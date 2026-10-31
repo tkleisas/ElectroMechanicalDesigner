@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-31
+
+### Added
+
+- Basic motor phase topology check (`EMD-ELEC-006`): each motor electrical
+  phase must reach a board/driver endpoint.
+- Trace assertion checking: CSV trace loader, small expression evaluator
+  (numbers, signals, arithmetic, comparisons, `abs()`), scenario assertion
+  evaluation (`EMD-TRACE-001`..`006`), and `emd trace check`.
+
 ## [0.9.0] - 2026-10-31
 
 ### Added
@@ -131,7 +141,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.10.0
 [0.9.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.9.0
 [0.8.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.8.0
 [0.7.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.7.0

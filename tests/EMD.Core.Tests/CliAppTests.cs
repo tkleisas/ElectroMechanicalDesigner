@@ -201,6 +201,22 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Trace_check_accepts_a_passing_trace()
+    {
+        using var temp = new TempDirectory();
+        var tracePath = Path.Combine(temp.Path, "trace.csv");
+        File.WriteAllText(tracePath, "time,x_carriage_m\n0,0\n1,0.0405\n");
+
+        var (exitCode, stdout, stderr) = Run(
+            "trace", "check", "--project", TestPaths.ExampleProject,
+            "--trace", tracePath, "--scenario", "move_40mm");
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("trace:", stdout, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EMD-TRACE-003", stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

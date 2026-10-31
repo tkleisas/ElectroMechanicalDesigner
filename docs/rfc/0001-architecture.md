@@ -329,6 +329,7 @@ Examples:
 | `EMD-ELEC-003` | Motor/driver voltage or current mismatch |
 | `EMD-ELEC-004` | Electrical/control port is not connected |
 | `EMD-ELEC-005` | Net and port voltage mismatch |
+| `EMD-ELEC-006` | Motor phase has no board/driver endpoint |
 | `EMD-FW-001` | Firmware pin map incomplete or conflicting |
 | `EMD-FW-002` | Duplicate MCU pin assignment |
 | `EMD-FW-003` | Firmware pin is not connected to its mapped net |
@@ -355,6 +356,12 @@ Examples:
 | `EMD-PACKAGE-005` | Package member hash/size mismatch |
 | `EMD-PACKAGE-006` | Package contains an unlisted file |
 | `EMD-PACKAGE-007` | Package member escapes the package directory |
+| `EMD-TRACE-001` | Trace CSV or assertion expression is invalid |
+| `EMD-TRACE-002` | Assertion references an unknown trace signal |
+| `EMD-TRACE-003` | Scenario assertion failed |
+| `EMD-TRACE-004` | Trace has no data rows |
+| `EMD-TRACE-005` | Requested scenario was not found |
+| `EMD-TRACE-006` | Scenario has no assertions |
 | `EMD-SIM-001` | Unbound FMU port or unit mismatch |
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
 | `EMD-SIM-003` | Simulation binding references an undeclared variable |
@@ -450,12 +457,12 @@ Implemented:
 - KiCad PCB outline and mounting-hole import into a board part with mechanical
   ports; `emd import kicad-pcb`.
 - Cross-domain ERC: unconnected electrical/control ports, duplicate MCU pins,
-  duplicate refdes, net/port voltage mismatch, and firmware pin-to-net
-  connectivity.
+  duplicate refdes, net/port voltage mismatch, firmware pin-to-net
+  connectivity, and basic motor phase-to-board topology.
 
 Remaining:
 
-- Motor phase/driver topology checks.
+- Deeper motor phase-count/mapping checks.
 - Co-simulation wiring for SPICE/FMU models.
 
 ### P3 — Digital twin co-simulation — groundwork
@@ -465,6 +472,7 @@ Remaining:
 - Simulation-binding validation against behavior-model variables. **Done.**
 - MechMaker compile adapter and `emd compile mechmaker`. **Done.**
 - Deterministic package bundle and verifier (`emd package`, `emd package verify`). **Done.**
+- Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
 - SSP composition + OMSimulator/FMPy; record/replay; assertions.

@@ -84,6 +84,29 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Motor_phase_without_a_board_endpoint_is_reported_as_EMD_ELEC_006()
+    {
+        var project = Mutate(root =>
+        {
+            var connections = root["connections"]!.AsArray();
+            var driverPhaseA = connections.First(c => (string?)c!["key"] == "driver_phase_a");
+            connections.Remove(driverPhaseA);
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-006");
+    }
+
+    [Fact]
+    public void Valid_example_has_no_motor_topology_warnings()
+    {
+        var diagnostics = _validator.Validate(LoadExample());
+
+        Assert.DoesNotContain(diagnostics, d => d.Code == "EMD-ELEC-006");
+    }
+
+    [Fact]
     public void Net_voltage_mismatch_is_reported_as_EMD_ELEC_005()
     {
         var project = Mutate(root =>

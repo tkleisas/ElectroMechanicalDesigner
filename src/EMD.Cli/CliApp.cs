@@ -42,6 +42,7 @@ public static class CliApp
                     new NgSpiceAdapter(ProcessToolHost.Default)),
                 "compile" => Compile(args.Skip(1).ToArray(), stdout, stderr),
                 "package" => Package(args, stdout, stderr),
+                "trace" => TraceCommand.Run(args.Skip(1).ToArray(), stdout, stderr),
                 "build" => Build(args, stdout, stderr),
                 "artifacts" => Artifacts(args, stdout, stderr),
                 _ => UsageError(stderr, $"Unknown command '{args[0]}'.")
@@ -598,6 +599,7 @@ public static class CliApp
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");
         writer.WriteLine("  emd package --project <project.json> --out-dir <dir>");
         writer.WriteLine("  emd package verify --dir <dir>");
+        writer.WriteLine("  emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();

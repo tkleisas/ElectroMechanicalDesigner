@@ -33,6 +33,7 @@ public sealed class ProjectValidator
         ValidateElectrical(project, parts, artifacts, diagnostics);
         ValidateElectricalPortConnectivity(project, diagnostics);
         ValidateElectricalVoltages(project, parts, nets, diagnostics);
+        ValidateMotorTopology(project, diagnostics);
         ValidateFirmware(project, parts, nets, artifacts, diagnostics);
         ValidateBehavior(project, parts, artifacts, diagnostics);
         ValidateSimulation(project, connections, artifacts, diagnostics);
@@ -265,6 +266,104 @@ public sealed class ProjectValidator
                 $"Net '{net.Key}' is {netVoltage} V but port '{portId}' on part " +
                 $"'{Entity(part)}' is {portVoltage} V.",
                 Entity: $"{Entity(part)}.{portId}"));
+        }
+    }
+
+    private static void ValidateMotorTopology(
+        EmdProject project,
+        List<Diagnostic> diagnostics)
+    {
+        var boardPartIds = new HashSet<Guid>();
+        foreach (var board in project.Electrical?.Boards ?? [])
+            boardPartIds.Add(board.PartId);
+        foreach (var part in project.Parts)
+        {
+            if (part.Kind == PartKind.Board)
+                boardPartIds.Add(part.Id);
+        }
+
+        var netEndpoints = BuildNetEndpoints(project);
+
+        foreach (var part in project.Parts)
+        {
+            if (part.Category != PartCategory.Motor)
+                continue;
+
+            foreach (var port in part.Ports.Where(port => port.Domain == PortDomain.Electrical))
+            {
+                var nets = NetsOfPort(project, part.Id, port.Id).Distinct().ToList();
+                if (nets.Count == 0)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-ELEC-006",
+                        DiagnosticSeverity.Warning,
+                        $"Motor phase '{port.Id}' on part '{Entity(part)}' is not connected to a net.",
+                        Entity: $"{Entity(part)}.{port.Id}"));
+                    continue;
+                }
+
+                var hasBoardEndpoint = nets.Any(netId =>
+                    netEndpoints.TryGetValue(netId, out var endpoints) &&
+                    endpoints.Any(endpoint => boardPartIds.Contains(endpoint.PartId)));
+
+                if (!hasBoardEndpoint)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-ELEC-006",
+                        DiagnosticSeverity.Warning,
+                        $"Motor phase '{port.Id}' on part '{Entity(part)}' has no board/driver endpoint.",
+                        Entity: $"{Entity(part)}.{port.Id}"));
+                }
+            }
+        }
+    }
+
+    private static Dictionary<Guid, List<(Guid PartId, string PortId)>> BuildNetEndpoints(EmdProject project)
+    {
+        var endpointsByNet = new Dictionary<Guid, List<(Guid PartId, string PortId)>>();
+        foreach (var connection in project.Connections)
+        {
+            Add(connection.From, connection.To);
+            Add(connection.To, connection.From);
+        }
+
+        return endpointsByNet;
+
+        void Add(Endpoint netSide, Endpoint partSide)
+        {
+            if (netSide.NetId is not { } netId ||
+                partSide.PartId is not { } partId ||
+                partSide.PortId is not { } portId)
+            {
+                return;
+            }
+
+            if (!endpointsByNet.TryGetValue(netId, out var endpoints))
+            {
+                endpoints = [];
+                endpointsByNet[netId] = endpoints;
+            }
+
+            if (endpoints.All(endpoint => endpoint.PartId != partId || endpoint.PortId != portId))
+                endpoints.Add((partId, portId));
+        }
+    }
+
+    private static IEnumerable<Guid> NetsOfPort(EmdProject project, Guid partId, string portId)
+    {
+        foreach (var connection in project.Connections)
+        {
+            if (connection.From.PartId == partId && connection.From.PortId == portId &&
+                connection.To.NetId is { } fromNet)
+            {
+                yield return fromNet;
+            }
+
+            if (connection.To.PartId == partId && connection.To.PortId == portId &&
+                connection.From.NetId is { } toNet)
+            {
+                yield return toNet;
+            }
         }
     }
 
