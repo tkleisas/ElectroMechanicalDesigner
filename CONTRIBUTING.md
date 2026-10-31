@@ -33,8 +33,9 @@ merged. "I will add tests later" is not an accepted development plan.
 
 | Layer | Location | Purpose |
 |---|---|---|
-| Unit | `tests/EMD.Core.Tests` | graph, schema, validation, importer, build planning, CLI |
+| Unit | `tests/EMD.Core.Tests` | graph, schema, validation, importer, exporter, build planning, CLI |
 | Adapter contract | `tests/EMD.Adapters.Tests` | process launch, timeouts, JSON-RPC request/response |
+| Python adapters | `adapters/python/test_*.py` | manifest math, hashing, JSON-RPC framing |
 | Integration | `tests/EMD.Integration.Tests` (planned) | headless FreeCAD/KiCad/MechMaker/OMSimulator runs |
 | End-to-end | `tests/EMD.EndToEnd.Tests` (planned) | the MVP axis: design → validate → co-simulate → export |
 
@@ -48,6 +49,8 @@ container.
 dotnet test EMD.slnx
 dotnet format EMD.slnx --verify-no-changes
 python3 -m jsonschema -i examples/project.json schema/emd-project.schema.json
+python3 -m jsonschema -i tests/EMD.Core.Tests/Fixtures/freecad_manifest.json schema/cad-manifest.schema.json
+cd adapters/python && python3 -m unittest discover -s . -p 'test_*.py'
 ```
 
 ## Pull request checklist

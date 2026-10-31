@@ -316,6 +316,13 @@ Examples:
 | `EMD-MECH-001` | Assembly interference / clearance violation |
 | `EMD-MECH-002` | Unreachable pose or joint limit exceeded |
 | `EMD-MECH-003` | Missing mate or floating connector |
+| `EMD-MECH-004` | Invalid joint or simulation-proxy geometry |
+| `EMD-ART-001` | Referenced artifact is missing |
+| `EMD-ART-002` | Artifact content is missing or corrupt |
+| `EMD-MJCF-001` | MJCF export has no parts |
+| `EMD-MJCF-002` | Missing or unmaterialized mesh artifact |
+| `EMD-MJCF-003` | Part disconnected from the assembly root |
+| `EMD-MJCF-004` | Mechanical graph cycle or multiple paths |
 | `EMD-ELEC-001` | Netlist and EMD wiring disagree |
 | `EMD-ELEC-002` | KiCad ERC/DRC failures |
 | `EMD-ELEC-003` | Motor/driver voltage or current mismatch |
@@ -379,13 +386,24 @@ pinned tool versions. The Red-Green-Refactor rule is mandatory; see
   FreeCAD artifact references with optional content-addressed storage.
 - Example project, xUnit tests, format/test CI gates.
 
-### P1 — Mechanical vertical slice
+### P1 — Mechanical vertical slice — in progress
 
-- FreeCAD headless adapter: open/recompute/export STEP, STL, glTF, BOM.
-- CadQuery catalog part generation; connector sidecar.
-- External geometry + joint metadata → MJCF for MechMaker; interference and
-  reach checks.
-- Board outline/holes from KiCad STEP into the assembly.
+Implemented:
+
+- CAD manifest schema and FreeCAD manifest importer: parts, connectors,
+  simulation-proxy geometry, joints, artifacts, and BOM.
+- Extrinsic-XYZ pose transforms and an MJCF exporter with body trees, geoms,
+  hinge/slide/ball/free joints, motors, and diagnostics.
+- Starter FreeCAD JSON-RPC adapter (`adapters/python`) exporting STEP/STL and a
+  CAD manifest from bounding-box proxies.
+- CLI: `import freecad-manifest` and `export mjcf`.
+
+Remaining:
+
+- A richer FreeCAD property scheme or workbench export (real connector frames,
+  materials, BOM, per-feature geometry).
+- CadQuery catalog part generation.
+- Interference/reach checks and board outline/holes from KiCad STEP.
 
 ### P2 — Electrical vertical slice
 

@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
       - name: Install validator
         run: python -m pip install --upgrade jsonschema
-      - name: Validate schema and example
+      - name: Validate schemas and fixtures
         run: |
           python - <<'PY'
           import json
@@ -39,5 +39,15 @@ jobs:
           Draft7Validator.check_schema(schema)
           example = json.load(open("examples/project.json", encoding="utf-8"))
           Draft7Validator(schema).validate(example)
-          print("schema and example are valid")
+
+          manifest_schema = json.load(open("schema/cad-manifest.schema.json", encoding="utf-8"))
+          Draft7Validator.check_schema(manifest_schema)
+          manifest = json.load(open("tests/EMD.Core.Tests/Fixtures/freecad_manifest.json", encoding="utf-8"))
+          Draft7Validator(manifest_schema).validate(manifest)
+          print("schemas and fixtures are valid")
           PY
+      - name: Python adapter tests
+        run: |
+          cd adapters/python
+          python -m unittest discover -s . -p 'test_*.py'
+          python -m py_compile freecad_adapter.py emd_cad_manifest.py

@@ -1,4 +1,5 @@
 using Emd.Cli;
+using Emd.Core.Importers;
 using Emd.Core.Model;
 using Emd.Core.Projects;
 
@@ -83,6 +84,46 @@ public class CliAppTests
         Assert.True(loaded.IsValid, string.Join(Environment.NewLine, loaded.Diagnostics));
         var artifact = Assert.Single(loaded.Project!.Artifacts);
         Assert.Equal(artifact.Id, loaded.Project.Mechanical!.Exports!["step"]);
+    }
+
+    [Fact]
+    public void Import_freecad_manifest_writes_a_valid_project()
+    {
+        using var temp = new TempDirectory();
+        var output = Path.Combine(temp.Path, "manifest_project.json");
+
+        var (exitCode, stdout, stderr) = Run(
+            "import", "freecad-manifest", TestPaths.Fixture("freecad_manifest.json"), "--out", output);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(output), stderr);
+        Assert.Contains("imported:", stdout, StringComparison.OrdinalIgnoreCase);
+
+        var loaded = ProjectLoader.Default.LoadFile(output);
+        Assert.True(loaded.IsValid, string.Join(Environment.NewLine, loaded.Diagnostics));
+        Assert.Equal(2, loaded.Project!.Parts.Count);
+        Assert.Single(loaded.Project.Mechanical!.Joints!);
+    }
+
+    [Fact]
+    public void Export_mjcf_writes_a_scene()
+    {
+        using var temp = new TempDirectory();
+        var projectPath = Path.Combine(temp.Path, "manifest_project.json");
+        var imported = FreeCadManifestImporter.Default.Import(
+            File.ReadAllText(TestPaths.Fixture("freecad_manifest.json")), "axis.FCStd");
+        ProjectWriter.Save(imported.Project!, projectPath);
+        var scenePath = Path.Combine(temp.Path, "axis.xml");
+
+        var (exitCode, stdout, stderr) = Run(
+            "export", "mjcf", "--project", projectPath, "--out", scenePath);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(scenePath), stderr);
+        Assert.Contains("exported:", stdout, StringComparison.OrdinalIgnoreCase);
+        var scene = System.Xml.Linq.XDocument.Load(scenePath);
+        Assert.Equal("mujoco", scene.Root!.Name.LocalName);
+        Assert.Contains(scene.Descendants("body"), body => (string?)body.Attribute("name") == "frame");
     }
 
     [Fact]

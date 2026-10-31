@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-31
+
+### Added
+
+- Project schema: simulation-proxy `part.geometry` and `mechanical.joints`
+  (fixed/hinge/slide/ball/free, axis, range, actuator, damping, stiffness).
+- Extrinsic-XYZ pose transforms (`PoseMath`) with relative/compose operations.
+- MJCF exporter: body tree from mates and joints, box/cylinder/sphere/capsule/
+  ellipsoid/mesh geoms, hinge/slide/ball/free joints, motors, and
+  `EMD-MJCF-*` diagnostics.
+- CAD manifest schema (`cad-manifest.schema.json`) and FreeCAD manifest
+  importer: parts, connectors, geometry proxies, joints, artifacts, and BOM.
+- Starter FreeCAD JSON-RPC adapter under `adapters/python`, with pure manifest
+  helpers and Python tests (no FreeCAD required for the test suite).
+- CLI: `import freecad-manifest` and `export mjcf`.
+- CI: CAD manifest schema validation and Python adapter tests.
+
 ## [0.2.0] - 2026-10-31
 
 ### Added
@@ -52,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.3.0
 [0.2.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.2.0
 [0.1.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.1.0

@@ -622,6 +622,9 @@
         "pose": {
           "$ref": "#/definitions/pose"
         },
+        "geometry": {
+          "$ref": "#/definitions/part_geometry"
+        },
         "catalog_ref": {
           "type": "object",
           "required": [
@@ -820,6 +823,111 @@
         }
       }
     },
+    "part_geometry": {
+      "type": "object",
+      "description": "Simulation proxy geometry. The CAD document remains canonical.",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "box",
+            "cylinder",
+            "sphere",
+            "capsule",
+            "ellipsoid",
+            "mesh"
+          ]
+        },
+        "size": {
+          "$ref": "#/definitions/vec3",
+          "description": "Box full extents; cylinder radius/length; sphere radius; capsule radius/length; ellipsoid radii."
+        },
+        "mesh_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "mesh_scale": {
+          "$ref": "#/definitions/vec3"
+        },
+        "rgba": {
+          "type": "string"
+        },
+        "collision": {
+          "type": "boolean"
+        },
+        "visual": {
+          "type": "boolean"
+        }
+      }
+    },
+    "mechanical_joint": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "type",
+        "parent_part_id",
+        "child_part_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "fixed",
+            "hinge",
+            "slide",
+            "ball",
+            "free"
+          ]
+        },
+        "parent_part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "child_part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "axis": {
+          "$ref": "#/definitions/vec3"
+        },
+        "anchor": {
+          "$ref": "#/definitions/pose"
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "actuator": {
+          "type": "string"
+        },
+        "damping": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stiffness": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
     "mechanical": {
       "type": "object",
       "additionalProperties": false,
@@ -829,6 +937,12 @@
         },
         "assembly_root_part_id": {
           "$ref": "#/definitions/uuid"
+        },
+        "joints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/mechanical_joint"
+          }
         },
         "exports": {
           "type": "object",

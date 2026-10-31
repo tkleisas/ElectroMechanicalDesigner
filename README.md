@@ -4,11 +4,12 @@ An open-source CAD/CAM suite for electromechanical systems: draw the mechanics,
 draw the electronics, write the firmware, and simulate the whole machine as a
 digital twin from one traceable project.
 
-**Status: P0 complete.** The repository has the RFC and v0.1 schema, a .NET 10
-core with cross-domain validation, a content-addressed artifact store, a build
-planner, deterministic MechMaker/KiCad importers, FreeCAD artifact references,
-a process adapter host with a JSON-RPC adapter contract, and a CLI. P1 (FreeCAD
-headless export and STEP↔MJCF) is next.
+**Status: P1 in progress.** P0 is complete: RFC/schema, .NET 10 core,
+cross-domain validation, content-addressed artifacts, build planner,
+deterministic MechMaker/KiCad importers, FreeCAD artifact references, process
+adapter host, JSON-RPC contract, and CLI. P1 now adds a CAD manifest sidecar,
+pose transforms, an MJCF exporter, and a starter FreeCAD adapter. The suite has
+95 xUnit tests and 10 Python adapter tests.
 
 ## Principle
 
@@ -32,8 +33,10 @@ cross-domain identity and bindings.
 
 - [RFC 0001 — Unified Electromechanical CAD Suite](docs/rfc/0001-architecture.md)
 - [Project schema v0.1](schema/emd-project.schema.json)
+- [CAD manifest schema v0.1](schema/cad-manifest.schema.json)
 - [Example project](examples/project.json)
 - [Tool adapter protocol](docs/adapter-protocol.md)
+- [Starter FreeCAD adapter](adapters/python/README.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
 Run the suite and the CLI:
@@ -46,6 +49,10 @@ dotnet run --project src/EMD.Cli -- import mechmaker \
   --out out/linear_axis.json --catalog ../MechMaker/catalog
 dotnet run --project src/EMD.Cli -- import kicad \
   tests/EMD.Core.Tests/Fixtures/kicad_netlist.xml --out out/kicad.json
+dotnet run --project src/EMD.Cli -- import freecad-manifest \
+  tests/EMD.Core.Tests/Fixtures/freecad_manifest.json --out out/axis.json
+dotnet run --project src/EMD.Cli -- export mjcf \
+  --project out/axis.json --out out/axis.xml
 python3 -m jsonschema -i examples/project.json schema/emd-project.schema.json
 ```
 
@@ -56,6 +63,8 @@ emd validate <project.json>
 emd import mechmaker <machine.json> --out <project.json> [--catalog <dir>]
 emd import kicad <netlist.xml> --out <project.json>
 emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]
+emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]
+emd export mjcf --project <project.json> --out <scene.xml>
 emd artifacts verify <project.json> [--store <dir>]
 emd build plan --project <project.json>
 ```
@@ -63,22 +72,22 @@ emd build plan --project <project.json>
 ## Layout
 
 ```
-src/EMD.Core            project graph, schema, validation, importers, artifacts
+src/EMD.Core            project graph, schema, validation, importers, MJCF exporter
 src/EMD.Adapters        process tool host + JSON-RPC tool adapter contract
-src/EMD.Cli             validate/import/build/artifacts commands
-tests/EMD.Core.Tests    unit, schema, importer, CLI tests
+src/EMD.Cli             validate/import/export/build/artifacts commands
+adapters/python         starter FreeCAD adapter + pure manifest helpers
+tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI tests
 tests/EMD.Adapters.Tests process host + JSON-RPC adapter tests
 ```
 
 Planned additions:
 
 ```
-src/EMD.Mechanical      FreeCAD/CadQuery adapter, STEP<->MJCF, MCAD<->ECAD
+src/EMD.Mechanical      richer FreeCAD/CadQuery export, MCAD<->ECAD
 src/EMD.Electrical      KiCad/ngspice adapter, netlist<->wiring, harness
 src/EMD.Twin            FMU wrappers, SSP composer, OMSimulator, HIL
 src/EMD.Cam             CAM and manufacturing outputs
 src/EMD.Hub             Avalonia shell, MCP server, web viewer
-adapters/python/        FreeCAD/KiCad/OpenModelica scripts
 ```
 
 ## Development
@@ -92,7 +101,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.2.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.3.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

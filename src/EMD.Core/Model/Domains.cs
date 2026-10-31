@@ -8,6 +8,8 @@ public sealed record MechanicalSection
 
     public Guid? AssemblyRootPartId { get; init; }
 
+    public List<MechanicalJoint>? Joints { get; init; }
+
     public Dictionary<string, Guid>? Exports { get; init; }
 
     public MechanicalSimulation? Simulation { get; init; }
@@ -37,6 +39,35 @@ public sealed record JointBinding
     public string? Actuator { get; init; }
 
     public string? Axis { get; init; }
+}
+
+public sealed record MechanicalJoint
+{
+    public Guid Id { get; init; }
+
+    public string Key { get; init; } = "";
+
+    public string? Name { get; init; }
+
+    public MechanicalJointType Type { get; init; }
+
+    public Guid ParentPartId { get; init; }
+
+    public Guid ChildPartId { get; init; }
+
+    public double[]? Axis { get; init; }
+
+    public Pose? Anchor { get; init; }
+
+    public double[]? Range { get; init; }
+
+    public string? Actuator { get; init; }
+
+    public double? Damping { get; init; }
+
+    public double? Stiffness { get; init; }
+
+    public JsonObject? Metadata { get; init; }
 }
 
 public sealed record ElectricalSection

@@ -21,11 +21,13 @@ public sealed class ProjectValidator
         var simSystems = Index(project.Simulation?.Systems ?? [], system => system.Id, "simulation system", diagnostics);
         var scenarios = Index(project.Simulation?.Scenarios ?? [], scenario => scenario.Id, "scenario", diagnostics);
         var processes = Index(project.Manufacturing?.Processes ?? [], process => process.Id, "manufacturing process", diagnostics);
+        _ = Index(project.Mechanical?.Joints ?? [], joint => joint.Id, "mechanical joint", diagnostics);
 
         ValidateDuplicatePorts(project, diagnostics);
         ValidateConnectionEndpoints(project, parts, nets, artifacts, diagnostics);
         ValidateArtifactInputs(project, artifacts, diagnostics);
         ValidateDomainReferences(project, artifacts, diagnostics);
+        ValidatePartGeometry(project, artifacts, diagnostics);
         ValidateMechanical(project, parts, artifacts, diagnostics);
         ValidateElectrical(project, parts, artifacts, diagnostics);
         ValidateFirmware(project, parts, nets, artifacts, diagnostics);
@@ -182,6 +184,47 @@ public sealed class ProjectValidator
         }
     }
 
+    private static void ValidatePartGeometry(
+        EmdProject project,
+        IReadOnlyDictionary<Guid, Artifact> artifacts,
+        List<Diagnostic> diagnostics)
+    {
+        foreach (var part in project.Parts)
+        {
+            var geometry = part.Geometry;
+            if (geometry is null)
+                continue;
+
+            if (geometry.Kind == GeometryKind.Mesh)
+            {
+                if (geometry.MeshArtifactId is null)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-MECH-004",
+                        DiagnosticSeverity.Error,
+                        $"Part '{Entity(part)}' has mesh geometry without a mesh artifact.",
+                        Entity: Entity(part)));
+                }
+                else
+                {
+                    RequireArtifact(
+                        geometry.MeshArtifactId,
+                        artifacts,
+                        $"Part '{Entity(part)}' mesh geometry",
+                        diagnostics);
+                }
+            }
+            else if (geometry.Size is not { Length: 3 })
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-MECH-004",
+                    DiagnosticSeverity.Error,
+                    $"Part '{Entity(part)}' {geometry.Kind} geometry needs a three-component size.",
+                    Entity: Entity(part)));
+            }
+        }
+    }
+
     private static void ValidateMechanical(
         EmdProject project,
         IReadOnlyDictionary<Guid, Part> parts,
@@ -227,6 +270,60 @@ public sealed class ProjectValidator
                     DiagnosticSeverity.Error,
                     $"Joint binding '{binding.Joint}' references missing port '{portId}' on part '{Entity(part)}'.",
                     Entity: binding.Joint));
+            }
+        }
+
+        foreach (var joint in mechanical.Joints ?? [])
+        {
+            var jointName = Entity(joint);
+
+            if (!parts.ContainsKey(joint.ParentPartId))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-MECH-004",
+                    DiagnosticSeverity.Error,
+                    $"Joint '{jointName}' references missing parent part '{joint.ParentPartId}'.",
+                    Entity: jointName));
+            }
+
+            if (!parts.ContainsKey(joint.ChildPartId))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-MECH-004",
+                    DiagnosticSeverity.Error,
+                    $"Joint '{jointName}' references missing child part '{joint.ChildPartId}'.",
+                    Entity: jointName));
+            }
+
+            if (joint.ParentPartId == joint.ChildPartId)
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-MECH-004",
+                    DiagnosticSeverity.Error,
+                    $"Joint '{jointName}' connects part '{joint.ParentPartId}' to itself.",
+                    Entity: jointName));
+            }
+
+            if (joint.Type is MechanicalJointType.Hinge or MechanicalJointType.Slide)
+            {
+                if (joint.Axis is not { Length: 3 } axis ||
+                    (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]) < 1e-18)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-MECH-004",
+                        DiagnosticSeverity.Error,
+                        $"Joint '{jointName}' is a {joint.Type} joint but has no usable axis.",
+                        Entity: jointName));
+                }
+            }
+
+            if (joint.Range is { Length: 2 } range && range[0] > range[1])
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-MECH-004",
+                    DiagnosticSeverity.Error,
+                    $"Joint '{jointName}' has a range whose minimum is greater than its maximum.",
+                    Entity: jointName));
             }
         }
     }
@@ -503,4 +600,7 @@ public sealed class ProjectValidator
     private static string Entity(Scenario scenario) => scenario.Key ?? scenario.Id.ToString();
 
     private static string Entity(ManufacturingProcess process) => process.Key ?? process.Id.ToString();
+
+    private static string Entity(MechanicalJoint joint) =>
+        string.IsNullOrWhiteSpace(joint.Key) ? joint.Id.ToString() : joint.Key;
 }

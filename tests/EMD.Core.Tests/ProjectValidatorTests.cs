@@ -109,6 +109,99 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Mesh_geometry_with_missing_artifact_is_reported_as_EMD_ART_001()
+    {
+        var project = Mutate(root =>
+            root["parts"]![1]!["geometry"] = new JsonObject
+            {
+                ["kind"] = "mesh",
+                ["mesh_artifact_id"] = Guid.NewGuid().ToString()
+            });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ART-001");
+    }
+
+    [Fact]
+    public void Mechanical_joint_with_missing_parent_is_reported_as_EMD_MECH_004()
+    {
+        var project = Mutate(root =>
+            root["mechanical"]!["joints"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["id"] = Guid.NewGuid().ToString(),
+                    ["key"] = "bad_joint",
+                    ["type"] = "slide",
+                    ["parent_part_id"] = Guid.NewGuid().ToString(),
+                    ["child_part_id"] = root["parts"]![1]!["id"]!.GetValue<string>(),
+                    ["axis"] = new JsonArray(1, 0, 0)
+                }
+            });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-MECH-004");
+    }
+
+    [Fact]
+    public void Duplicate_mechanical_joint_id_is_reported_as_EMD_ID_001()
+    {
+        var project = Mutate(root =>
+        {
+            var jointId = Guid.NewGuid().ToString();
+            root["mechanical"]!["joints"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["id"] = jointId,
+                    ["key"] = "joint_a",
+                    ["type"] = "slide",
+                    ["parent_part_id"] = root["parts"]![0]!["id"]!.GetValue<string>(),
+                    ["child_part_id"] = root["parts"]![1]!["id"]!.GetValue<string>(),
+                    ["axis"] = new JsonArray(1, 0, 0)
+                },
+                new JsonObject
+                {
+                    ["id"] = jointId,
+                    ["key"] = "joint_b",
+                    ["type"] = "hinge",
+                    ["parent_part_id"] = root["parts"]![0]!["id"]!.GetValue<string>(),
+                    ["child_part_id"] = root["parts"]![1]!["id"]!.GetValue<string>(),
+                    ["axis"] = new JsonArray(0, 0, 1)
+                }
+            };
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ID-001");
+    }
+
+    [Fact]
+    public void Hinge_joint_with_zero_axis_is_reported_as_EMD_MECH_004()
+    {
+        var project = Mutate(root =>
+            root["mechanical"]!["joints"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["id"] = Guid.NewGuid().ToString(),
+                    ["key"] = "bad_axis",
+                    ["type"] = "hinge",
+                    ["parent_part_id"] = root["parts"]![0]!["id"]!.GetValue<string>(),
+                    ["child_part_id"] = root["parts"]![1]!["id"]!.GetValue<string>(),
+                    ["axis"] = new JsonArray(0, 0, 0)
+                }
+            });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-MECH-004");
+    }
+
+    [Fact]
     public void Missing_mechanical_source_artifact_is_reported_as_EMD_ART_001()
     {
         var project = Mutate(root =>

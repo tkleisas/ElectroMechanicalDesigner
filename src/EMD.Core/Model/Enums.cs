@@ -74,6 +74,25 @@ public enum ConnectionKind
     Other
 }
 
+public enum GeometryKind
+{
+    Box,
+    Cylinder,
+    Sphere,
+    Capsule,
+    Ellipsoid,
+    Mesh
+}
+
+public enum MechanicalJointType
+{
+    Fixed,
+    Hinge,
+    Slide,
+    Ball,
+    Free
+}
+
 public enum ArtifactRole
 {
     Source,

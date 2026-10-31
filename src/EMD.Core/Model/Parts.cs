@@ -26,6 +26,8 @@ public sealed record Part
 
     public Pose? Pose { get; init; }
 
+    public PartGeometry? Geometry { get; init; }
+
     public PartDomainRefs? DomainRefs { get; init; }
 
     public List<Port> Ports { get; init; } = [];
@@ -108,4 +110,21 @@ public sealed record Pose
     public double[]? Pos { get; init; }
 
     public double[]? Rot { get; init; }
+}
+
+public sealed record PartGeometry
+{
+    public GeometryKind Kind { get; init; }
+
+    public double[]? Size { get; init; }
+
+    public Guid? MeshArtifactId { get; init; }
+
+    public double[]? MeshScale { get; init; }
+
+    public string? Rgba { get; init; }
+
+    public bool? Collision { get; init; }
+
+    public bool? Visual { get; init; }
 }

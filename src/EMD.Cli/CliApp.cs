@@ -1,6 +1,7 @@
 using Emd.Core.Artifacts;
 using Emd.Core.Build;
 using Emd.Core.Diagnostics;
+using Emd.Core.Exporters;
 using Emd.Core.Importers;
 using Emd.Core.Projects;
 using Emd.Core.Validation;
@@ -23,6 +24,7 @@ public static class CliApp
             {
                 "validate" => Validate(args, stdout, stderr),
                 "import" => Import(args, stdout, stderr),
+                "export" => Export(args, stdout, stderr),
                 "build" => Build(args, stdout, stderr),
                 "artifacts" => Artifacts(args, stdout, stderr),
                 _ => UsageError(stderr, $"Unknown command '{args[0]}'.")
@@ -67,6 +69,7 @@ public static class CliApp
             "mechmaker" => ImportMechMaker(args, stdout, stderr),
             "kicad" => ImportKiCad(args, stdout, stderr),
             "freecad" => ImportFreeCad(args, stdout, stderr),
+            "freecad-manifest" => ImportFreeCadManifest(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown import source '{args[1]}'.")
         };
     }
@@ -159,6 +162,70 @@ public static class CliApp
         stdout.WriteLine(
             $"added: {Path.GetFileName(input)} -> {output} " +
             $"({result.Project.Artifacts.Count} artifacts)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ImportFreeCadManifest(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var input = args[2];
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "import freecad-manifest requires --out <project.json>.");
+
+        ArtifactStore? store = null;
+        var storePath = GetOption(args, "--store");
+        if (!string.IsNullOrWhiteSpace(storePath))
+            store = new ArtifactStore(storePath);
+
+        var result = FreeCadManifestImporter.Default.ImportFile(input, store);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Project is null)
+            return 1;
+
+        ProjectWriter.Save(result.Project, output);
+        var joints = result.Project.Mechanical?.Joints?.Count ?? 0;
+        stdout.WriteLine(
+            $"imported: {result.Project.Name} -> {output} " +
+            $"({result.Project.Parts.Count} parts, {joints} joints, {result.Project.Artifacts.Count} artifacts)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int Export(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length < 2 || !string.Equals(args[1], "mjcf", StringComparison.OrdinalIgnoreCase))
+            return UsageError(stderr, "export expects the 'mjcf' subcommand.");
+
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "export mjcf requires --project <project.json>.");
+
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "export mjcf requires --out <scene.xml>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = MjcfExporter.Default.Export(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Xml is null)
+            return 1;
+
+        var directory = Path.GetDirectoryName(Path.GetFullPath(output));
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+        File.WriteAllText(output, result.Xml);
+
+        stdout.WriteLine(
+            $"exported: {loaded.Project.Name} -> {output} ({loaded.Project.Parts.Count} parts)");
 
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
@@ -280,6 +347,8 @@ public static class CliApp
         writer.WriteLine("  emd import mechmaker <machine.json> --out <project.json> [--catalog <dir>]");
         writer.WriteLine("  emd import kicad <netlist.xml> --out <project.json>");
         writer.WriteLine("  emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]");
+        writer.WriteLine("  emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]");
+        writer.WriteLine("  emd export mjcf --project <project.json> --out <scene.xml>");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();

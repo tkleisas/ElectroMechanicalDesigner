@@ -1,0 +1,83 @@
+{
+  "schema_version": "0.1",
+  "source": "axis.FCStd",
+  "units": "m",
+  "root": "frame",
+  "parts": [
+    {
+      "id": "frame",
+      "name": "Frame",
+      "category": "structure",
+      "pose": {
+        "pos": [0, 0, 0]
+      },
+      "mass_kg": 0.85,
+      "material": {
+        "name": "AL_6063_T5",
+        "density_kg_m3": 2700,
+        "youngs_modulus_pa": 69000000000,
+        "poisson_ratio": 0.33,
+        "thermal_conductivity_w_m_k": 200
+      },
+      "geometry": {
+        "kind": "box",
+        "size": [0.4, 0.2, 0.02],
+        "rgba": "0.7 0.7 0.75 1"
+      },
+      "connectors": [
+        {
+          "name": "motor_mount",
+          "type": "bolt_m3",
+          "pose": {
+            "pos": [0, 0, 0.01]
+          }
+        }
+      ]
+    },
+    {
+      "id": "carriage",
+      "name": "Carriage",
+      "category": "linear_motion",
+      "pose": {
+        "pos": [0.1, 0, 0.02]
+      },
+      "mass_kg": 0.15,
+      "geometry": {
+        "kind": "box",
+        "size": [0.06, 0.06, 0.02]
+      }
+    }
+  ],
+  "joints": [
+    {
+      "key": "x_slide",
+      "name": "X slide",
+      "type": "slide",
+      "parent": "frame",
+      "child": "carriage",
+      "axis": [1, 0, 0],
+      "range": [-0.2, 0.2],
+      "actuator": "x_motor",
+      "damping": 0.01
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "files/mechanical/axis.FCStd",
+      "format": "fcstd",
+      "role": "source"
+    },
+    {
+      "path": "files/mechanical/axis.step",
+      "format": "step",
+      "role": "generated",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bytes": 123
+    }
+  ],
+  "bom": {
+    "path": "files/manufacturing/bom.csv",
+    "format": "bom",
+    "role": "manufacturing"
+  }
+}

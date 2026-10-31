@@ -1,0 +1,300 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://emd.dev/schemas/cad-manifest-0.1.json",
+  "title": "EMD CAD manifest",
+  "description": "The JSON sidecar exported by a CAD adapter (FreeCAD first). It describes simulation-proxy parts, connectors, joints, and exported artifacts.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "source",
+    "parts"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "units": {
+      "const": "m"
+    },
+    "root": {
+      "type": "string",
+      "description": "Manifest part id used as the assembly root."
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/part"
+      }
+    },
+    "joints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/joint"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/artifact"
+      }
+    },
+    "bom": {
+      "$ref": "#/definitions/artifact"
+    }
+  },
+  "definitions": {
+    "key": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "pose": {
+      "type": "object",
+      "properties": {
+        "pos": {
+          "$ref": "#/definitions/vec3"
+        },
+        "rot": {
+          "$ref": "#/definitions/vec3"
+        }
+      },
+      "additionalProperties": false
+    },
+    "material": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "density_kg_m3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "youngs_modulus_pa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "poisson_ratio": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 0.5
+        },
+        "thermal_conductivity_w_m_k": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "box",
+            "cylinder",
+            "sphere",
+            "capsule",
+            "ellipsoid",
+            "mesh"
+          ]
+        },
+        "size": {
+          "$ref": "#/definitions/vec3"
+        },
+        "mesh": {
+          "type": "string",
+          "description": "Path matching an artifact in this manifest."
+        },
+        "mesh_scale": {
+          "$ref": "#/definitions/vec3"
+        },
+        "rgba": {
+          "type": "string"
+        },
+        "collision": {
+          "type": "boolean"
+        },
+        "visual": {
+          "type": "boolean"
+        }
+      }
+    },
+    "connector": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string"
+        },
+        "pose": {
+          "$ref": "#/definitions/pose"
+        }
+      }
+    },
+    "part": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "structure",
+            "motor",
+            "transmission",
+            "linear_motion",
+            "sensor",
+            "electronics",
+            "tool",
+            "fastener",
+            "other"
+          ]
+        },
+        "pose": {
+          "$ref": "#/definitions/pose"
+        },
+        "mass_kg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "material": {
+          "$ref": "#/definitions/material"
+        },
+        "geometry": {
+          "$ref": "#/definitions/geometry"
+        },
+        "connectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/connector"
+          }
+        }
+      }
+    },
+    "joint": {
+      "type": "object",
+      "required": [
+        "key",
+        "type",
+        "parent",
+        "child"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "fixed",
+            "hinge",
+            "slide",
+            "ball",
+            "free"
+          ]
+        },
+        "parent": {
+          "type": "string"
+        },
+        "child": {
+          "type": "string"
+        },
+        "axis": {
+          "$ref": "#/definitions/vec3"
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "actuator": {
+          "type": "string"
+        },
+        "damping": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stiffness": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "path",
+        "format",
+        "role"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "source",
+            "generated",
+            "visualization",
+            "simulation",
+            "manufacturing",
+            "report",
+            "other"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
