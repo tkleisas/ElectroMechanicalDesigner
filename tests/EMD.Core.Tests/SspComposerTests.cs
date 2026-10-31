@@ -38,6 +38,7 @@ public class SspComposerTests
             .Single(component => (string?)component.Attribute("name") == "controller");
         var plant = root.Descendants(Ssd + "Component")
             .Single(component => (string?)component.Attribute("name") == "plant");
+        Assert.Equal("application/x-fmu-sharedlibrary", (string?)controller.Attribute("type"));
         Assert.Contains(controller.Descendants(Ssd + "Connector"), connector =>
             (string?)connector.Attribute("name") == "cmd" &&
             (string?)connector.Attribute("kind") == "output");
@@ -52,8 +53,22 @@ public class SspComposerTests
         Assert.Equal("cmd_in", (string?)connection.Attribute("endConnector"));
 
         var experiment = Assert.Single(root.Descendants(Ssd + "DefaultExperiment"));
-        Assert.Equal("0.001", (string?)experiment.Attribute("stepSize"));
         Assert.Equal("1", (string?)experiment.Attribute("stopTime"));
+        Assert.Null(experiment.Attribute("stepSize"));
+    }
+
+    [Fact]
+    public void Compose_can_emit_an_ssp_1_0_compatibility_archive()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+
+        var result = SspComposer.Default.Compose(project, "1.0");
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        using var archive = new ZipArchive(new MemoryStream(result.Archive!), ZipArchiveMode.Read);
+        var document = XDocument.Parse(ReadEntry(archive, "SystemStructure.ssd"));
+        Assert.Equal("1.0", (string?)document.Root!.Attribute("version"));
     }
 
     [Fact]
@@ -66,6 +81,18 @@ public class SspComposerTests
 
         Assert.Null(result.Archive);
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "EMD-SSP-002");
+    }
+
+    [Fact]
+    public void Unsupported_ssp_version_reports_EMD_SSP_004()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+
+        var result = SspComposer.Default.Compose(project, "3.0");
+
+        Assert.Null(result.Archive);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "EMD-SSP-004");
     }
 
     [Fact]

@@ -16,7 +16,7 @@ pin-to-net connectivity), simulation-binding validation, and a MechMaker
 compile hand-off. P3 groundwork adds live MechMaker simulation over MCP and
 trace-assertion checking. P1 adds motor phase topology, clearance checks, and
 slide/hinge motion sweeps. The package exporter bundles the verifiable
-design/manufacturing artifacts. The suite has 212 xUnit tests and 10 Python
+design/manufacturing artifacts. The suite has 214 xUnit tests and 10 Python
 adapter tests.
 
 ## Principle
@@ -77,7 +77,7 @@ emd export mjcf --project <project.json> --out <scene.xml>
 emd export bom --project <project.json> --out <bom.csv>
 emd export harness --project <project.json> --out <harness.yml>
 emd export mechmaker --project <project.json> --out <machine.json>
-emd export ssp --project <project.json> --out <file.ssp>
+emd export ssp --project <project.json> --out <file.ssp> [--version 1.0|2.0]
 emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]
 emd package --project <project.json> --out-dir <dir> [--trace <csv>]...
 emd package verify --dir <dir>
@@ -109,6 +109,7 @@ src/EMD.Electrical      KiCad/ngspice adapter, netlist<->wiring, harness
 src/EMD.Twin            FMU wrappers, SSP composer, OMSimulator, HIL
 src/EMD.Cam             CAM and manufacturing outputs
 src/EMD.Hub             Avalonia shell, MCP server, web viewer
+tools/mechmaker_fmu     PythonFMU proxy wrapping MechMaker as FMI 2.0
 ```
 
 ## Development
@@ -122,7 +123,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.19.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.20.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

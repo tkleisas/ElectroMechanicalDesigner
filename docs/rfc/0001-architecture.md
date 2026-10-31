@@ -377,6 +377,7 @@ Examples:
 | `EMD-SSP-001` | No FMU behavior models for SSP composition |
 | `EMD-SSP-002` | FMU artifact is missing or unreadable |
 | `EMD-SSP-003` | Simulation binding does not match FMU connectors |
+| `EMD-SSP-004` | Unsupported SSP version |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
 | `EMD-BOM-001` | BOM/refdes mismatch |
 
@@ -489,10 +490,13 @@ Remaining:
 - Live MechMaker simulation over MCP and `emd simulate mechmaker`. **Done.**
 - Project → machine.json → live run → trace → scenario assertion loop. **Done.**
 - Scenario trace evidence persisted in the project and packaged. **Done.**
-- SSP 2.0 composition of FMU behavior models and FMU-to-FMU bindings. **Done.**
+- SSP 1.0/2.0 composition of FMU behavior models and FMU-to-FMU bindings. **Done.**
+- SSP execution verified with OMSimulator and FMPy using real FMUs. **Done.**
+- MechMaker FMI 2.0 proxy FMU verified with FMPy. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
-- MechMaker FMU wrapper (fixed step, deterministic).
+- MechMaker FMU wrapper (fixed step, deterministic). **Proxy FMU done** via
+  PythonFMU + MCP; direct in-process FMU remains future work.
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
 - SSP composition + OMSimulator/FMPy; record/replay; assertions.
 - HIL mode through Klipper/adb.

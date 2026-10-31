@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- MechMaker FMI 2.0 co-simulation proxy FMU (`tools/mechmaker_fmu`) exposing up
+  to four stepper channels through the MechMaker MCP server.
+- SSP 1.0/2.0 compatibility switch (`emd export ssp --version`).
+- OMSimulator 2.0 and FMPy 1.0 execution verified with real Controller and
+  Drivetrain FMUs.
+
 ## [0.19.0] - 2026-10-31
 
 ### Added
@@ -204,7 +212,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.20.0
 [0.19.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.19.0
 [0.18.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.18.0
 [0.17.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.17.0

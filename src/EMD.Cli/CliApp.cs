@@ -593,7 +593,8 @@ public static class CliApp
         if (loaded.Project is null)
             return 1;
 
-        var result = SspComposer.Default.Compose(loaded.Project);
+        var version = GetOption(args, "--version") ?? "2.0";
+        var result = SspComposer.Default.Compose(loaded.Project, version);
         PrintDiagnostics(result.Diagnostics, stderr);
         if (result.Archive is null)
             return 1;
@@ -753,7 +754,7 @@ public static class CliApp
         writer.WriteLine("  emd export bom --project <project.json> --out <bom.csv>");
         writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
         writer.WriteLine("  emd export mechmaker --project <project.json> --out <machine.json>");
-        writer.WriteLine("  emd export ssp --project <project.json> --out <file.ssp>");
+        writer.WriteLine("  emd export ssp --project <project.json> --out <file.ssp> [--version 1.0|2.0]");
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");

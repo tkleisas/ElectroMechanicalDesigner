@@ -26,8 +26,19 @@ public sealed class SspComposer
 
     public static SspComposer Default { get; } = new();
 
-    public SspExportResult Compose(EmdProject project)
+    public SspExportResult Compose(EmdProject project, string version = "2.0")
     {
+        if (version is not ("1.0" or "2.0"))
+        {
+            return new SspExportResult(null,
+            [
+                new Diagnostic(
+                    "EMD-SSP-004",
+                    DiagnosticSeverity.Error,
+                    $"Unsupported SSP version '{version}'; use 1.0 or 2.0.")
+            ]);
+        }
+
         var diagnostics = new List<Diagnostic>();
         var components = new List<ComponentInfo>();
         var usedNames = new HashSet<string>(StringComparer.Ordinal);
@@ -151,7 +162,7 @@ public sealed class SspComposer
         var root = new XElement(Ssd + "SystemStructureDescription",
             new XAttribute(XNamespace.Xmlns + "ssd", Ssd),
             new XAttribute(XNamespace.Xmlns + "ssc", Ssc),
-            new XAttribute("version", "2.0"),
+            new XAttribute("version", version),
             new XAttribute("name", project.Name),
             new XElement(Ssd + "System",
                 new XAttribute("name", project.Name),
@@ -159,6 +170,7 @@ public sealed class SspComposer
                     components.Select(component =>
                         new XElement(Ssd + "Component",
                             new XAttribute("name", component.Name),
+                            new XAttribute("type", "application/x-fmu-sharedlibrary"),
                             new XAttribute("source", component.Source),
                             component.Connectors.Count == 0
                                 ? null
@@ -168,8 +180,7 @@ public sealed class SspComposer
                     : new XElement(Ssd + "Connections", connections)),
             new XElement(Ssd + "DefaultExperiment",
                 new XAttribute("startTime", Format(system?.StartTimeS ?? 0)),
-                new XAttribute("stopTime", Format(system?.StopTimeS ?? 1)),
-                new XAttribute("stepSize", Format(system?.StepSizeS ?? 0.001))));
+                new XAttribute("stopTime", Format(system?.StopTimeS ?? 1))));
 
         var document = new XDocument(
             new XDeclaration("1.0", "UTF-8", null),

@@ -22,3 +22,6 @@ Thumbs.db
 *.swo
 .idea/
 .vscode/
+
+# Generated FMU artifacts
+tools/mechmaker_fmu/*.fmu
