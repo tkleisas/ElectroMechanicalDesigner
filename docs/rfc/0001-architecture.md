@@ -341,6 +341,11 @@ Examples:
 | `EMD-SPICE-002` | Expected ngspice log is missing |
 | `EMD-HARNESS-001` | Net is not point-to-point for harness export |
 | `EMD-HARNESS-002` | Harness net endpoint is unresolved |
+| `EMD-MECHMAKER-001` | Part has no MechMaker catalog reference |
+| `EMD-MECHMAKER-002` | Connection references a skipped part |
+| `EMD-MECHMAKER-003` | Net cannot be mapped to a MechMaker signal |
+| `EMD-MECHMAKER-004` | Duplicate exported MechMaker id |
+| `EMD-MECHMAKER-005` | No MechMaker-exportable parts |
 | `EMD-SIM-001` | Unbound FMU port or unit mismatch |
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
@@ -443,8 +448,10 @@ Remaining:
 - Motor phase/driver topology checks.
 - Co-simulation wiring for SPICE/FMU models.
 
-### P3 — Digital twin co-simulation
+### P3 — Digital twin co-simulation — groundwork
 
+- EMD→MechMaker `machine.json` exporter: catalog parts, mates, boards, wiring,
+  with round-trip tests. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
 - SSP composition + OMSimulator/FMPy; record/replay; assertions.

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Emd.Adapters;
 using Emd.Core.Artifacts;
 using Emd.Core.Build;
@@ -269,6 +270,7 @@ public static class CliApp
             "mjcf" => ExportMjcf(args, stdout, stderr),
             "bom" => ExportBom(args, stdout, stderr),
             "harness" => ExportHarness(args, stdout, stderr),
+            "mechmaker" => ExportMechMaker(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown export '{args[1]}'.")
         };
     }
@@ -356,6 +358,37 @@ public static class CliApp
         stdout.WriteLine(
             $"exported harness: {loaded.Project.Name} -> {output} " +
             $"({loaded.Project.Electrical?.Nets.Count ?? 0} nets)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ExportMechMaker(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "export mechmaker requires --project <project.json>.");
+
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "export mechmaker requires --out <machine.json>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = MechMakerMachineExporter.Default.Export(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Machine is null)
+            return 1;
+
+        var json = result.Machine.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        WriteTextFile(output, json);
+        var partCount = result.Machine["parts"]?.AsArray().Count ?? 0;
+        stdout.WriteLine(
+            $"exported MechMaker machine: {loaded.Project.Name} -> {output} ({partCount} parts)");
 
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
@@ -490,6 +523,7 @@ public static class CliApp
         writer.WriteLine("  emd export mjcf --project <project.json> --out <scene.xml>");
         writer.WriteLine("  emd export bom --project <project.json> --out <bom.csv>");
         writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
+        writer.WriteLine("  emd export mechmaker --project <project.json> --out <machine.json>");
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");

@@ -146,6 +146,27 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Export_mechmaker_writes_a_machine_json()
+    {
+        using var temp = new TempDirectory();
+        var imported = MechMakerImporter.Default.Import(
+            File.ReadAllText(TestPaths.Fixture("linear_axis.json")), "linear_axis.json");
+        var projectPath = Path.Combine(temp.Path, "project.json");
+        ProjectWriter.Save(imported.Project!, projectPath);
+        var machinePath = Path.Combine(temp.Path, "machine.json");
+
+        var (exitCode, stdout, stderr) = Run(
+            "export", "mechmaker", "--project", projectPath, "--out", machinePath);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(machinePath), stderr);
+        Assert.Contains("exported MechMaker", stdout, StringComparison.OrdinalIgnoreCase);
+        var roundtrip = MechMakerImporter.Default.Import(File.ReadAllText(machinePath), "machine.json");
+        Assert.Empty(roundtrip.Diagnostics);
+        Assert.Equal(3, roundtrip.Project!.Parts.Count);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

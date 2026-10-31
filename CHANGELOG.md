@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-31
+
+### Added
+
+- KiCad PCB outline and mounting-hole importer, adding a mechanical board part
+  and `Electrical.Boards` entry (`EMD-KICAD-020`/`021`/`022`).
+- CLI: `emd import kicad-pcb`.
+- Round-trippable EMD→MechMaker `machine.json` exporter with
+  `EMD-MECHMAKER-001`..`005` diagnostics and `emd export mechmaker`.
+- Deeper cross-domain ERC: duplicate electrical refdes (`EMD-XREF-002`),
+  net/port voltage mismatch (`EMD-ELEC-005`), and firmware pin-to-net
+  connectivity (`EMD-FW-003`).
+
 ## [0.5.0] - 2026-10-31
 
 ### Added
@@ -19,13 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ngspice batch adapter and `emd spice` (`EMD-SPICE-001`/`002`).
 - WireViz-compatible harness exporter and `emd export harness`
   (`EMD-HARNESS-001`/`002`).
-- KiCad PCB outline and mounting-hole importer, adding a mechanical board part
-  and `Electrical.Boards` entry (`EMD-KICAD-020`/`021`/`022`).
-- CLI: `emd import kicad-pcb`.
-- Cross-domain ERC: unconnected electrical/control ports (`EMD-ELEC-004`),
-  duplicate MCU pin assignments (`EMD-FW-002`), duplicate electrical refdes
-  (`EMD-XREF-002`), net/port voltage mismatch (`EMD-ELEC-005`), and firmware
-  pin-to-net connectivity (`EMD-FW-003`).
+- Cross-domain ERC: unconnected electrical/control ports (`EMD-ELEC-004`) and
+  duplicate MCU pin assignments (`EMD-FW-002`).
 
 ## [0.4.0] - 2026-10-31
 
@@ -99,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.6.0
 [0.5.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.5.0
 [0.4.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.4.0
 [0.3.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.3.0
