@@ -13,8 +13,11 @@ BOM/Gerbers/STEP), KiCad PCB outline/mounting-hole import, an ngspice batch
 adapter, WireViz harness export, a round-trippable MechMaker machine exporter,
 and cross-domain ERC checks (refdes uniqueness, net/port voltages, firmware
 pin-to-net connectivity), simulation-binding validation, and a MechMaker
-compile hand-off, trace-assertion checking, motor phase topology, clearance checks, slide/hinge motion sweeps, and a verifiable design/manufacturing
-package bundle. The suite has 188 xUnit tests and 10 Python adapter tests.
+compile hand-off. P3 groundwork adds live MechMaker simulation over MCP and
+trace-assertion checking. P1 adds motor phase topology, clearance checks, and
+slide/hinge motion sweeps. The package exporter bundles the verifiable
+design/manufacturing artifacts. The suite has 195 xUnit tests and 10 Python
+adapter tests.
 
 ## Principle
 
@@ -78,6 +81,7 @@ emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cl
 emd package --project <project.json> --out-dir <dir>
 emd package verify --dir <dir>
 emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]
+emd simulate mechmaker --machine <machine.json> --out <trace.csv> --mechmaker <server.dll|exe> [--duration <s>] [--motor <id:rev/s>]
 emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>
 emd spice --netlist <file.cir> --out <log>
 emd artifacts verify <project.json> [--store <dir>]
@@ -116,7 +120,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.13.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.14.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

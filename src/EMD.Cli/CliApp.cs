@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Emd.Adapters;
+using Emd.Adapters.MechMaker;
 using Emd.Core;
 using Emd.Core.Artifacts;
 using Emd.Core.Build;
@@ -43,6 +44,7 @@ public static class CliApp
                 "compile" => Compile(args.Skip(1).ToArray(), stdout, stderr),
                 "package" => Package(args, stdout, stderr),
                 "trace" => TraceCommand.Run(args.Skip(1).ToArray(), stdout, stderr),
+                "simulate" => Simulate(args.Skip(1).ToArray(), stdout, stderr),
                 "build" => Build(args, stdout, stderr),
                 "artifacts" => Artifacts(args, stdout, stderr),
                 _ => UsageError(stderr, $"Unknown command '{args[0]}'.")
@@ -465,6 +467,50 @@ public static class CliApp
         return 0;
     }
 
+    private static int Simulate(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length == 0 || !string.Equals(args[0], "mechmaker", StringComparison.OrdinalIgnoreCase))
+            return UsageError(stderr, "simulate expects the 'mechmaker' subcommand.");
+
+        var serverPath = GetOption(args, "--mechmaker") ?? Environment.GetEnvironmentVariable("MECHMAKER_SERVER");
+        if (string.IsNullOrWhiteSpace(serverPath))
+            return UsageError(stderr, "simulate mechmaker requires --mechmaker <server.dll|exe> or MECHMAKER_SERVER.");
+
+        var catalog = GetOption(args, "--catalog");
+        var workingDirectory = GetOption(args, "--work-dir") ??
+            Path.GetDirectoryName(Path.GetFullPath(serverPath)) ??
+            Directory.GetCurrentDirectory();
+
+        return SimulateAsync(args, stdout, stderr, serverPath, catalog, workingDirectory)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    private static async Task<int> SimulateAsync(
+        string[] args,
+        TextWriter stdout,
+        TextWriter stderr,
+        string serverPath,
+        string? catalog,
+        string workingDirectory)
+    {
+        var environment = new Dictionary<string, string?>();
+        if (!string.IsNullOrWhiteSpace(catalog))
+            environment["MECHMAKER_CATALOG"] = catalog;
+
+        var executable = Path.GetExtension(serverPath).Equals(".dll", StringComparison.OrdinalIgnoreCase)
+            ? "dotnet"
+            : serverPath;
+        var arguments = executable == "dotnet" ? new[] { serverPath } : [];
+
+        await using var client = await MechMakerMcpToolClient.ConnectAsync(
+            executable,
+            arguments,
+            workingDirectory,
+            environment);
+        return await MechMakerSimulateCommand.RunAsync(args, stdout, stderr, client);
+    }
+
     private static int Build(string[] args, TextWriter stdout, TextWriter stderr)
     {
         if (args.Length < 2 || !string.Equals(args[1], "plan", StringComparison.OrdinalIgnoreCase))
@@ -600,6 +646,7 @@ public static class CliApp
         writer.WriteLine("  emd package --project <project.json> --out-dir <dir>");
         writer.WriteLine("  emd package verify --dir <dir>");
         writer.WriteLine("  emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]");
+        writer.WriteLine("  emd simulate mechmaker --machine <machine.json> --out <trace.csv> --mechmaker <server.dll|exe> [--duration <s>] [--motor <id:rev/s>]");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();

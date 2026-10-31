@@ -353,6 +353,9 @@ Examples:
 | `EMD-MECHMAKER-005` | No MechMaker-exportable parts |
 | `EMD-MECHMAKER-010` | MechMaker compilation failed |
 | `EMD-MECHMAKER-011` | Expected MechMaker MJCF output is missing |
+| `EMD-MECHMAKER-020` | MechMaker MCP tool/run failed |
+| `EMD-MECHMAKER-021` | MechMaker status could not be parsed |
+| `EMD-MECHMAKER-022` | MechMaker stop_run failed |
 | `EMD-PACKAGE-001` | Optional package member was omitted |
 | `EMD-PACKAGE-002` | Required package member failed to export |
 | `EMD-PACKAGE-003` | Package manifest is missing or invalid |
@@ -475,6 +478,7 @@ Remaining:
   with round-trip tests. **Done.**
 - Simulation-binding validation against behavior-model variables. **Done.**
 - MechMaker compile adapter and `emd compile mechmaker`. **Done.**
+- Live MechMaker simulation over MCP and `emd simulate mechmaker`. **Done.**
 - Deterministic package bundle and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).
