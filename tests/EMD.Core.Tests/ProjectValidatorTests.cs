@@ -99,6 +99,22 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Net_with_two_motor_phases_is_reported_as_EMD_ELEC_007()
+    {
+        var project = Mutate(root =>
+        {
+            var connection = root["connections"]!.AsArray()
+                .First(c => (string?)c!["key"] == "motor_phase_b");
+            connection!["to"]!["net_id"] = root["electrical"]!["nets"]!.AsArray()
+                .First(n => (string?)n!["key"] == "m1a")!["id"]!.GetValue<string>();
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-007");
+    }
+
+    [Fact]
     public void Valid_example_has_no_motor_topology_warnings()
     {
         var diagnostics = _validator.Validate(LoadExample());

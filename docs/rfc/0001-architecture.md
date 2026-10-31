@@ -318,6 +318,7 @@ Examples:
 | `EMD-MECH-002` | Unreachable pose or joint limit exceeded |
 | `EMD-MECH-003` | Missing mate or floating connector |
 | `EMD-MECH-004` | Invalid joint or simulation-proxy geometry |
+| `EMD-MECH-005` | Non-connected parts are closer than the clearance |
 | `EMD-ART-001` | Referenced artifact is missing |
 | `EMD-ART-002` | Artifact content is missing or corrupt |
 | `EMD-MJCF-001` | MJCF export has no parts |
@@ -330,6 +331,7 @@ Examples:
 | `EMD-ELEC-004` | Electrical/control port is not connected |
 | `EMD-ELEC-005` | Net and port voltage mismatch |
 | `EMD-ELEC-006` | Motor phase has no board/driver endpoint |
+| `EMD-ELEC-007` | Multiple motor phases share one net |
 | `EMD-FW-001` | Firmware pin map incomplete or conflicting |
 | `EMD-FW-002` | Duplicate MCU pin assignment |
 | `EMD-FW-003` | Firmware pin is not connected to its mapped net |
@@ -432,9 +434,9 @@ Implemented:
   hinge/slide/ball/free joints, motors, and diagnostics.
 - Starter FreeCAD JSON-RPC adapter (`adapters/python`) exporting STEP/STL and a
   CAD manifest from bounding-box proxies.
-- Interference and joint-limit checks: oriented-box SAT, box/sphere and
-  sphere/sphere penetration, explicit-mate/joint overlap exemptions, and
-  slide/hinge ranges.
+- Interference, clearance, and joint-limit checks: oriented-box SAT,
+  box/sphere and sphere/sphere penetration/separation, explicit-mate/joint
+  exemptions, and slide/hinge ranges.
 - CLI: `import freecad-manifest` and `export mjcf`.
 
 Remaining:
@@ -442,7 +444,7 @@ Remaining:
 - A richer FreeCAD property scheme or workbench export (real connector frames,
   materials, BOM, per-feature geometry).
 - CadQuery catalog part generation.
-- Reachability/clearance sweeps and board outline/holes from KiCad STEP.
+- Reachability sweeps and board outline/holes from KiCad STEP.
 
 ### P2 — Electrical vertical slice — in progress
 
@@ -458,7 +460,7 @@ Implemented:
   ports; `emd import kicad-pcb`.
 - Cross-domain ERC: unconnected electrical/control ports, duplicate MCU pins,
   duplicate refdes, net/port voltage mismatch, firmware pin-to-net
-  connectivity, and basic motor phase-to-board topology.
+  connectivity, and basic motor phase topology (board endpoints and shared nets).
 
 Remaining:
 

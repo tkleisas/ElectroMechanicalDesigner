@@ -283,6 +283,32 @@ public sealed class ProjectValidator
         }
 
         var netEndpoints = BuildNetEndpoints(project);
+        var partsById = new Dictionary<Guid, Part>();
+        foreach (var part in project.Parts)
+            partsById.TryAdd(part.Id, part);
+        var motorPartIds = project.Parts
+            .Where(part => part.Category == PartCategory.Motor)
+            .Select(part => part.Id)
+            .ToHashSet();
+
+        foreach (var (netId, endpoints) in netEndpoints)
+        {
+            var motorPhases = endpoints.Count(endpoint =>
+                motorPartIds.Contains(endpoint.PartId) &&
+                partsById.TryGetValue(endpoint.PartId, out var part) &&
+                part.Ports.Any(port => port.Id == endpoint.PortId && port.Domain == PortDomain.Electrical));
+
+            if (motorPhases > 1)
+            {
+                var netName = project.Electrical?.Nets.FirstOrDefault(net => net.Id == netId)?.Key
+                    ?? netId.ToString();
+                diagnostics.Add(new Diagnostic(
+                    "EMD-ELEC-007",
+                    DiagnosticSeverity.Warning,
+                    $"Net '{netName}' connects {motorPhases} motor phases; expected one motor per phase net.",
+                    Entity: netName));
+            }
+        }
 
         foreach (var part in project.Parts)
         {

@@ -40,6 +40,7 @@ public sealed class MechanicalValidator
         }
 
         var tolerance = InterferenceToleranceMeters(project);
+        var clearance = ClearanceToleranceMeters(project);
 
         for (var i = 0; i < bounds.Count; i++)
         {
@@ -51,14 +52,29 @@ public sealed class MechanicalValidator
                     continue;
 
                 var penetration = CollisionMath.Penetration(a.Bounds, b.Bounds);
-                if (penetration <= tolerance + 1e-12)
+                if (penetration > tolerance + 1e-12)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-MECH-001",
+                        DiagnosticSeverity.Error,
+                        $"Parts '{Entity(a.Part)}' and '{Entity(b.Part)}' interfere by {penetration * 1000:0.###} mm.",
+                        Entity: $"{Entity(a.Part)}|{Entity(b.Part)}"));
+                    continue;
+                }
+
+                if (clearance <= 0)
                     continue;
 
-                diagnostics.Add(new Diagnostic(
-                    "EMD-MECH-001",
-                    DiagnosticSeverity.Error,
-                    $"Parts '{Entity(a.Part)}' and '{Entity(b.Part)}' interfere by {penetration * 1000:0.###} mm.",
-                    Entity: $"{Entity(a.Part)}|{Entity(b.Part)}"));
+                var separation = CollisionMath.Separation(a.Bounds, b.Bounds);
+                if (separation > 0 && separation < clearance)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-MECH-005",
+                        DiagnosticSeverity.Warning,
+                        $"Parts '{Entity(a.Part)}' and '{Entity(b.Part)}' are {separation * 1000:0.###} mm apart; " +
+                        $"clearance is {clearance * 1000:0.###} mm.",
+                        Entity: $"{Entity(a.Part)}|{Entity(b.Part)}"));
+                }
             }
         }
 
@@ -161,6 +177,23 @@ public sealed class MechanicalValidator
         }
         else if (project.Mechanical?.Tolerances is { } mechanical &&
                  mechanical.TryGetValue("interference_mm", out var fromMechanical))
+        {
+            millimeters = fromMechanical;
+        }
+
+        return millimeters / 1000.0;
+    }
+
+    private static double ClearanceToleranceMeters(EmdProject project)
+    {
+        var millimeters = 0.5;
+        if (project.Validation?.Tolerances is { } validation &&
+            validation.TryGetValue("clearance_mm", out var fromValidation))
+        {
+            millimeters = fromValidation;
+        }
+        else if (project.Mechanical?.Tolerances is { } mechanical &&
+                 mechanical.TryGetValue("clearance_mm", out var fromMechanical))
         {
             millimeters = fromMechanical;
         }

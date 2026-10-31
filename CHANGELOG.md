@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-31
+
+### Added
+
+- Shared motor phase net warning (`EMD-ELEC-007`).
+- Clearance warning (`EMD-MECH-005`) for non-connected parts within
+  `clearance_mm`, with box/sphere and sphere/sphere separation.
+
 ## [0.10.0] - 2026-10-31
 
 ### Added
@@ -141,7 +149,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.11.0
 [0.10.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.10.0
 [0.9.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.9.0
 [0.8.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.8.0

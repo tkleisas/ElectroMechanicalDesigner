@@ -82,6 +82,62 @@ public class MechanicalValidatorTests
     }
 
     [Fact]
+    public void Close_unconnected_parts_report_EMD_MECH_005()
+    {
+        var first = Sphere("first", [0, 0, 0], 0.1);
+        var second = Sphere("second", [0.25, 0, 0], 0.1);
+
+        var diagnostics = MechanicalValidator.Default.Validate(
+            Project(first, second, clearanceMm: 100));
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-005");
+    }
+
+    [Fact]
+    public void Clearance_tolerance_suppresses_the_warning()
+    {
+        var first = Sphere("first", [0, 0, 0], 0.1);
+        var second = Sphere("second", [0.25, 0, 0], 0.1);
+
+        var diagnostics = MechanicalValidator.Default.Validate(
+            Project(first, second, clearanceMm: 10));
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-005");
+    }
+
+    [Fact]
+    public void Connected_parts_do_not_report_clearance()
+    {
+        var first = Sphere("first", [0, 0, 0], 0.1);
+        var second = Sphere("second", [0.25, 0, 0], 0.1);
+        var connection = new Connection
+        {
+            Id = Guid.NewGuid(),
+            Kind = ConnectionKind.Mate,
+            From = new Endpoint { PartId = first.Id },
+            To = new Endpoint { PartId = second.Id }
+        };
+
+        var diagnostics = MechanicalValidator.Default.Validate(
+            Project(first, second, connections: [connection], clearanceMm: 100));
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-005");
+    }
+
+    [Fact]
+    public void Overlapping_parts_report_interference_not_clearance()
+    {
+        var first = Sphere("first", [0, 0, 0], 0.1);
+        var second = Sphere("second", [0.05, 0, 0], 0.1);
+
+        var diagnostics = MechanicalValidator.Default.Validate(
+            Project(first, second, clearanceMm: 100));
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-005");
+    }
+
+    [Fact]
     public void Sphere_and_box_interference_is_detected()
     {
         var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
@@ -192,20 +248,27 @@ public class MechanicalValidatorTests
         Part second,
         MechanicalSection? mechanical = null,
         IEnumerable<Connection>? connections = null,
-        double? interferenceMm = null) => new()
+        double? interferenceMm = null,
+        double? clearanceMm = null)
+    {
+        var tolerances = new Dictionary<string, double>();
+        if (interferenceMm is not null)
+            tolerances["interference_mm"] = interferenceMm.Value;
+        if (clearanceMm is not null)
+            tolerances["clearance_mm"] = clearanceMm.Value;
+
+        return new EmdProject
         {
             Id = Guid.NewGuid(),
             Name = "mechanical test",
             Parts = [first, second],
             Connections = connections?.ToList() ?? [],
             Mechanical = mechanical ?? new MechanicalSection { AssemblyRootPartId = first.Id },
-            Validation = interferenceMm is null
+            Validation = tolerances.Count == 0
                 ? null
-                : new ValidationSection
-                {
-                    Tolerances = new Dictionary<string, double> { ["interference_mm"] = interferenceMm.Value }
-                }
+                : new ValidationSection { Tolerances = tolerances }
         };
+    }
 
     private static Part Box(string key, double[] pos, double[] size, double[]? rot = null) => new()
     {
