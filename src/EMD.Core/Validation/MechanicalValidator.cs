@@ -78,6 +78,8 @@ public sealed class MechanicalValidator
             }
         }
 
+        ValidateSlideSweeps(project, allowedPairs, tolerance, diagnostics);
+
         var partsById = new Dictionary<Guid, Part>();
         foreach (var part in project.Parts)
             partsById.TryAdd(part.Id, part);
@@ -100,6 +102,87 @@ public sealed class MechanicalValidator
         }
 
         return diagnostics;
+    }
+
+    private static void ValidateSlideSweeps(
+        EmdProject project,
+        HashSet<(Guid, Guid)> allowedPairs,
+        double interferenceTolerance,
+        List<Diagnostic> diagnostics)
+    {
+        var partsById = new Dictionary<Guid, Part>();
+        foreach (var part in project.Parts)
+            partsById.TryAdd(part.Id, part);
+
+        var boundsById = new Dictionary<Guid, PartBounds>();
+        foreach (var part in project.Parts)
+        {
+            if (PartGeometryBounds.TryCreate(part, out var bounds))
+                boundsById[part.Id] = bounds;
+        }
+
+        foreach (var joint in project.Mechanical?.Joints ?? [])
+        {
+            if (joint.Type != MechanicalJointType.Slide ||
+                joint.Range is not { Length: 2 } range ||
+                joint.Axis is not { Length: 3 } axisValues)
+            {
+                continue;
+            }
+
+            if (!partsById.TryGetValue(joint.ParentPartId, out var parent) ||
+                !partsById.TryGetValue(joint.ChildPartId, out var child) ||
+                !boundsById.TryGetValue(parent.Id, out var parentBounds) ||
+                !boundsById.TryGetValue(child.Id, out var childBounds))
+            {
+                continue;
+            }
+
+            var axisLocal = ToVec(axisValues).Normalized();
+            if (axisLocal.Length < 1e-12)
+                continue;
+
+            var parentPose = parent.Pose ?? new Pose();
+            var childPose = child.Pose ?? new Pose();
+            var relative = PoseMath.Relative(parentPose, childPose);
+            var current = Vec3d.Dot(ToVec(relative.Pos) - ToVec(joint.Anchor?.Pos), axisLocal);
+            var axisWorld = Mat3.FromEulerXyzDegrees(parentPose.Rot) * axisLocal;
+            var reported = new HashSet<Guid>();
+            const int samples = 10;
+
+            for (var index = 0; index <= samples; index++)
+            {
+                var coordinate = range[0] + (range[1] - range[0]) * index / samples;
+                var moved = childBounds with
+                {
+                    Center = childBounds.Center + (coordinate - current) * axisWorld
+                };
+
+                foreach (var other in boundsById)
+                {
+                    if (other.Key == parent.Id ||
+                        other.Key == child.Id ||
+                        allowedPairs.Contains((child.Id, other.Key)) ||
+                        !partsById.TryGetValue(other.Key, out var otherPart))
+                    {
+                        continue;
+                    }
+
+                    var penetration = CollisionMath.Penetration(moved, other.Value);
+                    if (penetration <= interferenceTolerance + 1e-12 || !reported.Add(other.Key))
+                        continue;
+
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-MECH-006",
+                        DiagnosticSeverity.Warning,
+                        $"Slide joint '{Entity(joint)}' sweeps child '{Entity(child)}' into part " +
+                        $"'{Entity(otherPart)}' at {coordinate * 1000:0.###} mm.",
+                        Entity: Entity(joint)));
+                }
+            }
+
+            _ = parentBounds;
+        }
     }
 
     private static void CheckSlide(

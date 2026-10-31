@@ -138,6 +138,67 @@ public class MechanicalValidatorTests
     }
 
     [Fact]
+    public void Slide_sweep_detects_an_obstacle_in_the_path()
+    {
+        var project = SlideSweepProject(obstaclePosition: [0.4, 0, 0]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-006");
+    }
+
+    [Fact]
+    public void Slide_sweep_ignores_an_obstacle_outside_the_path()
+    {
+        var project = SlideSweepProject(obstaclePosition: [0.4, 0.3, 0]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-006");
+    }
+
+    [Fact]
+    public void Slide_sweep_ignores_parts_connected_to_the_child()
+    {
+        var parent = Box("parent", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var child = Box("child", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var obstacle = Box("obstacle", [0.4, 0, 0], [0.1, 0.1, 0.1]);
+        var joint = new MechanicalJoint
+        {
+            Id = Guid.NewGuid(),
+            Key = "x_slide",
+            Type = MechanicalJointType.Slide,
+            ParentPartId = parent.Id,
+            ChildPartId = child.Id,
+            Axis = [1, 0, 0],
+            Range = [0, 0.5]
+        };
+        var connection = new Connection
+        {
+            Id = Guid.NewGuid(),
+            Kind = ConnectionKind.Mate,
+            From = new Endpoint { PartId = child.Id },
+            To = new Endpoint { PartId = obstacle.Id }
+        };
+        var project = new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "sweep connected",
+            Parts = [parent, child, obstacle],
+            Connections = [connection],
+            Mechanical = new MechanicalSection
+            {
+                AssemblyRootPartId = parent.Id,
+                Joints = [joint]
+            }
+        };
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-006");
+    }
+
+    [Fact]
     public void Sphere_and_box_interference_is_detected()
     {
         var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
@@ -241,6 +302,35 @@ public class MechanicalValidatorTests
         var diagnostics = ProjectValidator.Default.Validate(Project(frame, motor));
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    private static EmdProject SlideSweepProject(double[] obstaclePosition)
+    {
+        var parent = Box("parent", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var child = Box("child", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var obstacle = Box("obstacle", obstaclePosition, [0.1, 0.1, 0.1]);
+        var joint = new MechanicalJoint
+        {
+            Id = Guid.NewGuid(),
+            Key = "x_slide",
+            Type = MechanicalJointType.Slide,
+            ParentPartId = parent.Id,
+            ChildPartId = child.Id,
+            Axis = [1, 0, 0],
+            Range = [0, 0.5]
+        };
+
+        return new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "sweep",
+            Parts = [parent, child, obstacle],
+            Mechanical = new MechanicalSection
+            {
+                AssemblyRootPartId = parent.Id,
+                Joints = [joint]
+            }
+        };
     }
 
     private static EmdProject Project(

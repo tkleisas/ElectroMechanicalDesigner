@@ -13,8 +13,8 @@ BOM/Gerbers/STEP), KiCad PCB outline/mounting-hole import, an ngspice batch
 adapter, WireViz harness export, a round-trippable MechMaker machine exporter,
 and cross-domain ERC checks (refdes uniqueness, net/port voltages, firmware
 pin-to-net connectivity), simulation-binding validation, and a MechMaker
-compile hand-off, trace-assertion checking, motor phase topology, clearance checks, and a verifiable design/manufacturing
-package bundle. The suite has 182 xUnit tests and 10 Python adapter tests.
+compile hand-off, trace-assertion checking, motor phase topology, clearance checks, slide motion sweeps, and a verifiable design/manufacturing
+package bundle. The suite has 185 xUnit tests and 10 Python adapter tests.
 
 ## Principle
 
@@ -116,7 +116,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.11.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.12.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
