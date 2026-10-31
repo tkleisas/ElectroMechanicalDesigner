@@ -479,6 +479,7 @@ Remaining:
 - Simulation-binding validation against behavior-model variables. **Done.**
 - MechMaker compile adapter and `emd compile mechmaker`. **Done.**
 - Live MechMaker simulation over MCP and `emd simulate mechmaker`. **Done.**
+- Project → machine.json → live run → trace → scenario assertion loop. **Done.**
 - Deterministic package bundle and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).

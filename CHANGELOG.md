@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.14.0] - 2026-10-31
+## [0.15.0] - 2026-10-31
 
 ### Added
 
 - MechMaker MCP simulation adapter and `emd simulate mechmaker`: opens a
   machine, starts a run, commands motors, records status traces, and stops the
   run (`EMD-MECHMAKER-020`/`021`/`022`).
+- Project-driven simulation: `--project` exports `machine.json` automatically;
+  `--scenario` evaluates the recorded trace against EMD scenario assertions.
 - Locale-tolerant MechMaker status parsing.
 
 ## [0.13.0] - 2026-10-31
@@ -171,7 +173,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.15.0
 [0.14.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.14.0
 [0.13.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.13.0
 [0.12.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.12.0
