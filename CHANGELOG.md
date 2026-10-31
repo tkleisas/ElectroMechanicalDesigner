@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-31
+
+### Added
+
+- Project differ and `emd diff`: added/removed/changed parts, connections,
+  artifacts, nets, boards, joints, firmware, behavior models, simulation
+  systems, scenarios, and manufacturing processes.
+
 ## [0.15.0] - 2026-10-31
 
 ### Added
@@ -173,7 +181,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.16.0
 [0.15.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.15.0
 [0.14.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.14.0
 [0.13.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.13.0

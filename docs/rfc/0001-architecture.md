@@ -375,6 +375,9 @@ Examples:
 | `EMD-MFG-001` | Manufacturing output missing or stale |
 | `EMD-BOM-001` | BOM/refdes mismatch |
 
+Project diffing (`emd diff`) reports added/removed/changed entities across all
+domains by stable UUID.
+
 Cross-domain queries answer: "What breaks if I move this motor?", "Which
 firmware pins are affected by this net rename?", "Which parts are not
 manufacturable?"

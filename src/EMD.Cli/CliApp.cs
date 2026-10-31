@@ -4,6 +4,7 @@ using Emd.Adapters.MechMaker;
 using Emd.Core;
 using Emd.Core.Artifacts;
 using Emd.Core.Build;
+using Emd.Core.Diff;
 using Emd.Core.Diagnostics;
 using Emd.Core.Exporters;
 using Emd.Core.Importers;
@@ -44,6 +45,7 @@ public static class CliApp
                 "compile" => Compile(args.Skip(1).ToArray(), stdout, stderr),
                 "package" => Package(args, stdout, stderr),
                 "trace" => TraceCommand.Run(args.Skip(1).ToArray(), stdout, stderr),
+                "diff" => Diff(args, stdout, stderr),
                 "simulate" => Simulate(args.Skip(1).ToArray(), stdout, stderr),
                 "build" => Build(args, stdout, stderr),
                 "artifacts" => Artifacts(args, stdout, stderr),
@@ -511,6 +513,47 @@ public static class CliApp
         return await MechMakerSimulateCommand.RunAsync(args, stdout, stderr, client);
     }
 
+    private static int Diff(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var beforePath = GetOption(args, "--before");
+        var afterPath = GetOption(args, "--after");
+        if (string.IsNullOrWhiteSpace(beforePath) || string.IsNullOrWhiteSpace(afterPath))
+            return UsageError(stderr, "diff requires --before <project.json> and --after <project.json>.");
+
+        var before = ProjectLoader.Default.LoadFile(beforePath);
+        var after = ProjectLoader.Default.LoadFile(afterPath);
+        PrintDiagnostics(before.Diagnostics, stderr);
+        PrintDiagnostics(after.Diagnostics, stderr);
+        if (before.Project is null || after.Project is null)
+            return 1;
+
+        var diff = ProjectDiffer.Default.Compare(before.Project, after.Project);
+        if (args.Contains("--json"))
+        {
+            stdout.WriteLine(JsonSerializer.Serialize(diff.Changes, CoreJson.Options));
+            return 0;
+        }
+
+        if (!diff.HasChanges)
+        {
+            stdout.WriteLine("no changes");
+            return 0;
+        }
+
+        foreach (var change in diff.Changes)
+        {
+            var name = change.Key ?? change.Id;
+            var detail = change.Kind == "changed"
+                ? $": {change.Before} -> {change.After}"
+                : change.After is not null
+                    ? $": {change.After}"
+                    : $": {change.Before}";
+            stdout.WriteLine($"{change.Kind} {change.EntityType} {name}{detail}");
+        }
+
+        return 0;
+    }
+
     private static int Build(string[] args, TextWriter stdout, TextWriter stderr)
     {
         if (args.Length < 2 || !string.Equals(args[1], "plan", StringComparison.OrdinalIgnoreCase))
@@ -647,6 +690,7 @@ public static class CliApp
         writer.WriteLine("  emd package verify --dir <dir>");
         writer.WriteLine("  emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]");
         writer.WriteLine("  emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--duration <s>] [--motor <id:rev/s>]");
+        writer.WriteLine("  emd diff --before <project.json> --after <project.json> [--json]");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();

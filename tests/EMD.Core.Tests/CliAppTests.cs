@@ -217,6 +217,41 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Diff_reports_an_added_part()
+    {
+        using var temp = new TempDirectory();
+        var beforePath = Path.Combine(temp.Path, "before.json");
+        var afterPath = Path.Combine(temp.Path, "after.json");
+        var loaded = ProjectLoader.Default.LoadFile(TestPaths.ExampleProject);
+        var before = loaded.Project!;
+        var after = before with
+        {
+            Parts =
+            [
+                .. before.Parts,
+                new Part
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "extra",
+                    Name = "Extra",
+                    Kind = PartKind.Component,
+                    Ports = []
+                }
+            ]
+        };
+        ProjectWriter.Save(before, beforePath);
+        ProjectWriter.Save(after, afterPath);
+
+        var (exitCode, stdout, stderr) = Run(
+            "diff", "--before", beforePath, "--after", afterPath);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("added part", stdout, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("extra", stdout, StringComparison.OrdinalIgnoreCase);
+        Assert.True(string.IsNullOrEmpty(stderr), stderr);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();
