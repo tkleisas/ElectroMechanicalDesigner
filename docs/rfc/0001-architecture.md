@@ -350,6 +350,11 @@ Examples:
 | `EMD-MECHMAKER-011` | Expected MechMaker MJCF output is missing |
 | `EMD-PACKAGE-001` | Optional package member was omitted |
 | `EMD-PACKAGE-002` | Required package member failed to export |
+| `EMD-PACKAGE-003` | Package manifest is missing or invalid |
+| `EMD-PACKAGE-004` | Package member is missing |
+| `EMD-PACKAGE-005` | Package member hash/size mismatch |
+| `EMD-PACKAGE-006` | Package contains an unlisted file |
+| `EMD-PACKAGE-007` | Package member escapes the package directory |
 | `EMD-SIM-001` | Unbound FMU port or unit mismatch |
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
 | `EMD-SIM-003` | Simulation binding references an undeclared variable |
@@ -459,7 +464,7 @@ Remaining:
   with round-trip tests. **Done.**
 - Simulation-binding validation against behavior-model variables. **Done.**
 - MechMaker compile adapter and `emd compile mechmaker`. **Done.**
-- Deterministic package bundle (`emd package`). **Done.**
+- Deterministic package bundle and verifier (`emd package`, `emd package verify`). **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
 - SSP composition + OMSimulator/FMPy; record/replay; assertions.

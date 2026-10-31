@@ -184,6 +184,23 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Package_verify_accepts_a_bundle()
+    {
+        using var temp = new TempDirectory();
+        var outputDir = Path.Combine(temp.Path, "package");
+
+        var (packageExit, _, packageError) = Run(
+            "package", "--project", TestPaths.ExampleProject, "--out-dir", outputDir);
+        Assert.Equal(0, packageExit);
+
+        var (verifyExit, stdout, stderr) = Run("package", "verify", "--dir", outputDir);
+
+        Assert.Equal(0, verifyExit);
+        Assert.Contains("verified package:", stdout, StringComparison.OrdinalIgnoreCase);
+        Assert.True(string.IsNullOrEmpty(stderr), packageError + stderr);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

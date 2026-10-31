@@ -7,6 +7,7 @@ using Emd.Core.Diagnostics;
 using Emd.Core.Exporters;
 using Emd.Core.Importers;
 using Emd.Core.Model;
+using Emd.Core.Packaging;
 using Emd.Core.Projects;
 using Emd.Core.Validation;
 
@@ -415,6 +416,9 @@ public static class CliApp
 
     private static int Package(string[] args, TextWriter stdout, TextWriter stderr)
     {
+        if (args.Length > 1 && string.Equals(args[1], "verify", StringComparison.OrdinalIgnoreCase))
+            return VerifyPackage(args, stdout, stderr);
+
         var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
         if (string.IsNullOrWhiteSpace(projectPath))
             return UsageError(stderr, "package requires --project <project.json>.");
@@ -443,6 +447,21 @@ public static class CliApp
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
             : 0;
+    }
+
+    private static int VerifyPackage(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var directory = GetOption(args, "--dir") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(directory))
+            return UsageError(stderr, "package verify requires --dir <dir>.");
+
+        var result = PackageVerifier.Default.VerifyDirectory(directory);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (!result.IsValid)
+            return 1;
+
+        stdout.WriteLine($"verified package: {directory}");
+        return 0;
     }
 
     private static int Build(string[] args, TextWriter stdout, TextWriter stderr)
@@ -578,6 +597,7 @@ public static class CliApp
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");
         writer.WriteLine("  emd package --project <project.json> --out-dir <dir>");
+        writer.WriteLine("  emd package verify --dir <dir>");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();
