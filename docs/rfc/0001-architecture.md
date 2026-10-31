@@ -348,6 +348,7 @@ Examples:
 | `EMD-MECHMAKER-005` | No MechMaker-exportable parts |
 | `EMD-SIM-001` | Unbound FMU port or unit mismatch |
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
+| `EMD-SIM-003` | Simulation binding references an undeclared variable |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
 | `EMD-BOM-001` | BOM/refdes mismatch |
 
@@ -452,6 +453,7 @@ Remaining:
 
 - EMD→MechMaker `machine.json` exporter: catalog parts, mates, boards, wiring,
   with round-trip tests. **Done.**
+- Simulation-binding validation against behavior-model variables. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
 - SSP composition + OMSimulator/FMPy; record/replay; assertions.

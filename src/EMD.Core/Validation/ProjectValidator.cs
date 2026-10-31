@@ -36,6 +36,7 @@ public sealed class ProjectValidator
         ValidateFirmware(project, parts, nets, artifacts, diagnostics);
         ValidateBehavior(project, parts, artifacts, diagnostics);
         ValidateSimulation(project, connections, artifacts, diagnostics);
+        ValidateSimulationBindings(project, diagnostics);
         ValidateManufacturing(project, parts, artifacts, diagnostics);
         diagnostics.AddRange(MechanicalValidator.Default.Validate(project));
 
@@ -655,6 +656,49 @@ public sealed class ProjectValidator
 
         foreach (var scenario in project.Simulation?.Scenarios ?? [])
             RequireArtifact(scenario.ArtifactId, artifacts, $"Scenario '{Entity(scenario)}'", diagnostics);
+    }
+
+    private static void ValidateSimulationBindings(
+        EmdProject project,
+        List<Diagnostic> diagnostics)
+    {
+        var declared = new HashSet<(Guid ArtifactId, string Variable)>();
+        foreach (var model in project.Behavior?.Models ?? [])
+        {
+            foreach (var port in (model.Inputs ?? []).Concat(model.Outputs ?? []))
+            {
+                if (!string.IsNullOrWhiteSpace(port.Variable))
+                    declared.Add((model.ArtifactId, port.Variable));
+            }
+        }
+
+        foreach (var connection in project.Connections)
+        {
+            if (connection.Kind != ConnectionKind.SimulationBinding)
+                continue;
+
+            Check(connection, connection.From);
+            Check(connection, connection.To);
+        }
+
+        void Check(Connection connection, Endpoint endpoint)
+        {
+            if (endpoint.ArtifactId is not { } artifactId ||
+                string.IsNullOrWhiteSpace(endpoint.Variable))
+            {
+                return;
+            }
+
+            if (declared.Contains((artifactId, endpoint.Variable)))
+                return;
+
+            diagnostics.Add(new Diagnostic(
+                "EMD-SIM-003",
+                DiagnosticSeverity.Error,
+                $"Simulation binding '{connection.Key ?? connection.Id.ToString()}' references " +
+                $"undeclared variable '{endpoint.Variable}' for artifact '{artifactId}'.",
+                Entity: connection.Key ?? connection.Id.ToString()));
+        }
     }
 
     private static void ValidateManufacturing(

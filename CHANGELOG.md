@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-31
+
+### Added
+
+- Simulation-binding variable validation (`EMD-SIM-003`): bindings must point at
+  an input/output variable declared by a behavior model for the same artifact.
+
 ## [0.6.0] - 2026-10-31
 
 ### Added
@@ -107,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.7.0
 [0.6.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.6.0
 [0.5.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.5.0
 [0.4.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.4.0

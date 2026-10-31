@@ -147,6 +147,21 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Simulation_binding_to_undeclared_variable_is_reported_as_EMD_SIM_003()
+    {
+        var project = Mutate(root =>
+        {
+            var binding = root["connections"]!.AsArray()
+                .First(c => (string?)c!["key"] == "motor_shaft_twin");
+            binding!["to"]!["variable"] = "missing.angle";
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-SIM-003");
+    }
+
+    [Fact]
     public void Simulation_system_with_unknown_binding_is_reported_as_EMD_SIM_001()
     {
         var project = Mutate(root =>
