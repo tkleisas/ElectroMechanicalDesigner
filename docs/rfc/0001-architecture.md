@@ -320,6 +320,7 @@ Examples:
 | `EMD-MECH-004` | Invalid joint or simulation-proxy geometry |
 | `EMD-MECH-005` | Non-connected parts are closer than the clearance |
 | `EMD-MECH-006` | Slide-joint motion sweep collides with another part |
+| `EMD-MECH-007` | Hinge-joint motion sweep collides with another part |
 | `EMD-ART-001` | Referenced artifact is missing |
 | `EMD-ART-002` | Artifact content is missing or corrupt |
 | `EMD-MJCF-001` | MJCF export has no parts |
@@ -437,7 +438,7 @@ Implemented:
   CAD manifest from bounding-box proxies.
 - Interference, clearance, motion-sweep, and joint-limit checks: oriented-box
   SAT, box/sphere and sphere/sphere penetration/separation, explicit-mate/joint
-  exemptions, slide-joint range sampling, and slide/hinge ranges.
+  exemptions, slide/hinge range sampling, and slide/hinge ranges.
 - CLI: `import freecad-manifest` and `export mjcf`.
 
 Remaining:
@@ -445,7 +446,7 @@ Remaining:
 - A richer FreeCAD property scheme or workbench export (real connector frames,
   materials, BOM, per-feature geometry).
 - CadQuery catalog part generation.
-- Hinge motion sweeps and board outline/holes from KiCAD STEP.
+- Full swept-volume checks and board outline/holes from KiCAD STEP.
 
 ### P2 — Electrical vertical slice — in progress
 

@@ -199,6 +199,36 @@ public class MechanicalValidatorTests
     }
 
     [Fact]
+    public void Hinge_sweep_detects_an_obstacle_in_the_path()
+    {
+        var project = HingeSweepProject(obstaclePosition: [0, 0.3, 0]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-007");
+    }
+
+    [Fact]
+    public void Hinge_sweep_ignores_an_obstacle_outside_the_path()
+    {
+        var project = HingeSweepProject(obstaclePosition: [0.6, 0.6, 0]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-007");
+    }
+
+    [Fact]
+    public void Hinge_sweep_ignores_parts_connected_to_the_child()
+    {
+        var project = HingeSweepProject(obstaclePosition: [0, 0.3, 0], connectObstacle: true);
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-007");
+    }
+
+    [Fact]
     public void Sphere_and_box_interference_is_detected()
     {
         var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
@@ -302,6 +332,50 @@ public class MechanicalValidatorTests
         var diagnostics = ProjectValidator.Default.Validate(Project(frame, motor));
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    private static EmdProject HingeSweepProject(
+        double[] obstaclePosition,
+        bool connectObstacle = false)
+    {
+        var parent = Box("parent", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var child = Box("child", [0.2, 0, 0], [0.4, 0.1, 0.1]);
+        var obstacle = Box("obstacle", obstaclePosition, [0.1, 0.1, 0.1]);
+        var joint = new MechanicalJoint
+        {
+            Id = Guid.NewGuid(),
+            Key = "z_hinge",
+            Type = MechanicalJointType.Hinge,
+            ParentPartId = parent.Id,
+            ChildPartId = child.Id,
+            Axis = [0, 0, 1],
+            Range = [0, 90],
+            Anchor = new Pose { Pos = [0, 0, 0] }
+        };
+        var connections = new List<Connection>();
+        if (connectObstacle)
+        {
+            connections.Add(new Connection
+            {
+                Id = Guid.NewGuid(),
+                Kind = ConnectionKind.Mate,
+                From = new Endpoint { PartId = child.Id },
+                To = new Endpoint { PartId = obstacle.Id }
+            });
+        }
+
+        return new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "hinge sweep",
+            Parts = [parent, child, obstacle],
+            Connections = connections,
+            Mechanical = new MechanicalSection
+            {
+                AssemblyRootPartId = parent.Id,
+                Joints = [joint]
+            }
+        };
     }
 
     private static EmdProject SlideSweepProject(double[] obstaclePosition)

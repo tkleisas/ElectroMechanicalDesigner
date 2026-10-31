@@ -79,6 +79,7 @@ public sealed class MechanicalValidator
         }
 
         ValidateSlideSweeps(project, allowedPairs, tolerance, diagnostics);
+        ValidateHingeSweeps(project, allowedPairs, tolerance, diagnostics);
 
         var partsById = new Dictionary<Guid, Part>();
         foreach (var part in project.Parts)
@@ -185,6 +186,114 @@ public sealed class MechanicalValidator
         }
     }
 
+    private static void ValidateHingeSweeps(
+        EmdProject project,
+        HashSet<(Guid, Guid)> allowedPairs,
+        double interferenceTolerance,
+        List<Diagnostic> diagnostics)
+    {
+        var partsById = new Dictionary<Guid, Part>();
+        foreach (var part in project.Parts)
+            partsById.TryAdd(part.Id, part);
+
+        var boundsById = new Dictionary<Guid, PartBounds>();
+        foreach (var part in project.Parts)
+        {
+            if (PartGeometryBounds.TryCreate(part, out var bounds))
+                boundsById[part.Id] = bounds;
+        }
+
+        foreach (var joint in project.Mechanical?.Joints ?? [])
+        {
+            if (joint.Type != MechanicalJointType.Hinge ||
+                joint.Range is not { Length: 2 } range ||
+                joint.Axis is not { Length: 3 } axisValues)
+            {
+                continue;
+            }
+
+            if (!partsById.TryGetValue(joint.ParentPartId, out var parent) ||
+                !partsById.TryGetValue(joint.ChildPartId, out var child) ||
+                !boundsById.TryGetValue(child.Id, out var childBounds))
+            {
+                continue;
+            }
+
+            var axisLocal = ToVec(axisValues).Normalized();
+            if (axisLocal.Length < 1e-12)
+                continue;
+
+            var parentPose = parent.Pose ?? new Pose();
+            var childPose = child.Pose ?? new Pose();
+            var parentRotation = Mat3.FromEulerXyzDegrees(parentPose.Rot);
+            var childRotation = Mat3.FromEulerXyzDegrees(childPose.Rot);
+            var currentAngle = SignedAngleAboutAxis(parentRotation.Transpose() * childRotation, axisLocal);
+            var anchorWorld = ToVec(parentPose.Pos) + parentRotation * ToVec(joint.Anchor?.Pos);
+            var axisWorld = parentRotation * axisLocal;
+            var reported = new HashSet<Guid>();
+            const int samples = 10;
+
+            for (var index = 0; index <= samples; index++)
+            {
+                var angle = range[0] + (range[1] - range[0]) * index / samples;
+                var rotation = RotationAboutAxis(axisWorld, (angle - currentAngle) * Math.PI / 180);
+                var moved = childBounds with
+                {
+                    Center = anchorWorld + rotation * (childBounds.Center - anchorWorld),
+                    Rotation = rotation * childBounds.Rotation
+                };
+
+                foreach (var other in boundsById)
+                {
+                    if (other.Key == parent.Id ||
+                        other.Key == child.Id ||
+                        allowedPairs.Contains((child.Id, other.Key)) ||
+                        !partsById.TryGetValue(other.Key, out var otherPart))
+                    {
+                        continue;
+                    }
+
+                    var penetration = CollisionMath.Penetration(moved, other.Value);
+                    if (penetration <= interferenceTolerance + 1e-12 || !reported.Add(other.Key))
+                        continue;
+
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-MECH-007",
+                        DiagnosticSeverity.Warning,
+                        $"Hinge joint '{Entity(joint)}' sweeps child '{Entity(child)}' into part " +
+                        $"'{Entity(otherPart)}' at {angle:0.###} deg.",
+                        Entity: Entity(joint)));
+                }
+            }
+        }
+    }
+
+    private static Mat3 RotationAboutAxis(Vec3d axis, double radians)
+    {
+        var unit = axis.Normalized();
+        var c = Math.Cos(radians);
+        var s = Math.Sin(radians);
+        var t = 1 - c;
+        var x = unit.X;
+        var y = unit.Y;
+        var z = unit.Z;
+
+        return new Mat3(
+            t * x * x + c, t * x * y - s * z, t * x * z + s * y,
+            t * x * y + s * z, t * y * y + c, t * y * z - s * x,
+            t * x * z - s * y, t * y * z + s * x, t * z * z + c);
+    }
+
+    private static double SignedAngleAboutAxis(Mat3 relative, Vec3d axis)
+    {
+        var sin = 0.5 * (
+            (relative.M21 - relative.M12) * axis.X +
+            (relative.M02 - relative.M20) * axis.Y +
+            (relative.M10 - relative.M01) * axis.Z);
+        var cos = (relative.M00 + relative.M11 + relative.M22 - 1) / 2;
+        return Math.Atan2(sin, cos) * 180 / Math.PI;
+    }
+
     private static void CheckSlide(
         MechanicalJoint joint,
         Pose parentPose,
@@ -230,14 +339,7 @@ public sealed class MechanicalValidator
 
         var parentRotation = Mat3.FromEulerXyzDegrees(parentPose.Rot);
         var childRotation = Mat3.FromEulerXyzDegrees(childPose.Rot);
-        var relative = parentRotation.Transpose() * childRotation;
-
-        var sin = 0.5 * (
-            (relative.M21 - relative.M12) * axis.X +
-            (relative.M02 - relative.M20) * axis.Y +
-            (relative.M10 - relative.M01) * axis.Z);
-        var cos = (relative.M00 + relative.M11 + relative.M22 - 1) / 2;
-        var angle = Math.Atan2(sin, cos) * 180 / Math.PI;
+        var angle = SignedAngleAboutAxis(parentRotation.Transpose() * childRotation, axis);
 
         if (angle < range[0] - 1e-9 || angle > range[1] + 1e-9)
         {
