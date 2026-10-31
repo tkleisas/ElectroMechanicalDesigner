@@ -1,0 +1,24 @@
+# EMD build and content-addressed artifact store
+.emd/
+out/
+dist/
+build/
+
+# .NET
+**/bin/
+**/obj/
+*.user
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

@@ -1,0 +1,1186 @@
+{
+  "schema_version": "0.1",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "key": "axis_mvp",
+  "name": "Motorized axis MVP",
+  "description": "FreeCAD frame + NEMA17 + KiCad driver/MCU + firmware + MechMaker/SSP twin. The first end-to-end EMD vertical slice.",
+  "revision": "0.1.0",
+  "created_at": "2026-10-31T00:00:00Z",
+  "modified_at": "2026-10-31T00:00:00Z",
+  "authors": [
+    "EMD"
+  ],
+  "license": "GPL-3.0-only",
+  "units": {
+    "system": "SI",
+    "length": "m",
+    "mass": "kg",
+    "time": "s",
+    "angle": "deg",
+    "temperature": "K",
+    "current": "A",
+    "voltage": "V"
+  },
+  "coordinate_system": {
+    "handedness": "right",
+    "up_axis": "+Z",
+    "forward_axis": "+X",
+    "rotation": {
+      "order": [
+        "X",
+        "Y",
+        "Z"
+      ],
+      "extrinsic": true
+    }
+  },
+  "toolchain": {
+    "adapter_contract": "0.1",
+    "tools": [
+      {
+        "id": "freecad",
+        "name": "FreeCAD",
+        "version": "26.3",
+        "executable": "freecadcmd",
+        "adapter": "emd-freecad==0.1",
+        "capabilities": [
+          "fcstd",
+          "step",
+          "bom",
+          "cam",
+          "fem"
+        ],
+        "pinned": true
+      },
+      {
+        "id": "kicad",
+        "name": "KiCad",
+        "version": "10.0.8",
+        "executable": "kicad-cli",
+        "adapter": "emd-kicad==0.1",
+        "capabilities": [
+          "sch",
+          "pcb",
+          "erc",
+          "drc",
+          "netlist",
+          "bom",
+          "gerber",
+          "step",
+          "spice"
+        ],
+        "pinned": true
+      },
+      {
+        "id": "mechmaker",
+        "name": "MechMaker",
+        "version": "0.5.0",
+        "adapter": "emd-mechmaker==0.1",
+        "capabilities": [
+          "mjcf",
+          "mujoco",
+          "virtual_mcu",
+          "klipper"
+        ],
+        "pinned": true
+      },
+      {
+        "id": "omsimulator",
+        "name": "OMSimulator",
+        "version": "2.1",
+        "executable": "OMSimulator",
+        "adapter": "emd-ssp==0.1",
+        "capabilities": [
+          "fmi3",
+          "ssp2",
+          "co_simulation"
+        ],
+        "pinned": true
+      },
+      {
+        "id": "renode",
+        "name": "Renode",
+        "version": "1.17.0",
+        "executable": "renode",
+        "adapter": "emd-renode==0.1",
+        "capabilities": [
+          "firmware",
+          "mcu",
+          "peripherals"
+        ],
+        "pinned": true
+      }
+    ]
+  },
+  "catalogs": [
+    {
+      "id": "mechmaker",
+      "source": "../MechMaker/catalog",
+      "format": "mechmaker"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "key": "axis_fcstd",
+      "path": "files/mechanical/axis.FCStd",
+      "format": "fcstd",
+      "role": "source"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "key": "axis_step",
+      "path": "files/mechanical/axis.step",
+      "format": "step",
+      "role": "generated",
+      "produced_by": {
+        "tool": "freecad",
+        "version": "26.3"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000010"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "key": "axis_sch",
+      "path": "files/electrical/axis.kicad_sch",
+      "format": "kicad_sch",
+      "role": "source"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "key": "axis_pcb",
+      "path": "files/electrical/axis.kicad_pcb",
+      "format": "kicad_pcb",
+      "role": "source"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000014",
+      "key": "axis_netlist",
+      "path": "files/electrical/axis.net",
+      "format": "netlist",
+      "role": "generated",
+      "produced_by": {
+        "tool": "kicad",
+        "version": "10.0.8"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000012"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000015",
+      "key": "axis_fw_src",
+      "path": "files/firmware/axis",
+      "format": "platformio",
+      "role": "source"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000016",
+      "key": "axis_fw_bin",
+      "path": "files/firmware/axis.bin",
+      "format": "elf",
+      "role": "generated",
+      "produced_by": {
+        "tool": "platformio",
+        "version": "6.1"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000015"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000017",
+      "key": "axis_mjcf",
+      "path": "files/sim/axis.xml",
+      "format": "mjcf",
+      "role": "simulation",
+      "produced_by": {
+        "tool": "mechmaker",
+        "version": "0.5.0"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000010",
+        "00000000-0000-4000-8000-000000000011"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000018",
+      "key": "axis_ssp",
+      "path": "files/sim/axis.ssp",
+      "format": "ssp",
+      "role": "simulation",
+      "produced_by": {
+        "tool": "omsimulator",
+        "version": "2.1"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000017",
+        "00000000-0000-4000-8000-000000000020"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000019",
+      "key": "axis_bom",
+      "path": "files/manufacturing/bom.csv",
+      "format": "bom",
+      "role": "manufacturing",
+      "produced_by": {
+        "tool": "kicad",
+        "version": "10.0.8"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000020",
+      "key": "axis_mechmaker_fmu",
+      "path": "files/sim/axis_mechmaker.fmu",
+      "format": "fmu",
+      "role": "simulation",
+      "produced_by": {
+        "tool": "mechmaker",
+        "version": "0.5.0"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000017"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "key": "axis_kicad_pro",
+      "path": "files/electrical/axis.kicad_pro",
+      "format": "kicad_pro",
+      "role": "source"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000022",
+      "key": "axis_spice",
+      "path": "files/electrical/axis.cir",
+      "format": "spice",
+      "role": "simulation",
+      "produced_by": {
+        "tool": "kicad",
+        "version": "10.0.8"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000012"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000023",
+      "key": "axis_board_step",
+      "path": "files/electrical/axis_board.step",
+      "format": "step",
+      "role": "generated",
+      "produced_by": {
+        "tool": "kicad",
+        "version": "10.0.8"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000013"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000024",
+      "key": "frame_gcode",
+      "path": "files/manufacturing/frame.gcode",
+      "format": "gcode",
+      "role": "manufacturing",
+      "produced_by": {
+        "tool": "freecad",
+        "version": "26.3"
+      },
+      "inputs": [
+        "00000000-0000-4000-8000-000000000011"
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000025",
+      "key": "axis_scenario",
+      "path": "scripts/axis_home.lua",
+      "format": "lua",
+      "role": "simulation"
+    }
+  ],
+  "parts": [
+    {
+      "id": "00000000-0000-4000-8000-000000000100",
+      "key": "frame",
+      "name": "2020 frame",
+      "kind": "assembly",
+      "category": "structure",
+      "material": {
+        "name": "AL_6063_T5",
+        "density_kg_m3": 2700,
+        "youngs_modulus_pa": 69000000000,
+        "poisson_ratio": 0.33,
+        "thermal_conductivity_w_m_k": 200
+      },
+      "mass_kg": 0.85,
+      "domain_refs": {
+        "mechanical": {
+          "tool": "freecad",
+          "ref": "Frame",
+          "artifact_id": "00000000-0000-4000-8000-000000000010"
+        }
+      },
+      "ports": [
+        {
+          "id": "motor_mount",
+          "key": "MOTOR_MOUNT",
+          "name": "Motor mount",
+          "domain": "mechanical",
+          "kind": "mount",
+          "direction": "passive",
+          "pose": {
+            "pos": [
+              0,
+              0,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "board_mount",
+          "key": "BOARD_MOUNT",
+          "name": "Driver board mount",
+          "domain": "mechanical",
+          "kind": "mount",
+          "direction": "passive",
+          "pose": {
+            "pos": [
+              0.06,
+              0,
+              0.02
+            ],
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "key": "x_motor",
+      "name": "X axis NEMA17",
+      "kind": "component",
+      "category": "motor",
+      "catalog_ref": {
+        "catalog": "mechmaker",
+        "part": "nema17_stepper"
+      },
+      "mass_kg": 0.28,
+      "domain_refs": {
+        "mechanical": {
+          "tool": "freecad",
+          "ref": "Motor_X",
+          "artifact_id": "00000000-0000-4000-8000-000000000010"
+        },
+        "electrical": {
+          "tool": "kicad",
+          "ref": "M1",
+          "artifact_id": "00000000-0000-4000-8000-000000000012"
+        }
+      },
+      "ports": [
+        {
+          "id": "mount",
+          "key": "MOUNT",
+          "name": "NEMA17 face mount",
+          "domain": "mechanical",
+          "kind": "mount",
+          "direction": "passive"
+        },
+        {
+          "id": "shaft",
+          "key": "SHAFT",
+          "name": "Rotor shaft",
+          "domain": "mechanical",
+          "kind": "shaft",
+          "direction": "out"
+        },
+        {
+          "id": "phase_a",
+          "key": "A+",
+          "name": "Phase A",
+          "domain": "electrical",
+          "kind": "pin",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 2
+          }
+        },
+        {
+          "id": "phase_b",
+          "key": "B+",
+          "name": "Phase B",
+          "domain": "electrical",
+          "kind": "pin",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 2
+          }
+        },
+        {
+          "id": "phase_c",
+          "key": "A-",
+          "name": "Phase A inverse",
+          "domain": "electrical",
+          "kind": "pin",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "key": "driver",
+      "name": "Stepper driver board",
+      "kind": "board",
+      "category": "electronics",
+      "domain_refs": {
+        "electrical": {
+          "tool": "kicad",
+          "ref": "A1",
+          "artifact_id": "00000000-0000-4000-8000-000000000013"
+        }
+      },
+      "ports": [
+        {
+          "id": "m1_a",
+          "key": "M1A",
+          "name": "Motor 1 phase A",
+          "domain": "electrical",
+          "kind": "pin",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 2
+          }
+        },
+        {
+          "id": "m1_b",
+          "key": "M1B",
+          "name": "Motor 1 phase B",
+          "domain": "electrical",
+          "kind": "pin",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 2
+          }
+        },
+        {
+          "id": "m1_c",
+          "key": "M1C",
+          "name": "Motor 1 phase C",
+          "domain": "electrical",
+          "kind": "pin",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 2
+          }
+        },
+        {
+          "id": "vmot",
+          "key": "VMOT",
+          "name": "Motor supply",
+          "domain": "electrical",
+          "kind": "power",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 5
+          }
+        },
+        {
+          "id": "gnd",
+          "key": "GND",
+          "name": "Power ground",
+          "domain": "electrical",
+          "kind": "ground",
+          "signal": {
+            "type": "ground"
+          }
+        },
+        {
+          "id": "step",
+          "key": "STEP",
+          "name": "Step input",
+          "domain": "control",
+          "kind": "step",
+          "direction": "in",
+          "signal": {
+            "type": "digital",
+            "voltage_v": 3.3
+          }
+        },
+        {
+          "id": "dir",
+          "key": "DIR",
+          "name": "Direction input",
+          "domain": "control",
+          "kind": "dir",
+          "direction": "in",
+          "signal": {
+            "type": "digital",
+            "voltage_v": 3.3
+          }
+        },
+        {
+          "id": "enable",
+          "key": "EN",
+          "name": "Enable input",
+          "domain": "control",
+          "kind": "enable",
+          "direction": "in",
+          "signal": {
+            "type": "digital",
+            "voltage_v": 3.3
+          }
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "key": "mcu",
+      "name": "Controller board",
+      "kind": "board",
+      "category": "electronics",
+      "domain_refs": {
+        "electrical": {
+          "tool": "kicad",
+          "ref": "A2",
+          "artifact_id": "00000000-0000-4000-8000-000000000013"
+        },
+        "firmware": {
+          "tool": "platformio",
+          "ref": "axis_fw",
+          "artifact_id": "00000000-0000-4000-8000-000000000015"
+        }
+      },
+      "ports": [
+        {
+          "id": "step",
+          "key": "PA0",
+          "name": "Step output",
+          "domain": "control",
+          "kind": "step",
+          "direction": "out",
+          "signal": {
+            "type": "digital",
+            "voltage_v": 3.3
+          }
+        },
+        {
+          "id": "dir",
+          "key": "PA1",
+          "name": "Direction output",
+          "domain": "control",
+          "kind": "dir",
+          "direction": "out",
+          "signal": {
+            "type": "digital",
+            "voltage_v": 3.3
+          }
+        },
+        {
+          "id": "enable",
+          "key": "PA2",
+          "name": "Enable output",
+          "domain": "control",
+          "kind": "enable",
+          "direction": "out",
+          "signal": {
+            "type": "digital",
+            "voltage_v": 3.3
+          }
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "key": "psu",
+      "name": "24 V supply",
+      "kind": "component",
+      "category": "electronics",
+      "domain_refs": {
+        "electrical": {
+          "tool": "kicad",
+          "ref": "PS1",
+          "artifact_id": "00000000-0000-4000-8000-000000000012"
+        }
+      },
+      "ports": [
+        {
+          "id": "vmot",
+          "key": "V+",
+          "name": "24 V output",
+          "domain": "electrical",
+          "kind": "power",
+          "direction": "out",
+          "signal": {
+            "type": "power",
+            "voltage_v": 24,
+            "current_a": 5
+          }
+        },
+        {
+          "id": "gnd",
+          "key": "V-",
+          "name": "0 V output",
+          "domain": "electrical",
+          "kind": "ground",
+          "direction": "out",
+          "signal": {
+            "type": "ground"
+          }
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "00000000-0000-4000-8000-000000000300",
+      "key": "motor_to_frame",
+      "kind": "mate",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000101",
+        "port_id": "mount"
+      },
+      "to": {
+        "part_id": "00000000-0000-4000-8000-000000000100",
+        "port_id": "motor_mount"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000301",
+      "key": "motor_phase_a",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000101",
+        "port_id": "phase_a"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000200"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000302",
+      "key": "driver_phase_a",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "m1_a"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000200"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000303",
+      "key": "motor_phase_b",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000101",
+        "port_id": "phase_b"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000201"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000304",
+      "key": "driver_phase_b",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "m1_b"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000201"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000305",
+      "key": "motor_phase_c",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000101",
+        "port_id": "phase_c"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000202"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000306",
+      "key": "driver_phase_c",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "m1_c"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000202"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000307",
+      "key": "psu_vmot",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000104",
+        "port_id": "vmot"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000203"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000308",
+      "key": "driver_vmot",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "vmot"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000203"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000309",
+      "key": "psu_gnd",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000104",
+        "port_id": "gnd"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000204"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000310",
+      "key": "driver_gnd",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "gnd"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000204"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000311",
+      "key": "mcu_step",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000103",
+        "port_id": "step"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000205"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000312",
+      "key": "driver_step",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "step"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000205"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000313",
+      "key": "mcu_dir",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000103",
+        "port_id": "dir"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000206"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000314",
+      "key": "driver_dir",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "dir"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000206"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000315",
+      "key": "mcu_enable",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000103",
+        "port_id": "enable"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000207"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000316",
+      "key": "driver_enable",
+      "kind": "wire",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "port_id": "enable"
+      },
+      "to": {
+        "net_id": "00000000-0000-4000-8000-000000000207"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000317",
+      "key": "motor_shaft_twin",
+      "kind": "simulation_binding",
+      "from": {
+        "part_id": "00000000-0000-4000-8000-000000000101",
+        "port_id": "shaft"
+      },
+      "to": {
+        "artifact_id": "00000000-0000-4000-8000-000000000020",
+        "variable": "x_motor.angle"
+      }
+    }
+  ],
+  "mechanical": {
+    "source_artifact_id": "00000000-0000-4000-8000-000000000010",
+    "assembly_root_part_id": "00000000-0000-4000-8000-000000000100",
+    "exports": {
+      "step": "00000000-0000-4000-8000-000000000011",
+      "board_step": "00000000-0000-4000-8000-000000000023"
+    },
+    "simulation": {
+      "format": "mjcf",
+      "artifact_id": "00000000-0000-4000-8000-000000000017",
+      "joint_bindings": [
+        {
+          "joint": "x_motor",
+          "part_id": "00000000-0000-4000-8000-000000000101",
+          "port_id": "shaft",
+          "actuator": "motor_x",
+          "axis": "Z"
+        }
+      ]
+    },
+    "materials": [
+      {
+        "name": "AL_6063_T5",
+        "density_kg_m3": 2700,
+        "youngs_modulus_pa": 69000000000,
+        "poisson_ratio": 0.33,
+        "thermal_conductivity_w_m_k": 200
+      }
+    ],
+    "tolerances": {
+      "interference_mm": 0,
+      "clearance_mm": 0.5
+    }
+  },
+  "electrical": {
+    "project_artifact_id": "00000000-0000-4000-8000-000000000021",
+    "schematic_artifact_id": "00000000-0000-4000-8000-000000000012",
+    "pcb_artifact_id": "00000000-0000-4000-8000-000000000013",
+    "netlist_artifact_id": "00000000-0000-4000-8000-000000000014",
+    "spice_artifact_id": "00000000-0000-4000-8000-000000000022",
+    "bom_artifact_id": "00000000-0000-4000-8000-000000000019",
+    "board_step_artifact_id": "00000000-0000-4000-8000-000000000023",
+    "nets": [
+      {
+        "id": "00000000-0000-4000-8000-000000000200",
+        "key": "m1a",
+        "name": "M1_A",
+        "class": "signal",
+        "voltage_v": 24,
+        "current_a": 2
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000201",
+        "key": "m1b",
+        "name": "M1_B",
+        "class": "signal",
+        "voltage_v": 24,
+        "current_a": 2
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000202",
+        "key": "m1c",
+        "name": "M1_C",
+        "class": "signal",
+        "voltage_v": 24,
+        "current_a": 2
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000203",
+        "key": "vmot",
+        "name": "VMOT",
+        "class": "power",
+        "voltage_v": 24,
+        "current_a": 5
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000204",
+        "key": "gnd",
+        "name": "GND",
+        "class": "ground",
+        "voltage_v": 0
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000205",
+        "key": "step",
+        "name": "STEP",
+        "class": "signal",
+        "voltage_v": 3.3
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000206",
+        "key": "dir",
+        "name": "DIR",
+        "class": "signal",
+        "voltage_v": 3.3
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000207",
+        "key": "enable",
+        "name": "ENABLE",
+        "class": "signal",
+        "voltage_v": 3.3
+      }
+    ],
+    "boards": [
+      {
+        "id": "00000000-0000-4000-8000-000000000210",
+        "key": "driver_board",
+        "part_id": "00000000-0000-4000-8000-000000000102",
+        "refdes": "A1",
+        "stackup": "JLC04161H-3313",
+        "layers": 2,
+        "outline_artifact_id": "00000000-0000-4000-8000-000000000023"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000211",
+        "key": "mcu_board",
+        "part_id": "00000000-0000-4000-8000-000000000103",
+        "refdes": "A2",
+        "stackup": "JLC04161H-3313",
+        "layers": 4,
+        "outline_artifact_id": "00000000-0000-4000-8000-000000000023"
+      }
+    ],
+    "rules": {
+      "min_clearance_mm": 0.2,
+      "min_trace_width_mm": 0.2,
+      "min_drill_mm": 0.3
+    }
+  },
+  "firmware": {
+    "projects": [
+      {
+        "id": "00000000-0000-4000-8000-000000000400",
+        "key": "axis_fw",
+        "name": "Axis controller firmware",
+        "source_artifact_id": "00000000-0000-4000-8000-000000000015",
+        "build_system": "platformio",
+        "board_part_id": "00000000-0000-4000-8000-000000000103",
+        "mcu": "STM32F407VGT6",
+        "binary_artifact_id": "00000000-0000-4000-8000-000000000016",
+        "renode_platform": "platforms/cpus/stm32f4.repl",
+        "build_command": "pio run -e axis",
+        "pin_map": [
+          {
+            "mcu_pin": "PA0",
+            "net_id": "00000000-0000-4000-8000-000000000205",
+            "board_part_id": "00000000-0000-4000-8000-000000000103",
+            "port_id": "step",
+            "function": "step"
+          },
+          {
+            "mcu_pin": "PA1",
+            "net_id": "00000000-0000-4000-8000-000000000206",
+            "board_part_id": "00000000-0000-4000-8000-000000000103",
+            "port_id": "dir",
+            "function": "dir"
+          },
+          {
+            "mcu_pin": "PA2",
+            "net_id": "00000000-0000-4000-8000-000000000207",
+            "board_part_id": "00000000-0000-4000-8000-000000000103",
+            "port_id": "enable",
+            "function": "enable"
+          }
+        ]
+      }
+    ]
+  },
+  "behavior": {
+    "models": [
+      {
+        "id": "00000000-0000-4000-8000-000000000500",
+        "key": "x_motor_twin",
+        "name": "X motor physics FMU",
+        "kind": "mechmaker",
+        "artifact_id": "00000000-0000-4000-8000-000000000020",
+        "parameters": {
+          "holding_torque_scale": 1,
+          "microsteps": 16
+        },
+        "inputs": [
+          {
+            "name": "step_hz",
+            "unit": "Hz",
+            "part_id": "00000000-0000-4000-8000-000000000103",
+            "port_id": "step",
+            "variable": "x_motor.step_hz"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "angle_rad",
+            "unit": "rad",
+            "part_id": "00000000-0000-4000-8000-000000000101",
+            "port_id": "shaft",
+            "variable": "x_motor.angle"
+          }
+        ]
+      }
+    ]
+  },
+  "simulation": {
+    "fidelity": "co_simulation",
+    "systems": [
+      {
+        "id": "00000000-0000-4000-8000-000000000600",
+        "key": "axis_twin",
+        "name": "Axis digital twin",
+        "standard": "ssp2",
+        "artifact_id": "00000000-0000-4000-8000-000000000018",
+        "master": "omsimulator",
+        "step_size_s": 0.000125,
+        "start_time_s": 0,
+        "stop_time_s": 5,
+        "solver": {
+          "name": "oms_ma"
+        },
+        "bindings": [
+          "00000000-0000-4000-8000-000000000317"
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "00000000-0000-4000-8000-000000000700",
+        "key": "move_40mm",
+        "name": "Home then move 40 mm",
+        "artifact_id": "00000000-0000-4000-8000-000000000025",
+        "duration_s": 5,
+        "seed": 42,
+        "assertions": [
+          {
+            "name": "carriage reaches 40 mm",
+            "expression": "abs(x_carriage_m - 0.040) < 0.001",
+            "unit": "m",
+            "tolerance": 0.001,
+            "severity": "error"
+          }
+        ],
+        "record": [
+          "x_motor.angle",
+          "x_carriage.position"
+        ]
+      }
+    ]
+  },
+  "manufacturing": {
+    "bom_artifact_id": "00000000-0000-4000-8000-000000000019",
+    "processes": [
+      {
+        "id": "00000000-0000-4000-8000-000000000800",
+        "key": "frame_cnc",
+        "name": "Frame plates CNC",
+        "kind": "cnc",
+        "source_artifact_id": "00000000-0000-4000-8000-000000000011",
+        "postprocessor": "klipper",
+        "output_artifact_ids": [
+          "00000000-0000-4000-8000-000000000024"
+        ],
+        "parameters": {
+          "feed_mm_min": 1200,
+          "spindle_rpm": 18000
+        }
+      }
+    ]
+  },
+  "validation": {
+    "rules": [
+      {
+        "id": "EMD-MECH-001",
+        "severity": "error"
+      },
+      {
+        "id": "EMD-MECH-003",
+        "severity": "warning"
+      },
+      {
+        "id": "EMD-ELEC-001",
+        "severity": "error"
+      },
+      {
+        "id": "EMD-ELEC-002",
+        "severity": "error"
+      },
+      {
+        "id": "EMD-FW-001",
+        "severity": "error"
+      },
+      {
+        "id": "EMD-SIM-001",
+        "severity": "error"
+      }
+    ],
+    "required_checks": [
+      "EMD-MECH-001",
+      "EMD-ELEC-001",
+      "EMD-ELEC-002",
+      "EMD-FW-001",
+      "EMD-SIM-001"
+    ],
+    "tolerances": {
+      "interference_mm": 0,
+      "position_mm": 0.5
+    }
+  },
+  "metadata": {
+    "mvp": true,
+    "notes": "Synthetic example used to validate the EMD project schema. Artifact paths are placeholders."
+  }
+}

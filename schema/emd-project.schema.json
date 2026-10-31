@@ -1,0 +1,1469 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://emd.dev/schemas/emd-project-0.1.json",
+  "title": "ElectroMechanicalDesigner project",
+  "description": "A multi-domain electromechanical project. Domain-native files (FreeCAD, KiCad, Modelica) stay canonical for their domain; this manifest owns stable identity and cross-domain bindings. Units are SI; angles are degrees; rotations are extrinsic XYZ unless the project declares otherwise.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "units",
+    "coordinate_system",
+    "parts"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "id": {
+      "$ref": "#/definitions/uuid"
+    },
+    "key": {
+      "$ref": "#/definitions/key"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "modified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "license": {
+      "type": "string"
+    },
+    "units": {
+      "$ref": "#/definitions/units"
+    },
+    "coordinate_system": {
+      "$ref": "#/definitions/coordinate_system"
+    },
+    "toolchain": {
+      "$ref": "#/definitions/toolchain"
+    },
+    "catalogs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/catalog"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/artifact"
+      }
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/part"
+      }
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/connection"
+      }
+    },
+    "mechanical": {
+      "$ref": "#/definitions/mechanical"
+    },
+    "electrical": {
+      "$ref": "#/definitions/electrical"
+    },
+    "firmware": {
+      "$ref": "#/definitions/firmware"
+    },
+    "behavior": {
+      "$ref": "#/definitions/behavior"
+    },
+    "simulation": {
+      "$ref": "#/definitions/simulation"
+    },
+    "manufacturing": {
+      "$ref": "#/definitions/manufacturing"
+    },
+    "validation": {
+      "$ref": "#/definitions/validation"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "pose": {
+      "type": "object",
+      "description": "Position in metres; rotation in degrees, extrinsic XYZ by default.",
+      "properties": {
+        "pos": {
+          "$ref": "#/definitions/vec3"
+        },
+        "rot": {
+          "$ref": "#/definitions/vec3"
+        }
+      },
+      "additionalProperties": false
+    },
+    "units": {
+      "type": "object",
+      "required": [
+        "system",
+        "length",
+        "mass",
+        "time",
+        "angle",
+        "temperature",
+        "current",
+        "voltage"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "const": "SI"
+        },
+        "length": {
+          "const": "m"
+        },
+        "mass": {
+          "const": "kg"
+        },
+        "time": {
+          "const": "s"
+        },
+        "angle": {
+          "enum": [
+            "rad",
+            "deg"
+          ]
+        },
+        "temperature": {
+          "const": "K"
+        },
+        "current": {
+          "const": "A"
+        },
+        "voltage": {
+          "const": "V"
+        }
+      }
+    },
+    "coordinate_system": {
+      "type": "object",
+      "required": [
+        "handedness",
+        "up_axis",
+        "forward_axis",
+        "rotation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "handedness": {
+          "const": "right"
+        },
+        "up_axis": {
+          "enum": [
+            "+X",
+            "+Y",
+            "+Z"
+          ]
+        },
+        "forward_axis": {
+          "enum": [
+            "+X",
+            "+Y",
+            "+Z"
+          ]
+        },
+        "rotation": {
+          "type": "object",
+          "required": [
+            "order",
+            "extrinsic"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "order": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "X",
+                  "Y",
+                  "Z"
+                ]
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "extrinsic": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "tool_ref": {
+      "type": "object",
+      "required": [
+        "tool"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "adapter": {
+          "type": "string"
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "executable": {
+          "type": "string"
+        },
+        "adapter": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "required": [
+        "adapter_contract"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "adapter_contract": {
+          "type": "string"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tool"
+          }
+        }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "required": [
+        "id",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/key"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "artifact_id": {
+          "$ref": "#/definitions/uuid"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "format",
+        "role"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "type": "string",
+          "description": "step, fcstd, kicad_sch, kicad_pcb, netlist, spice, mjcf, urdf, sdf, gltf, stl, fmu, ssp, gerber, gcode, csv, pdf, ..."
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "source",
+            "generated",
+            "visualization",
+            "simulation",
+            "manufacturing",
+            "report",
+            "other"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "produced_by": {
+          "$ref": "#/definitions/tool_ref"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/uuid"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "material": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "density_kg_m3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "youngs_modulus_pa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "poisson_ratio": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 0.5
+        },
+        "thermal_conductivity_w_m_k": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "domain_ref": {
+      "type": "object",
+      "required": [
+        "tool",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "signal": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "analog",
+            "digital",
+            "power",
+            "ground",
+            "pwm",
+            "differential",
+            "mechanical",
+            "thermal",
+            "fluid",
+            "software",
+            "other"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "voltage_v": {
+          "type": "number"
+        },
+        "current_a": {
+          "type": "number"
+        },
+        "frequency_hz": {
+          "type": "number"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "port": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "domain",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/key"
+        },
+        "key": {
+          "type": "string",
+          "description": "Human-readable label, e.g. A+ or STEP."
+        },
+        "name": {
+          "type": "string"
+        },
+        "domain": {
+          "enum": [
+            "mechanical",
+            "electrical",
+            "control",
+            "thermal",
+            "fluid",
+            "simulation",
+            "software"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "description": "mount, shaft, slide, hinge, fastener, pin, power, ground, net, bus, heat, airflow, fmu_input, fmu_output, variable, protocol, other"
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out",
+            "inout",
+            "passive"
+          ]
+        },
+        "signal": {
+          "$ref": "#/definitions/signal"
+        },
+        "ref": {
+          "$ref": "#/definitions/domain_ref"
+        },
+        "pose": {
+          "$ref": "#/definitions/pose"
+        },
+        "units": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "part": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "ports"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "component",
+            "assembly",
+            "board",
+            "cable",
+            "virtual",
+            "reference"
+          ]
+        },
+        "category": {
+          "enum": [
+            "structure",
+            "motor",
+            "transmission",
+            "linear_motion",
+            "sensor",
+            "electronics",
+            "tool",
+            "fastener",
+            "other"
+          ]
+        },
+        "catalog_ref": {
+          "type": "object",
+          "required": [
+            "part"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "catalog": {
+              "type": "string"
+            },
+            "part": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        },
+        "material": {
+          "$ref": "#/definitions/material"
+        },
+        "mass_kg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "domain_refs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mechanical": {
+              "$ref": "#/definitions/domain_ref"
+            },
+            "electrical": {
+              "$ref": "#/definitions/domain_ref"
+            },
+            "firmware": {
+              "$ref": "#/definitions/domain_ref"
+            },
+            "behavior": {
+              "$ref": "#/definitions/domain_ref"
+            },
+            "simulation": {
+              "$ref": "#/definitions/domain_ref"
+            },
+            "manufacturing": {
+              "$ref": "#/definitions/domain_ref"
+            }
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/port"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "description": "One side of a connection: a part port, an electrical net, an FMU variable, or an external URI.",
+      "properties": {
+        "part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "port_id": {
+          "$ref": "#/definitions/key"
+        },
+        "net_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "node_id": {
+          "$ref": "#/definitions/key"
+        },
+        "artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "variable": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "part_id",
+            "port_id"
+          ]
+        },
+        {
+          "required": [
+            "net_id"
+          ]
+        },
+        {
+          "required": [
+            "artifact_id",
+            "variable"
+          ]
+        },
+        {
+          "required": [
+            "uri"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "connection": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "from",
+        "to"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "kind": {
+          "enum": [
+            "mate",
+            "wire",
+            "net",
+            "control",
+            "thermal",
+            "fluid",
+            "mount",
+            "simulation_binding",
+            "harness",
+            "firmware_pin",
+            "other"
+          ]
+        },
+        "from": {
+          "$ref": "#/definitions/endpoint"
+        },
+        "to": {
+          "$ref": "#/definitions/endpoint"
+        },
+        "transform": {
+          "$ref": "#/definitions/pose"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "joint_binding": {
+      "type": "object",
+      "required": [
+        "joint",
+        "part_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "joint": {
+          "type": "string"
+        },
+        "part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "port_id": {
+          "$ref": "#/definitions/key"
+        },
+        "actuator": {
+          "type": "string"
+        },
+        "axis": {
+          "type": "string"
+        }
+      }
+    },
+    "mechanical": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "assembly_root_part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "exports": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/uuid"
+          }
+        },
+        "simulation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "enum": [
+                "mjcf",
+                "urdf",
+                "sdf"
+              ]
+            },
+            "artifact_id": {
+              "$ref": "#/definitions/uuid"
+            },
+            "joint_bindings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/joint_binding"
+              }
+            }
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/material"
+          }
+        },
+        "tolerances": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "net": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "name",
+        "class"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "class": {
+          "enum": [
+            "power",
+            "ground",
+            "signal",
+            "differential",
+            "bus",
+            "rf",
+            "other"
+          ]
+        },
+        "voltage_v": {
+          "type": "number"
+        },
+        "current_a": {
+          "type": "number"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "board": {
+      "type": "object",
+      "required": [
+        "id",
+        "part_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "refdes": {
+          "type": "string"
+        },
+        "stackup": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "outline_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        }
+      }
+    },
+    "electrical": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "schematic_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "pcb_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "netlist_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "spice_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "bom_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "board_step_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "nets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/net"
+          }
+        },
+        "boards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/board"
+          }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "pin_binding": {
+      "type": "object",
+      "required": [
+        "mcu_pin",
+        "net_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mcu_pin": {
+          "type": "string"
+        },
+        "net_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "board_part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "port_id": {
+          "$ref": "#/definitions/key"
+        },
+        "function": {
+          "type": "string"
+        }
+      }
+    },
+    "firmware_project": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "source_artifact_id",
+        "board_part_id",
+        "pin_map"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "source_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "build_system": {
+          "enum": [
+            "platformio",
+            "zephyr",
+            "cmake",
+            "arduino",
+            "make",
+            "other"
+          ]
+        },
+        "board_part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "mcu": {
+          "type": "string"
+        },
+        "binary_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "renode_platform": {
+          "type": "string"
+        },
+        "build_command": {
+          "type": "string"
+        },
+        "pin_map": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pin_binding"
+          }
+        }
+      }
+    },
+    "firmware": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "projects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/firmware_project"
+          }
+        }
+      }
+    },
+    "model_port": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "port_id": {
+          "$ref": "#/definitions/key"
+        },
+        "variable": {
+          "type": "string"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "kind",
+        "artifact_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "modelica",
+            "spice",
+            "fmu",
+            "mechmaker",
+            "lua",
+            "python",
+            "script",
+            "other"
+          ]
+        },
+        "artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model_port"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model_port"
+          }
+        }
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "models": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model"
+          }
+        }
+      }
+    },
+    "sim_system": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "standard",
+        "master"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "standard": {
+          "enum": [
+            "fmi3",
+            "ssp2",
+            "native"
+          ]
+        },
+        "artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "master": {
+          "enum": [
+            "omsimulator",
+            "fmpy",
+            "openmcx",
+            "mechmaker",
+            "custom"
+          ]
+        },
+        "step_size_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "start_time_s": {
+          "type": "number"
+        },
+        "stop_time_s": {
+          "type": "number"
+        },
+        "solver": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "tolerance": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/uuid"
+          },
+          "description": "Connection ids that bind graph ports to FMU variables."
+        }
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "duration_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "assertions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/assertion"
+          }
+        },
+        "record": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "simulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fidelity": {
+          "enum": [
+            "kinematic",
+            "rigid_body",
+            "co_simulation",
+            "hardware_in_the_loop"
+          ]
+        },
+        "systems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sim_system"
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/scenario"
+          }
+        }
+      }
+    },
+    "process": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "key": {
+          "$ref": "#/definitions/key"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "cnc",
+            "laser",
+            "3d_print",
+            "pcb_fab",
+            "pcb_assembly",
+            "assembly",
+            "other"
+          ]
+        },
+        "machine_part_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "source_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "postprocessor": {
+          "type": "string"
+        },
+        "output_artifact_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/uuid"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        }
+      }
+    },
+    "manufacturing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bom_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
+        "processes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/process"
+          }
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": [
+        "id",
+        "severity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rule"
+          }
+        },
+        "required_checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tolerances": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
