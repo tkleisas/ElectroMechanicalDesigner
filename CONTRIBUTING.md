@@ -31,22 +31,22 @@ merged. "I will add tests later" is not an accepted development plan.
 
 ### Test layers
 
-| Layer | Location (planned) | Purpose |
+| Layer | Location | Purpose |
 |---|---|---|
-| Unit | `tests/EMD.Core.Tests` | graph, units, validation, build planning |
-| Adapter contract | `tests/EMD.Adapters.Tests` | JSON-RPC protocol, capability probing, fixtures |
-| Integration | `tests/EMD.Integration.Tests` | headless FreeCAD/KiCad/MechMaker/OMSimulator runs |
-| End-to-end | `tests/EMD.EndToEnd.Tests` | the MVP axis: design → validate → co-simulate → export |
+| Unit | `tests/EMD.Core.Tests` | graph, schema, validation, importer, build planning, CLI |
+| Adapter contract | `tests/EMD.Adapters.Tests` | process launch, timeouts, JSON-RPC request/response |
+| Integration | `tests/EMD.Integration.Tests` (planned) | headless FreeCAD/KiCad/MechMaker/OMSimulator runs |
+| End-to-end | `tests/EMD.EndToEnd.Tests` (planned) | the MVP axis: design → validate → co-simulate → export |
 
 Fast unit tests run on every change. Integration tests are pinned to the
 versions in the project's `toolchain` block and must also pass in the CI
 container.
 
-## Current validation
-
-Until the .NET scaffold lands, validate the project schema:
+## Running the suite
 
 ```bash
+dotnet test EMD.slnx
+dotnet format EMD.slnx --verify-no-changes
 python3 -m jsonschema -i examples/project.json schema/emd-project.schema.json
 ```
 

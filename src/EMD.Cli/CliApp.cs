@@ -1,0 +1,288 @@
+using Emd.Core.Artifacts;
+using Emd.Core.Build;
+using Emd.Core.Diagnostics;
+using Emd.Core.Importers;
+using Emd.Core.Projects;
+using Emd.Core.Validation;
+
+namespace Emd.Cli;
+
+public static class CliApp
+{
+    public static int Run(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length == 0 || IsHelp(args[0]))
+        {
+            PrintUsage(stdout);
+            return 0;
+        }
+
+        try
+        {
+            return args[0] switch
+            {
+                "validate" => Validate(args, stdout, stderr),
+                "import" => Import(args, stdout, stderr),
+                "build" => Build(args, stdout, stderr),
+                "artifacts" => Artifacts(args, stdout, stderr),
+                _ => UsageError(stderr, $"Unknown command '{args[0]}'.")
+            };
+        }
+        catch (Exception exception)
+        {
+            stderr.WriteLine($"emd: unexpected error: {exception.Message}");
+            return 1;
+        }
+    }
+
+    private static int Validate(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length != 2)
+            return UsageError(stderr, "validate expects exactly one project path.");
+
+        var loaded = ProjectLoader.Default.LoadFile(args[1]);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var semantic = ProjectValidator.Default.Validate(loaded.Project);
+        PrintDiagnostics(semantic, stderr);
+
+        if (loaded.Diagnostics.Concat(semantic).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
+            return 1;
+
+        stdout.WriteLine(
+            $"valid: {loaded.Project.Name} " +
+            $"({loaded.Project.Parts.Count} parts, {loaded.Project.Connections.Count} connections)");
+        return 0;
+    }
+
+    private static int Import(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length < 3)
+            return UsageError(stderr, "import expects a source type and an input file.");
+
+        return args[1].ToLowerInvariant() switch
+        {
+            "mechmaker" => ImportMechMaker(args, stdout, stderr),
+            "kicad" => ImportKiCad(args, stdout, stderr),
+            "freecad" => ImportFreeCad(args, stdout, stderr),
+            _ => UsageError(stderr, $"Unknown import source '{args[1]}'.")
+        };
+    }
+
+    private static int ImportMechMaker(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var input = args[2];
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "import mechmaker requires --out <project.json>.");
+
+        MechMakerCatalog? catalog = null;
+        var catalogPath = GetOption(args, "--catalog");
+        if (!string.IsNullOrWhiteSpace(catalogPath))
+        {
+            try
+            {
+                catalog = MechMakerCatalog.Load(catalogPath);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                stderr.WriteLine($"emd: could not read catalog '{catalogPath}': {exception.Message}");
+                return 1;
+            }
+        }
+
+        var result = MechMakerImporter.Default.ImportFile(input, catalog);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Project is null)
+            return 1;
+
+        ProjectWriter.Save(result.Project, output);
+        var nets = result.Project.Electrical?.Nets.Count ?? 0;
+        stdout.WriteLine(
+            $"imported: {result.Project.Name} -> {output} " +
+            $"({result.Project.Parts.Count} parts, {result.Project.Connections.Count} connections, {nets} nets)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ImportKiCad(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var input = args[2];
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "import kicad requires --out <project.json>.");
+
+        var result = KiCadNetlistImporter.Default.ImportFile(input);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Project is null)
+            return 1;
+
+        ProjectWriter.Save(result.Project, output);
+        var nets = result.Project.Electrical?.Nets.Count ?? 0;
+        stdout.WriteLine(
+            $"imported: {result.Project.Name} -> {output} " +
+            $"({result.Project.Parts.Count} parts, {result.Project.Connections.Count} connections, {nets} nets)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ImportFreeCad(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var input = args[2];
+        var projectPath = GetOption(args, "--project");
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "import freecad requires --project <project.json>.");
+
+        var output = GetOption(args, "--out") ?? projectPath;
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        ArtifactStore? store = null;
+        var storePath = GetOption(args, "--store");
+        if (!string.IsNullOrWhiteSpace(storePath))
+            store = new ArtifactStore(storePath);
+
+        var result = FreeCadArtifactImporter.Default.AddReference(loaded.Project, input, store);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Project is null)
+            return 1;
+
+        ProjectWriter.Save(result.Project, output);
+        stdout.WriteLine(
+            $"added: {Path.GetFileName(input)} -> {output} " +
+            $"({result.Project.Artifacts.Count} artifacts)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int Build(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length < 2 || !string.Equals(args[1], "plan", StringComparison.OrdinalIgnoreCase))
+            return UsageError(stderr, "build expects the 'plan' subcommand.");
+
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "build plan requires --project <project.json>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var nodes = loaded.Project.Artifacts
+            .Select(artifact => new BuildNode(
+                artifact.Id.ToString(),
+                artifact.Key ?? artifact.Id.ToString(),
+                artifact.Inputs.Select(input => input.ToString()).ToList()))
+            .ToList();
+
+        var plan = BuildPlanner.Default.Plan(nodes);
+        PrintDiagnostics(plan.Diagnostics, stderr);
+        if (plan.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
+            return 1;
+
+        stdout.WriteLine($"build plan: {plan.Order.Count} node(s)");
+        foreach (var node in plan.Order)
+            stdout.WriteLine($"  {node.Name}");
+
+        return 0;
+    }
+
+    private static int Artifacts(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length < 3 || !string.Equals(args[1], "verify", StringComparison.OrdinalIgnoreCase))
+            return UsageError(stderr, "artifacts expects the 'verify' subcommand.");
+
+        var projectPath = args[2];
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var storePath = GetOption(args, "--store");
+        var root = string.IsNullOrWhiteSpace(storePath)
+            ? Path.Combine(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, ".emd", "artifacts")
+            : storePath;
+        var store = new ArtifactStore(root);
+
+        var checkedCount = 0;
+        var errors = 0;
+
+        foreach (var artifact in loaded.Project.Artifacts)
+        {
+            if (artifact.Sha256 is null)
+                continue;
+
+            checkedCount++;
+            if (store.Verify(artifact.Sha256))
+                continue;
+
+            errors++;
+            stderr.WriteLine(
+                $"EMD-ART-002 [Error] artifact '{artifact.Key ?? artifact.Id.ToString()}' " +
+                $"hash {artifact.Sha256} is missing or corrupt in '{root}'.");
+        }
+
+        if (errors > 0)
+            return 1;
+
+        stdout.WriteLine($"verified {checkedCount} artifact(s)");
+        return 0;
+    }
+
+    private static string? GetOption(string[] args, string name)
+    {
+        var prefix = name + "=";
+        for (var index = 0; index < args.Length; index++)
+        {
+            var argument = args[index];
+            if (argument.StartsWith(prefix, StringComparison.Ordinal))
+                return argument[prefix.Length..];
+            if (argument == name && index + 1 < args.Length)
+                return args[index + 1];
+        }
+
+        return null;
+    }
+
+    private static void PrintDiagnostics(IEnumerable<Diagnostic> diagnostics, TextWriter writer)
+    {
+        foreach (var diagnostic in diagnostics)
+            writer.WriteLine(diagnostic);
+    }
+
+    private static int UsageError(TextWriter stderr, string message)
+    {
+        stderr.WriteLine($"emd: {message}");
+        PrintUsage(stderr);
+        return 2;
+    }
+
+    private static bool IsHelp(string argument) =>
+        argument is "-h" or "--help" or "help";
+
+    private static void PrintUsage(TextWriter writer)
+    {
+        writer.WriteLine("emd — ElectroMechanicalDesigner CLI");
+        writer.WriteLine();
+        writer.WriteLine("Usage:");
+        writer.WriteLine("  emd validate <project.json>");
+        writer.WriteLine("  emd import mechmaker <machine.json> --out <project.json> [--catalog <dir>]");
+        writer.WriteLine("  emd import kicad <netlist.xml> --out <project.json>");
+        writer.WriteLine("  emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]");
+        writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
+        writer.WriteLine("  emd build plan --project <project.json>");
+        writer.WriteLine();
+        writer.WriteLine("Exit codes: 0 success, 1 diagnostics/errors, 2 usage.");
+    }
+}

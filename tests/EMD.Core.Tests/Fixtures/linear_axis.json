@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.1",
+  "name": "test_axis",
+  "parts": [
+    {
+      "id": "beam",
+      "part": "beam_2020_400",
+      "pose": {
+        "pos": [0, 0, 0]
+      }
+    },
+    {
+      "id": "motor",
+      "part": "nema17_stepper",
+      "pose": {
+        "pos": [0, 0, 0.1],
+        "rot": [0, 0, 90]
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "motor_on_beam",
+      "part_a": "motor",
+      "connector_a": "mount",
+      "part_b": "beam",
+      "connector_b": "end_a"
+    }
+  ],
+  "boards": [
+    {
+      "id": "main",
+      "type": "skr-pico",
+      "pins": {
+        "x_step": "P2_2",
+        "x_dir": "P2_6"
+      }
+    }
+  ],
+  "wiring": [
+    {
+      "component": "motor",
+      "signal": "step",
+      "board": "main",
+      "pin": "P2_2"
+    },
+    {
+      "component": "motor",
+      "signal": "dir",
+      "board": "main",
+      "pin": "P2_6"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>/home/me/axis.kicad_sch</source>
+    <date>2026-10-31</date>
+    <tool>Eeschema 10.0.8</tool>
+  </design>
+  <components>
+    <comp ref="M1">
+      <value>NEMA17</value>
+      <footprint>Motor:Stepper</footprint>
+      <libsource lib="Motor" part="Stepper"/>
+    </comp>
+    <comp ref="J1">
+      <value>Conn_01x04</value>
+      <footprint>Connector:Conn_01x04</footprint>
+      <libsource lib="Connector" part="Conn_01x04"/>
+    </comp>
+    <comp ref="#PWR01">
+      <value>GND</value>
+      <libsource lib="power" part="GND"/>
+    </comp>
+  </components>
+  <nets>
+    <net code="1" name="GND">
+      <node ref="M1" pin="1" pinfunction="A1" pintype="passive"/>
+      <node ref="J1" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="#PWR01" pin="1" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="2" name="STEP">
+      <node ref="M1" pin="2" pinfunction="A2" pintype="passive"/>
+      <node ref="J1" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+  </nets>
+</export>

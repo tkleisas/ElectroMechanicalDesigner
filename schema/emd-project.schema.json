@@ -619,6 +619,9 @@
             "other"
           ]
         },
+        "pose": {
+          "$ref": "#/definitions/pose"
+        },
         "catalog_ref": {
           "type": "object",
           "required": [

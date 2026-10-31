@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EMD.Adapters/EMD.Adapters.csproj" />
+    <Project Path="src/EMD.Cli/EMD.Cli.csproj" />
+    <Project Path="src/EMD.Core/EMD.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EMD.Adapters.Tests/EMD.Adapters.Tests.csproj" />
+    <Project Path="tests/EMD.Core.Tests/EMD.Core.Tests.csproj" />
+  </Folder>
+</Solution>

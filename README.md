@@ -4,8 +4,11 @@ An open-source CAD/CAM suite for electromechanical systems: draw the mechanics,
 draw the electronics, write the firmware, and simulate the whole machine as a
 digital twin from one traceable project.
 
-**Status: architecture draft.** This repository currently contains the RFC and
-the v0.1 project schema. Implementation starts with the P0 scaffold.
+**Status: P0 complete.** The repository has the RFC and v0.1 schema, a .NET 10
+core with cross-domain validation, a content-addressed artifact store, a build
+planner, deterministic MechMaker/KiCad importers, FreeCAD artifact references,
+a process adapter host with a JSON-RPC adapter contract, and a CLI. P1 (FreeCAD
+headless export and STEP↔MJCF) is next.
 
 ## Principle
 
@@ -30,26 +33,52 @@ cross-domain identity and bindings.
 - [RFC 0001 — Unified Electromechanical CAD Suite](docs/rfc/0001-architecture.md)
 - [Project schema v0.1](schema/emd-project.schema.json)
 - [Example project](examples/project.json)
+- [Tool adapter protocol](docs/adapter-protocol.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
-Validate the example:
+Run the suite and the CLI:
 
 ```bash
+dotnet test EMD.slnx
+dotnet run --project src/EMD.Cli -- validate examples/project.json
+dotnet run --project src/EMD.Cli -- import mechmaker \
+  ../MechMaker/examples/linear_axis_v0.json \
+  --out out/linear_axis.json --catalog ../MechMaker/catalog
+dotnet run --project src/EMD.Cli -- import kicad \
+  tests/EMD.Core.Tests/Fixtures/kicad_netlist.xml --out out/kicad.json
 python3 -m jsonschema -i examples/project.json schema/emd-project.schema.json
 ```
 
-## Planned layout
+CLI commands:
+
+```text
+emd validate <project.json>
+emd import mechmaker <machine.json> --out <project.json> [--catalog <dir>]
+emd import kicad <netlist.xml> --out <project.json>
+emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]
+emd artifacts verify <project.json> [--store <dir>]
+emd build plan --project <project.json>
+```
+
+## Layout
 
 ```
-src/EMD.Core            system graph, ports, xrefs, validation, build graph
-src/EMD.Adapters        IToolAdapter, JSON-RPC process host, artifact store
+src/EMD.Core            project graph, schema, validation, importers, artifacts
+src/EMD.Adapters        process tool host + JSON-RPC tool adapter contract
+src/EMD.Cli             validate/import/build/artifacts commands
+tests/EMD.Core.Tests    unit, schema, importer, CLI tests
+tests/EMD.Adapters.Tests process host + JSON-RPC adapter tests
+```
+
+Planned additions:
+
+```
 src/EMD.Mechanical      FreeCAD/CadQuery adapter, STEP<->MJCF, MCAD<->ECAD
 src/EMD.Electrical      KiCad/ngspice adapter, netlist<->wiring, harness
 src/EMD.Twin            FMU wrappers, SSP composer, OMSimulator, HIL
 src/EMD.Cam             CAM and manufacturing outputs
 src/EMD.Hub             Avalonia shell, MCP server, web viewer
 adapters/python/        FreeCAD/KiCad/OpenModelica scripts
-tests/                  unit, adapter-contract, integration, end-to-end
 ```
 
 ## Development
@@ -63,7 +92,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.1.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.2.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

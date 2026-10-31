@@ -128,8 +128,9 @@ repository/submodule or as published NuGet packages (`MechMaker.Core`,
   cross-domain queries, diagnostics, build-graph planning.
 - **EMD.Adapters** — `IToolAdapter`: capability probe, plan, execute, collect.
   Adapters are separate processes speaking JSON-RPC over stdio (or a local
-  socket), with timeouts, cancellation, and artifact manifests. This keeps
-  third-party code at arm's length and survives ABI/API churn.
+  socket), with timeouts, cancellation, and artifact manifests. The wire
+  contract is documented in [adapter-protocol.md](../adapter-protocol.md).
+  This keeps third-party code at arm's length and survives ABI/API churn.
 - **EMD.Twin** — composes domain models into FMI 3.0 FMUs and SSP 2.0 system
   structures; drives OMSimulator/FMPy/OpenMCx; exposes record/replay and HIL
   bridges.
@@ -364,15 +365,19 @@ pinned tool versions. The Red-Green-Refactor rule is mandatory; see
 
 ## 12. Roadmap
 
-### P0 — Foundation (2–3 weeks)
+### P0 — Foundation — complete
 
-- `EMD.Core`: project schema v0.1, UUID/key model, ports, connections,
-  validation skeleton, build-graph planner.
-- `EMD.Adapters`: `IToolAdapter`, JSON-RPC process host, capability probe,
-  artifact store, CLI (`emd validate`, `emd import`, `emd build`).
-- Importers: MechMaker `machine.json`, KiCad project/netlist, FreeCAD artifact
-  reference.
-- Example project + schema validation in CI.
+- `EMD.Core`: schema validation, project model, UUID/key identity, ports,
+  connections, cross-domain validation, content-addressed artifact store, and
+  build-graph planner.
+- `EMD.Adapters`: process tool host with timeouts, cancellation, stdin/stdout/
+  stderr capture, argument-boundary safety, and a one-shot JSON-RPC 2.0
+  `IToolAdapter` contract.
+- `EMD.Cli`: `validate`, `import mechmaker`, `import kicad`, `import freecad`,
+  `build plan`, `artifacts verify`.
+- Deterministic MechMaker `machine.json` and KiCad XML netlist importers;
+  FreeCAD artifact references with optional content-addressed storage.
+- Example project, xUnit tests, format/test CI gates.
 
 ### P1 — Mechanical vertical slice
 
