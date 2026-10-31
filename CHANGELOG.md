@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-31
+
+### Added
+
+- Deterministic package exporter: project, BOM, harness, MJCF, MechMaker
+  machine, and a hashed manifest (`emd package`).
+- MechMaker compile adapter: exports `machine.json`, invokes the MechMaker CLI,
+  and returns the compiled MJCF (`EMD-MECHMAKER-010`/`011`).
+- CLI: `emd compile mechmaker`.
+
 ## [0.7.0] - 2026-10-31
 
 ### Added
@@ -114,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.8.0
 [0.7.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.7.0
 [0.6.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.6.0
 [0.5.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.5.0

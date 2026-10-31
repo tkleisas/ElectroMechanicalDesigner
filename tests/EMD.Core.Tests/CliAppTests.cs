@@ -167,6 +167,23 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Package_writes_a_reproducible_bundle()
+    {
+        using var temp = new TempDirectory();
+        var outputDir = Path.Combine(temp.Path, "package");
+
+        var (exitCode, stdout, stderr) = Run(
+            "package", "--project", TestPaths.ExampleProject, "--out-dir", outputDir);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("packaged:", stdout, StringComparison.OrdinalIgnoreCase);
+        Assert.True(File.Exists(Path.Combine(outputDir, "project.json")), stderr);
+        Assert.True(File.Exists(Path.Combine(outputDir, "bom.csv")), stderr);
+        Assert.True(File.Exists(Path.Combine(outputDir, "scene.xml")), stderr);
+        Assert.True(File.Exists(Path.Combine(outputDir, "manifest.json")), stderr);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Emd.Adapters;
+using Emd.Core;
 using Emd.Core.Artifacts;
 using Emd.Core.Build;
 using Emd.Core.Diagnostics;
@@ -38,6 +39,8 @@ public static class CliApp
                     stdout,
                     stderr,
                     new NgSpiceAdapter(ProcessToolHost.Default)),
+                "compile" => Compile(args.Skip(1).ToArray(), stdout, stderr),
+                "package" => Package(args, stdout, stderr),
                 "build" => Build(args, stdout, stderr),
                 "artifacts" => Artifacts(args, stdout, stderr),
                 _ => UsageError(stderr, $"Unknown command '{args[0]}'.")
@@ -395,6 +398,53 @@ public static class CliApp
             : 0;
     }
 
+    private static int Compile(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        if (args.Length == 0 || !string.Equals(args[0], "mechmaker", StringComparison.OrdinalIgnoreCase))
+            return UsageError(stderr, "compile expects the 'mechmaker' subcommand.");
+
+        var toolPath = GetOption(args, "--mechmaker") ?? Environment.GetEnvironmentVariable("MECHMAKER_CLI");
+        if (string.IsNullOrWhiteSpace(toolPath))
+            return UsageError(stderr, "compile mechmaker requires --mechmaker <cli.dll|exe> or MECHMAKER_CLI.");
+
+        var adapter = Path.GetExtension(toolPath).Equals(".dll", StringComparison.OrdinalIgnoreCase)
+            ? new MechMakerCompileAdapter(ProcessToolHost.Default, "dotnet", [toolPath])
+            : new MechMakerCompileAdapter(ProcessToolHost.Default, toolPath);
+        return MechMakerCompileCommand.Run(args, stdout, stderr, adapter);
+    }
+
+    private static int Package(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "package requires --project <project.json>.");
+
+        var outputDirectory = GetOption(args, "--out-dir") ?? GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(outputDirectory))
+            return UsageError(stderr, "package requires --out-dir <dir>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = PackageExporter.Default.Export(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Files.Count == 0)
+            return 1;
+
+        Directory.CreateDirectory(outputDirectory);
+        foreach (var file in result.Files)
+            File.WriteAllBytes(Path.Combine(outputDirectory, file.Name), file.Content);
+
+        stdout.WriteLine(
+            $"packaged: {loaded.Project.Name} -> {outputDirectory} ({result.Files.Count} files)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
     private static int Build(string[] args, TextWriter stdout, TextWriter stderr)
     {
         if (args.Length < 2 || !string.Equals(args[1], "plan", StringComparison.OrdinalIgnoreCase))
@@ -526,6 +576,8 @@ public static class CliApp
         writer.WriteLine("  emd export mechmaker --project <project.json> --out <machine.json>");
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
+        writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");
+        writer.WriteLine("  emd package --project <project.json> --out-dir <dir>");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();
