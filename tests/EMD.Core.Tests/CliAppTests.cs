@@ -127,6 +127,25 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Import_kicad_pcb_adds_a_board_part()
+    {
+        using var temp = new TempDirectory();
+        var projectPath = Path.Combine(temp.Path, "project.json");
+        ProjectWriter.Save(MinimalProject(), projectPath);
+
+        var (exitCode, stdout, stderr) = Run(
+            "import", "kicad-pcb", TestPaths.Fixture("board.kicad_pcb"), "--project", projectPath);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("imported PCB:", stdout, StringComparison.OrdinalIgnoreCase);
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        Assert.True(loaded.IsValid, string.Join(Environment.NewLine, loaded.Diagnostics));
+        var board = loaded.Project!.Parts.Single(part => part.Kind == PartKind.Board);
+        Assert.Equal(2, board.Ports.Count);
+        Assert.Single(loaded.Project.Electrical!.Boards);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

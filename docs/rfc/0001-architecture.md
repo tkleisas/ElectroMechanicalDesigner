@@ -313,6 +313,7 @@ Examples:
 | Code | Check |
 |---|---|
 | `EMD-XREF-001` | Orphaned domain reference (deleted part/refdes/net) |
+| `EMD-XREF-002` | Duplicate electrical refdes |
 | `EMD-MECH-001` | Assembly interference / clearance violation |
 | `EMD-MECH-002` | Unreachable pose or joint limit exceeded |
 | `EMD-MECH-003` | Missing mate or floating connector |
@@ -327,10 +328,15 @@ Examples:
 | `EMD-ELEC-002` | KiCad ERC/DRC failures |
 | `EMD-ELEC-003` | Motor/driver voltage or current mismatch |
 | `EMD-ELEC-004` | Electrical/control port is not connected |
+| `EMD-ELEC-005` | Net and port voltage mismatch |
 | `EMD-FW-001` | Firmware pin map incomplete or conflicting |
 | `EMD-FW-002` | Duplicate MCU pin assignment |
+| `EMD-FW-003` | Firmware pin is not connected to its mapped net |
 | `EMD-KICAD-010` | `kicad-cli` command failed |
 | `EMD-KICAD-011` | Expected `kicad-cli` output is missing |
+| `EMD-KICAD-020` | KiCad PCB has no usable Edge.Cuts outline |
+| `EMD-KICAD-021` | Invalid KiCad PCB S-expression |
+| `EMD-KICAD-022` | KiCad PCB has no mounting holes |
 | `EMD-SPICE-001` | ngspice command failed |
 | `EMD-SPICE-002` | Expected ngspice log is missing |
 | `EMD-HARNESS-001` | Net is not point-to-point for harness export |
@@ -426,13 +432,15 @@ Implemented:
 - CLI: `emd kicad erc|drc|netlist|bom|gerbers|step`.
 - ngspice batch adapter and `emd spice`.
 - WireViz-compatible harness export and `emd export harness`.
-- Cross-domain ERC: unconnected electrical/control ports and duplicate MCU pin
-  assignments.
+- KiCad PCB outline and mounting-hole import into a board part with mechanical
+  ports; `emd import kicad-pcb`.
+- Cross-domain ERC: unconnected electrical/control ports, duplicate MCU pins,
+  duplicate refdes, net/port voltage mismatch, and firmware pin-to-net
+  connectivity.
 
 Remaining:
 
-- Deeper net/refdes mapping and motor phase/driver/firmware checks.
-- Board outline/holes into the mechanical assembly.
+- Motor phase/driver topology checks.
 - Co-simulation wiring for SPICE/FMU models.
 
 ### P3 — Digital twin co-simulation

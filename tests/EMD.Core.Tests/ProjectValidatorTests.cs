@@ -73,6 +73,43 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Duplicate_electrical_refdes_is_reported_as_EMD_XREF_002()
+    {
+        var project = Mutate(root =>
+            root["parts"]![1]!["domain_refs"]!["electrical"]!["ref"] = "A1");
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-XREF-002");
+    }
+
+    [Fact]
+    public void Net_voltage_mismatch_is_reported_as_EMD_ELEC_005()
+    {
+        var project = Mutate(root =>
+        {
+            var net = root["electrical"]!["nets"]!.AsArray()
+                .First(candidate => (string?)candidate!["key"] == "step");
+            net!["voltage_v"] = 5.0;
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-005");
+    }
+
+    [Fact]
+    public void Firmware_pin_on_the_wrong_board_port_net_is_reported_as_EMD_FW_003()
+    {
+        var project = Mutate(root =>
+            root["firmware"]!["projects"]![0]!["pin_map"]![0]!["port_id"] = "dir");
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-FW-003");
+    }
+
+    [Fact]
     public void Duplicate_firmware_pin_is_reported_as_EMD_FW_002()
     {
         var project = Mutate(root =>

@@ -19,8 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ngspice batch adapter and `emd spice` (`EMD-SPICE-001`/`002`).
 - WireViz-compatible harness exporter and `emd export harness`
   (`EMD-HARNESS-001`/`002`).
-- Cross-domain ERC: unconnected electrical/control ports (`EMD-ELEC-004`) and
-  duplicate MCU pin assignments (`EMD-FW-002`).
+- KiCad PCB outline and mounting-hole importer, adding a mechanical board part
+  and `Electrical.Boards` entry (`EMD-KICAD-020`/`021`/`022`).
+- CLI: `emd import kicad-pcb`.
+- Cross-domain ERC: unconnected electrical/control ports (`EMD-ELEC-004`),
+  duplicate MCU pin assignments (`EMD-FW-002`), duplicate electrical refdes
+  (`EMD-XREF-002`), net/port voltage mismatch (`EMD-ELEC-005`), and firmware
+  pin-to-net connectivity (`EMD-FW-003`).
 
 ## [0.4.0] - 2026-10-31
 

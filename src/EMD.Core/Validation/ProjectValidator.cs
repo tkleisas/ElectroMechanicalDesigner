@@ -27,10 +27,12 @@ public sealed class ProjectValidator
         ValidateConnectionEndpoints(project, parts, nets, artifacts, diagnostics);
         ValidateArtifactInputs(project, artifacts, diagnostics);
         ValidateDomainReferences(project, artifacts, diagnostics);
+        ValidateElectricalRefdes(project, diagnostics);
         ValidatePartGeometry(project, artifacts, diagnostics);
         ValidateMechanical(project, parts, artifacts, diagnostics);
         ValidateElectrical(project, parts, artifacts, diagnostics);
         ValidateElectricalPortConnectivity(project, diagnostics);
+        ValidateElectricalVoltages(project, parts, nets, diagnostics);
         ValidateFirmware(project, parts, nets, artifacts, diagnostics);
         ValidateBehavior(project, parts, artifacts, diagnostics);
         ValidateSimulation(project, connections, artifacts, diagnostics);
@@ -183,6 +185,85 @@ public sealed class ProjectValidator
             RequireArtifact(refs.Behavior?.ArtifactId, artifacts, $"Part '{Entity(part)}' behavior ref", diagnostics);
             RequireArtifact(refs.Simulation?.ArtifactId, artifacts, $"Part '{Entity(part)}' simulation ref", diagnostics);
             RequireArtifact(refs.Manufacturing?.ArtifactId, artifacts, $"Part '{Entity(part)}' manufacturing ref", diagnostics);
+        }
+    }
+
+    private static void ValidateElectricalRefdes(
+        EmdProject project,
+        List<Diagnostic> diagnostics)
+    {
+        var refs = new Dictionary<(string Tool, string Ref), List<Part>>();
+        foreach (var part in project.Parts)
+        {
+            var electrical = part.DomainRefs?.Electrical;
+            if (electrical is null || string.IsNullOrWhiteSpace(electrical.Ref))
+                continue;
+
+            var key = (electrical.Tool, electrical.Ref);
+            if (!refs.TryGetValue(key, out var parts))
+            {
+                parts = [];
+                refs[key] = parts;
+            }
+
+            parts.Add(part);
+        }
+
+        foreach (var (key, parts) in refs)
+        {
+            if (parts.Count < 2)
+                continue;
+
+            diagnostics.Add(new Diagnostic(
+                "EMD-XREF-002",
+                DiagnosticSeverity.Error,
+                $"Electrical refdes '{key.Ref}' is used by multiple parts: " +
+                string.Join(", ", parts.Select(Entity)) + ".",
+                Entity: key.Ref));
+        }
+    }
+
+    private static void ValidateElectricalVoltages(
+        EmdProject project,
+        IReadOnlyDictionary<Guid, Part> parts,
+        IReadOnlyDictionary<Guid, Net> nets,
+        List<Diagnostic> diagnostics)
+    {
+        var tolerance = project.Validation?.Tolerances?.GetValueOrDefault("voltage_v") ?? 0.5;
+
+        foreach (var connection in project.Connections)
+        {
+            Check(connection.From, connection.To);
+            Check(connection.To, connection.From);
+        }
+
+        void Check(Endpoint netSide, Endpoint partSide)
+        {
+            if (netSide.NetId is not { } netId ||
+                partSide.PartId is not { } partId ||
+                partSide.PortId is not { } portId)
+            {
+                return;
+            }
+
+            if (!nets.TryGetValue(netId, out var net) || net.VoltageV is not { } netVoltage)
+                return;
+            if (!parts.TryGetValue(partId, out var part))
+                return;
+
+            var port = part.Ports.FirstOrDefault(candidate => candidate.Id == portId);
+            if (port?.Signal?.VoltageV is not { } portVoltage)
+                return;
+
+            if (Math.Abs(netVoltage - portVoltage) <= tolerance)
+                return;
+
+            diagnostics.Add(new Diagnostic(
+                "EMD-ELEC-005",
+                DiagnosticSeverity.Error,
+                $"Net '{net.Key}' is {netVoltage} V but port '{portId}' on part " +
+                $"'{Entity(part)}' is {portVoltage} V.",
+                Entity: $"{Entity(part)}.{portId}"));
         }
     }
 
@@ -409,6 +490,13 @@ public sealed class ProjectValidator
         IReadOnlyDictionary<Guid, Artifact> artifacts,
         List<Diagnostic> diagnostics)
     {
+        var portNets = new HashSet<(Guid PartId, string PortId, Guid NetId)>();
+        foreach (var connection in project.Connections)
+        {
+            AddPortNet(connection.From, connection.To);
+            AddPortNet(connection.To, connection.From);
+        }
+
         foreach (var firmware in project.Firmware?.Projects ?? [])
         {
             var assignedPins = new HashSet<(Guid? Board, string Pin)>();
@@ -462,10 +550,31 @@ public sealed class ProjectValidator
                             $"Firmware '{Entity(firmware)}' pin '{pin.McuPin}' references missing port '{portId}' on board '{Entity(pinBoard)}'.",
                             Entity: Entity(firmware)));
                     }
+                    else if (pin.PortId is { } pinPortId &&
+                             nets.ContainsKey(pin.NetId) &&
+                             !portNets.Contains((boardPartId, pinPortId, pin.NetId)))
+                    {
+                        diagnostics.Add(new Diagnostic(
+                            "EMD-FW-003",
+                            DiagnosticSeverity.Error,
+                            $"Firmware '{Entity(firmware)}' pin '{pin.McuPin}' maps net '{pin.NetId}' " +
+                            $"but board port '{pinPortId}' is not connected to that net.",
+                            Entity: Entity(firmware)));
+                    }
                 }
             }
 
             _ = board;
+        }
+
+        void AddPortNet(Endpoint netSide, Endpoint partSide)
+        {
+            if (netSide.NetId is { } netId &&
+                partSide.PartId is { } partId &&
+                partSide.PortId is { } portId)
+            {
+                portNets.Add((partId, portId, netId));
+            }
         }
     }
 

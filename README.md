@@ -9,9 +9,10 @@ RFC/schema, .NET 10 core, cross-domain validation, content-addressed artifacts,
 build planning, deterministic MechMaker/KiCad importers, FreeCAD manifest and
 startup adapter, pose transforms, MJCF export, and interference/joint-limit
 checks. P2 adds BOM export, a headless `kicad-cli` adapter (ERC/DRC/netlist/
-BOM/Gerbers/STEP), an ngspice batch adapter, WireViz harness export, and
-cross-domain ERC checks. The suite has 132 xUnit tests and 10 Python adapter
-tests.
+BOM/Gerbers/STEP), KiCad PCB outline/mounting-hole import, an ngspice batch
+adapter, WireViz harness export, and cross-domain ERC checks (refdes
+uniqueness, net/port voltages, firmware pin-to-net connectivity). The suite has
+141 xUnit tests and 10 Python adapter tests.
 
 ## Principle
 
@@ -66,6 +67,7 @@ emd import mechmaker <machine.json> --out <project.json> [--catalog <dir>]
 emd import kicad <netlist.xml> --out <project.json>
 emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]
 emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]
+emd import kicad-pcb <board.kicad_pcb> --project <project.json> [--out <project.json>]
 emd export mjcf --project <project.json> --out <scene.xml>
 emd export bom --project <project.json> --out <bom.csv>
 emd export harness --project <project.json> --out <harness.yml>

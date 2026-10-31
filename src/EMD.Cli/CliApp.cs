@@ -4,6 +4,7 @@ using Emd.Core.Build;
 using Emd.Core.Diagnostics;
 using Emd.Core.Exporters;
 using Emd.Core.Importers;
+using Emd.Core.Model;
 using Emd.Core.Projects;
 using Emd.Core.Validation;
 
@@ -81,6 +82,7 @@ public static class CliApp
             "kicad" => ImportKiCad(args, stdout, stderr),
             "freecad" => ImportFreeCad(args, stdout, stderr),
             "freecad-manifest" => ImportFreeCadManifest(args, stdout, stderr),
+            "kicad-pcb" => ImportKiCadPcb(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown import source '{args[1]}'.")
         };
     }
@@ -173,6 +175,56 @@ public static class CliApp
         stdout.WriteLine(
             $"added: {Path.GetFileName(input)} -> {output} " +
             $"({result.Project.Artifacts.Count} artifacts)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ImportKiCadPcb(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var input = args[2];
+        var projectPath = GetOption(args, "--project");
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "import kicad-pcb requires --project <project.json>.");
+
+        var output = GetOption(args, "--out") ?? projectPath;
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = KiCadPcbOutlineImporter.Default.ImportFile(input);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Board is null || result.BoardEntry is null)
+            return 1;
+
+        var parts = loaded.Project.Parts
+            .Where(part => part.Id != result.Board.Id)
+            .ToList();
+        parts.Add(result.Board);
+
+        var electrical = loaded.Project.Electrical ?? new ElectricalSection();
+        var boards = electrical.Boards
+            .Where(board => board.Id != result.BoardEntry.Id)
+            .ToList();
+        boards.Add(result.BoardEntry);
+
+        var mechanical = loaded.Project.Mechanical ?? new MechanicalSection();
+        if (mechanical.AssemblyRootPartId is null)
+            mechanical = mechanical with { AssemblyRootPartId = result.Board.Id };
+
+        var updated = loaded.Project with
+        {
+            Parts = parts,
+            Electrical = electrical with { Boards = boards },
+            Mechanical = mechanical
+        };
+
+        ProjectWriter.Save(updated, output);
+        stdout.WriteLine(
+            $"imported PCB: {result.Board.Name} -> {output} " +
+            $"({result.Board.Ports.Count} mounting holes)");
 
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
@@ -434,6 +486,7 @@ public static class CliApp
         writer.WriteLine("  emd import kicad <netlist.xml> --out <project.json>");
         writer.WriteLine("  emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]");
         writer.WriteLine("  emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]");
+        writer.WriteLine("  emd import kicad-pcb <board.kicad_pcb> --project <project.json> [--out <project.json>]");
         writer.WriteLine("  emd export mjcf --project <project.json> --out <scene.xml>");
         writer.WriteLine("  emd export bom --project <project.json> --out <bom.csv>");
         writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
