@@ -1,0 +1,192 @@
+using System.IO.Compression;
+using System.Text;
+using System.Xml.Linq;
+using Emd.Core.Exporters;
+using Emd.Core.Model;
+
+namespace Emd.Core.Tests;
+
+public class SspComposerTests
+{
+    private static readonly XNamespace Ssd = "http://ssp-standard.org/SSP1/SystemStructureDescription";
+    private static readonly XNamespace Ssc = "http://ssp-standard.org/SSP1/SystemStructureCommon";
+
+    [Fact]
+    public void Compose_builds_the_ssd_and_fmu_resources()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.NotNull(result.Archive);
+
+        using var archive = new ZipArchive(new MemoryStream(result.Archive!), ZipArchiveMode.Read);
+        Assert.Contains(archive.Entries, entry => entry.FullName == "SystemStructure.ssd");
+        Assert.Contains(archive.Entries, entry => entry.FullName == "resources/controller.fmu");
+        Assert.Contains(archive.Entries, entry => entry.FullName == "resources/plant.fmu");
+
+        var ssd = ReadEntry(archive, "SystemStructure.ssd");
+        Assert.StartsWith("<?xml", ssd, StringComparison.Ordinal);
+        var document = XDocument.Parse(ssd);
+        var root = document.Root!;
+        Assert.Equal("SystemStructureDescription", root.Name.LocalName);
+        Assert.Equal("2.0", (string?)root.Attribute("version"));
+
+        var controller = root.Descendants(Ssd + "Component")
+            .Single(component => (string?)component.Attribute("name") == "controller");
+        var plant = root.Descendants(Ssd + "Component")
+            .Single(component => (string?)component.Attribute("name") == "plant");
+        Assert.Contains(controller.Descendants(Ssd + "Connector"), connector =>
+            (string?)connector.Attribute("name") == "cmd" &&
+            (string?)connector.Attribute("kind") == "output");
+        Assert.Contains(plant.Descendants(Ssd + "Connector"), connector =>
+            (string?)connector.Attribute("name") == "cmd_in" &&
+            (string?)connector.Attribute("kind") == "input");
+
+        var connection = Assert.Single(root.Descendants(Ssd + "Connection"));
+        Assert.Equal("controller", (string?)connection.Attribute("startElement"));
+        Assert.Equal("cmd", (string?)connection.Attribute("startConnector"));
+        Assert.Equal("plant", (string?)connection.Attribute("endElement"));
+        Assert.Equal("cmd_in", (string?)connection.Attribute("endConnector"));
+
+        var experiment = Assert.Single(root.Descendants(Ssd + "DefaultExperiment"));
+        Assert.Equal("0.001", (string?)experiment.Attribute("stepSize"));
+        Assert.Equal("1", (string?)experiment.Attribute("stopTime"));
+    }
+
+    [Fact]
+    public void Missing_fmu_file_reports_EMD_SSP_002()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path, deletePlantFmu: true);
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.Null(result.Archive);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "EMD-SSP-002");
+    }
+
+    [Fact]
+    public void Project_without_fmu_models_reports_EMD_SSP_001()
+    {
+        var project = new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "no fmu",
+            Parts = []
+        };
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.Null(result.Archive);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "EMD-SSP-001");
+    }
+
+    private static EmdProject ProjectWithFmus(string directory, bool deletePlantFmu = false)
+    {
+        var controllerPath = Path.Combine(directory, "controller.fmu");
+        var plantPath = Path.Combine(directory, "plant.fmu");
+        File.WriteAllText(controllerPath, "controller fmu");
+        File.WriteAllText(plantPath, "plant fmu");
+        if (deletePlantFmu)
+            File.Delete(plantPath);
+
+        var controllerArtifactId = Guid.NewGuid();
+        var plantArtifactId = Guid.NewGuid();
+        return new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "SSP test",
+            Parts =
+            [
+                new Part
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "frame",
+                    Name = "Frame",
+                    Kind = PartKind.Component,
+                    Ports = []
+                }
+            ],
+            Artifacts =
+            [
+                new Artifact
+                {
+                    Id = controllerArtifactId,
+                    Key = "controller_fmu",
+                    Path = controllerPath,
+                    Format = "fmu",
+                    Role = ArtifactRole.Simulation
+                },
+                new Artifact
+                {
+                    Id = plantArtifactId,
+                    Key = "plant_fmu",
+                    Path = plantPath,
+                    Format = "fmu",
+                    Role = ArtifactRole.Simulation
+                }
+            ],
+            Behavior = new BehaviorSection
+            {
+                Models =
+                [
+                    new BehaviorModel
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "controller",
+                        Name = "Controller",
+                        Kind = ModelKind.Fmu,
+                        ArtifactId = controllerArtifactId,
+                        Outputs = [new ModelPort { Name = "cmd", Variable = "cmd" }]
+                    },
+                    new BehaviorModel
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "plant",
+                        Name = "Plant",
+                        Kind = ModelKind.Fmu,
+                        ArtifactId = plantArtifactId,
+                        Inputs = [new ModelPort { Name = "cmd_in", Variable = "cmd_in" }]
+                    }
+                ]
+            },
+            Connections =
+            [
+                new Connection
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "cmd_to_plant",
+                    Kind = ConnectionKind.SimulationBinding,
+                    From = new Endpoint { ArtifactId = controllerArtifactId, Variable = "cmd" },
+                    To = new Endpoint { ArtifactId = plantArtifactId, Variable = "cmd_in" }
+                }
+            ],
+            Simulation = new SimulationSection
+            {
+                Systems =
+                [
+                    new SimSystem
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "twin",
+                        Standard = SimulationStandard.Ssp2,
+                        Master = SimulationMaster.Omsimulator,
+                        StepSizeS = 0.001,
+                        StartTimeS = 0,
+                        StopTimeS = 1
+                    }
+                ]
+            }
+        };
+    }
+
+    private static string ReadEntry(ZipArchive archive, string name)
+    {
+        var entry = archive.GetEntry(name)!;
+        using var reader = new StreamReader(entry.Open(), Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
+}

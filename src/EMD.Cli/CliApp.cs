@@ -280,6 +280,7 @@ public static class CliApp
             "bom" => ExportBom(args, stdout, stderr),
             "harness" => ExportHarness(args, stdout, stderr),
             "mechmaker" => ExportMechMaker(args, stdout, stderr),
+            "ssp" => ExportSsp(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown export '{args[1]}'.")
         };
     }
@@ -577,6 +578,33 @@ public static class CliApp
         return 0;
     }
 
+    private static int ExportSsp(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "export ssp requires --project <project.json>.");
+
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "export ssp requires --out <file.ssp>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = SspComposer.Default.Compose(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Archive is null)
+            return 1;
+
+        WriteBytesFile(output, result.Archive);
+        stdout.WriteLine($"exported SSP: {loaded.Project.Name} -> {output}");
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
     private static int Build(string[] args, TextWriter stdout, TextWriter stderr)
     {
         if (args.Length < 2 || !string.Equals(args[1], "plan", StringComparison.OrdinalIgnoreCase))
@@ -678,6 +706,14 @@ public static class CliApp
         return null;
     }
 
+    private static void WriteBytesFile(string path, byte[] content)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+        File.WriteAllBytes(path, content);
+    }
+
     private static void WriteTextFile(string path, string content)
     {
         var directory = Path.GetDirectoryName(Path.GetFullPath(path));
@@ -717,6 +753,7 @@ public static class CliApp
         writer.WriteLine("  emd export bom --project <project.json> --out <bom.csv>");
         writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
         writer.WriteLine("  emd export mechmaker --project <project.json> --out <machine.json>");
+        writer.WriteLine("  emd export ssp --project <project.json> --out <file.ssp>");
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");

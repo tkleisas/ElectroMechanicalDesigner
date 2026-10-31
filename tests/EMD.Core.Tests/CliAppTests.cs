@@ -268,6 +268,101 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Export_ssp_writes_an_archive()
+    {
+        using var temp = new TempDirectory();
+        var controllerPath = Path.Combine(temp.Path, "controller.fmu");
+        var plantPath = Path.Combine(temp.Path, "plant.fmu");
+        File.WriteAllText(controllerPath, "controller");
+        File.WriteAllText(plantPath, "plant");
+        var controllerId = Guid.NewGuid();
+        var plantId = Guid.NewGuid();
+        var project = new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "ssp cli",
+            Parts =
+            [
+                new Part
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "frame",
+                    Name = "Frame",
+                    Kind = PartKind.Component,
+                    Ports = []
+                }
+            ],
+            Artifacts =
+            [
+                new Artifact
+                {
+                    Id = controllerId,
+                    Key = "controller_fmu",
+                    Path = controllerPath,
+                    Format = "fmu",
+                    Role = ArtifactRole.Simulation
+                },
+                new Artifact
+                {
+                    Id = plantId,
+                    Key = "plant_fmu",
+                    Path = plantPath,
+                    Format = "fmu",
+                    Role = ArtifactRole.Simulation
+                }
+            ],
+            Behavior = new BehaviorSection
+            {
+                Models =
+                [
+                    new BehaviorModel
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "controller",
+                        Kind = ModelKind.Fmu,
+                        ArtifactId = controllerId,
+                        Outputs = [new ModelPort { Name = "cmd", Variable = "cmd" }]
+                    },
+                    new BehaviorModel
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "plant",
+                        Kind = ModelKind.Fmu,
+                        ArtifactId = plantId,
+                        Inputs = [new ModelPort { Name = "cmd_in", Variable = "cmd_in" }]
+                    }
+                ]
+            },
+            Simulation = new SimulationSection
+            {
+                Systems =
+                [
+                    new SimSystem
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "twin",
+                        Standard = SimulationStandard.Ssp2,
+                        Master = SimulationMaster.Omsimulator,
+                        StepSizeS = 0.001,
+                        StopTimeS = 1
+                    }
+                ]
+            }
+        };
+        var projectPath = Path.Combine(temp.Path, "project.json");
+        ProjectWriter.Save(project, projectPath);
+        var output = Path.Combine(temp.Path, "twin.ssp");
+
+        var (exitCode, stdout, stderr) = Run("export", "ssp", "--project", projectPath, "--out", output);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(output), stderr);
+        Assert.Contains("exported SSP", stdout, StringComparison.OrdinalIgnoreCase);
+        using var archive = System.IO.Compression.ZipFile.OpenRead(output);
+        Assert.Contains(archive.Entries, entry => entry.FullName == "SystemStructure.ssd");
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

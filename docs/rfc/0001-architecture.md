@@ -374,6 +374,9 @@ Examples:
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
 | `EMD-SIM-003` | Simulation binding references an undeclared variable |
 | `EMD-SIM-004` | Scenario trace artifact is missing |
+| `EMD-SSP-001` | No FMU behavior models for SSP composition |
+| `EMD-SSP-002` | FMU artifact is missing or unreadable |
+| `EMD-SSP-003` | Simulation binding does not match FMU connectors |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
 | `EMD-BOM-001` | BOM/refdes mismatch |
 
@@ -486,6 +489,7 @@ Remaining:
 - Live MechMaker simulation over MCP and `emd simulate mechmaker`. **Done.**
 - Project → machine.json → live run → trace → scenario assertion loop. **Done.**
 - Scenario trace evidence persisted in the project and packaged. **Done.**
+- SSP 2.0 composition of FMU behavior models and FMU-to-FMU bindings. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).

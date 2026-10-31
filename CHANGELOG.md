@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-31
+
+### Added
+
+- SSP 2.0 composer: packages FMU behavior models and FMU-to-FMU simulation
+  bindings into a deterministic `.ssp` archive (`emd export ssp`,
+  `EMD-SSP-001`..`003`).
+
 ## [0.18.0] - 2026-10-31
 
 ### Added
@@ -196,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.19.0
 [0.18.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.18.0
 [0.17.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.17.0
 [0.16.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.16.0
