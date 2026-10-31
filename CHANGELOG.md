@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-31
+
+### Added
+
+- Interference and joint-limit checks: oriented-box SAT, box/sphere and
+  sphere/sphere penetration, mate/joint overlap exemptions, interference
+  tolerance, and slide/hinge range checks (`EMD-MECH-001`/`002`).
+- Pose-math collision helpers and conservative proxy bounds for box, cylinder,
+  sphere, capsule, and ellipsoid geometry.
+
 ## [0.3.0] - 2026-10-31
 
 ### Added
@@ -69,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.4.0
 [0.3.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.3.0
 [0.2.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.2.0
 [0.1.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.1.0

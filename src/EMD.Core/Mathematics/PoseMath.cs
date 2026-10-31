@@ -12,6 +12,25 @@ public readonly record struct Vec3d(double X, double Y, double Z)
 
     public static Vec3d operator *(Mat3 matrix, Vec3d vector) => matrix.Multiply(vector);
 
+    public static Vec3d operator *(double scalar, Vec3d vector) =>
+        new(scalar * vector.X, scalar * vector.Y, scalar * vector.Z);
+
+    public static double Dot(Vec3d left, Vec3d right) =>
+        left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+
+    public static Vec3d Cross(Vec3d left, Vec3d right) => new(
+        left.Y * right.Z - left.Z * right.Y,
+        left.Z * right.X - left.X * right.Z,
+        left.X * right.Y - left.Y * right.X);
+
+    public double Length => Math.Sqrt(X * X + Y * Y + Z * Z);
+
+    public Vec3d Normalized()
+    {
+        var length = Length;
+        return length < 1e-15 ? new Vec3d(0, 0, 0) : new Vec3d(X / length, Y / length, Z / length);
+    }
+
     public double[] ToArray() => [X, Y, Z];
 }
 
@@ -48,6 +67,12 @@ public readonly record struct Mat3(
             sz * cy, sz * sy * sx + cz * cx, sz * sy * cx - cz * sx,
             -sy, cy * sx, cy * cx);
     }
+
+    public Vec3d AxisX => new(M00, M10, M20);
+
+    public Vec3d AxisY => new(M01, M11, M21);
+
+    public Vec3d AxisZ => new(M02, M12, M22);
 
     public Mat3 Transpose() => new(
         M00, M10, M20,

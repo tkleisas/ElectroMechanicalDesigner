@@ -1,0 +1,231 @@
+using Emd.Core.Model;
+using Emd.Core.Validation;
+
+namespace Emd.Core.Tests;
+
+public class MechanicalValidatorTests
+{
+    [Fact]
+    public void Overlapping_boxes_report_EMD_MECH_001()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var motor = Box("motor", [0, 0, 0], [0.5, 0.5, 0.5]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(Project(frame, motor));
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Separated_boxes_do_not_report()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var motor = Box("motor", [2, 0, 0], [1, 1, 1]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(Project(frame, motor));
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Touching_boxes_do_not_report()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var motor = Box("motor", [1, 0, 0], [1, 1, 1]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(Project(frame, motor));
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Rotated_boxes_are_checked_with_oriented_bounds()
+    {
+        var frame = Box("frame", [0, 0, 0], [2, 0.2, 0.2]);
+        var motor = Box("motor", [0, 0.2, 0], [0.2, 2, 0.2], rot: [0, 0, 45]);
+
+        var diagnostics = MechanicalValidator.Default.Validate(Project(frame, motor));
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Explicitly_connected_parts_may_overlap()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var motor = Box("motor", [0, 0, 0], [1, 1, 1]);
+        var connection = new Connection
+        {
+            Id = Guid.NewGuid(),
+            Key = "motor_on_frame",
+            Kind = ConnectionKind.Mate,
+            From = new Endpoint { PartId = frame.Id },
+            To = new Endpoint { PartId = motor.Id }
+        };
+
+        var diagnostics = MechanicalValidator.Default.Validate(Project(frame, motor, connections: [connection]));
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Interference_tolerance_is_honoured()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var motor = Box("motor", [0.999, 0, 0], [1, 1, 1]);
+
+        var allowed = MechanicalValidator.Default.Validate(Project(frame, motor, interferenceMm: 2));
+        var rejected = MechanicalValidator.Default.Validate(Project(frame, motor, interferenceMm: 0));
+
+        Assert.DoesNotContain(allowed, diagnostic => diagnostic.Code == "EMD-MECH-001");
+        Assert.Contains(rejected, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Sphere_and_box_interference_is_detected()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var ball = Sphere("ball", [0.6, 0, 0], 0.3);
+
+        var diagnostics = MechanicalValidator.Default.Validate(Project(frame, ball));
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    [Fact]
+    public void Slide_joint_out_of_range_reports_EMD_MECH_002()
+    {
+        var parent = Box("parent", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var child = Box("child", [0.3, 0, 0], [0.1, 0.1, 0.1]);
+        var project = Project(parent, child, mechanical: new MechanicalSection
+        {
+            AssemblyRootPartId = parent.Id,
+            Joints =
+            [
+                new MechanicalJoint
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "x_slide",
+                    Type = MechanicalJointType.Slide,
+                    ParentPartId = parent.Id,
+                    ChildPartId = child.Id,
+                    Axis = [1, 0, 0],
+                    Range = [-0.2, 0.2]
+                }
+            ]
+        });
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-002");
+    }
+
+    [Fact]
+    public void Hinge_joint_out_of_range_reports_EMD_MECH_002()
+    {
+        var parent = Box("parent", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var child = Box("child", [0, 0, 0], [0.1, 0.1, 0.1], rot: [0, 0, 60]);
+        var project = Project(parent, child, mechanical: new MechanicalSection
+        {
+            AssemblyRootPartId = parent.Id,
+            Joints =
+            [
+                new MechanicalJoint
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "z_hinge",
+                    Type = MechanicalJointType.Hinge,
+                    ParentPartId = parent.Id,
+                    ChildPartId = child.Id,
+                    Axis = [0, 0, 1],
+                    Range = [-45, 45]
+                }
+            ]
+        });
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-002");
+    }
+
+    [Fact]
+    public void Joint_within_range_does_not_report()
+    {
+        var parent = Box("parent", [0, 0, 0], [0.1, 0.1, 0.1]);
+        var child = Box("child", [0.1, 0, 0], [0.1, 0.1, 0.1]);
+        var project = Project(parent, child, mechanical: new MechanicalSection
+        {
+            AssemblyRootPartId = parent.Id,
+            Joints =
+            [
+                new MechanicalJoint
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "x_slide",
+                    Type = MechanicalJointType.Slide,
+                    ParentPartId = parent.Id,
+                    ChildPartId = child.Id,
+                    Axis = [1, 0, 0],
+                    Range = [-0.2, 0.2]
+                }
+            ]
+        });
+
+        var diagnostics = MechanicalValidator.Default.Validate(project);
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-002");
+    }
+
+    [Fact]
+    public void ProjectValidator_includes_mechanical_checks()
+    {
+        var frame = Box("frame", [0, 0, 0], [1, 1, 1]);
+        var motor = Box("motor", [0, 0, 0], [0.5, 0.5, 0.5]);
+
+        var diagnostics = ProjectValidator.Default.Validate(Project(frame, motor));
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-MECH-001");
+    }
+
+    private static EmdProject Project(
+        Part first,
+        Part second,
+        MechanicalSection? mechanical = null,
+        IEnumerable<Connection>? connections = null,
+        double? interferenceMm = null) => new()
+        {
+            Id = Guid.NewGuid(),
+            Name = "mechanical test",
+            Parts = [first, second],
+            Connections = connections?.ToList() ?? [],
+            Mechanical = mechanical ?? new MechanicalSection { AssemblyRootPartId = first.Id },
+            Validation = interferenceMm is null
+                ? null
+                : new ValidationSection
+                {
+                    Tolerances = new Dictionary<string, double> { ["interference_mm"] = interferenceMm.Value }
+                }
+        };
+
+    private static Part Box(string key, double[] pos, double[] size, double[]? rot = null) => new()
+    {
+        Id = Guid.NewGuid(),
+        Key = key,
+        Name = key,
+        Kind = PartKind.Component,
+        Pose = new Pose { Pos = pos, Rot = rot },
+        Geometry = new PartGeometry { Kind = GeometryKind.Box, Size = size },
+        Ports = []
+    };
+
+    private static Part Sphere(string key, double[] pos, double radius) => new()
+    {
+        Id = Guid.NewGuid(),
+        Key = key,
+        Name = key,
+        Kind = PartKind.Component,
+        Pose = new Pose { Pos = pos },
+        Geometry = new PartGeometry { Kind = GeometryKind.Sphere, Size = [radius, radius, radius] },
+        Ports = []
+    };
+}

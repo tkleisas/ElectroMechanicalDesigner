@@ -8,8 +8,8 @@ digital twin from one traceable project.
 cross-domain validation, content-addressed artifacts, build planner,
 deterministic MechMaker/KiCad importers, FreeCAD artifact references, process
 adapter host, JSON-RPC contract, and CLI. P1 now adds a CAD manifest sidecar,
-pose transforms, an MJCF exporter, and a starter FreeCAD adapter. The suite has
-95 xUnit tests and 10 Python adapter tests.
+pose transforms, an MJCF exporter, a starter FreeCAD adapter, and interference/
+joint-limit checks. The suite has 106 xUnit tests and 10 Python adapter tests.
 
 ## Principle
 
@@ -101,7 +101,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.3.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.4.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

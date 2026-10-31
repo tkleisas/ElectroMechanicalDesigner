@@ -34,6 +34,7 @@ public sealed class ProjectValidator
         ValidateBehavior(project, parts, artifacts, diagnostics);
         ValidateSimulation(project, connections, artifacts, diagnostics);
         ValidateManufacturing(project, parts, artifacts, diagnostics);
+        diagnostics.AddRange(MechanicalValidator.Default.Validate(project));
 
         _ = boards;
         _ = firmwareProjects;

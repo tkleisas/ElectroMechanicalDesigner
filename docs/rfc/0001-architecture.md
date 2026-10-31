@@ -396,6 +396,9 @@ Implemented:
   hinge/slide/ball/free joints, motors, and diagnostics.
 - Starter FreeCAD JSON-RPC adapter (`adapters/python`) exporting STEP/STL and a
   CAD manifest from bounding-box proxies.
+- Interference and joint-limit checks: oriented-box SAT, box/sphere and
+  sphere/sphere penetration, explicit-mate/joint overlap exemptions, and
+  slide/hinge ranges.
 - CLI: `import freecad-manifest` and `export mjcf`.
 
 Remaining:
@@ -403,7 +406,7 @@ Remaining:
 - A richer FreeCAD property scheme or workbench export (real connector frames,
   materials, BOM, per-feature geometry).
 - CadQuery catalog part generation.
-- Interference/reach checks and board outline/holes from KiCad STEP.
+- Reachability/clearance sweeps and board outline/holes from KiCad STEP.
 
 ### P2 — Electrical vertical slice
 
