@@ -30,6 +30,7 @@ public sealed class ProjectValidator
         ValidatePartGeometry(project, artifacts, diagnostics);
         ValidateMechanical(project, parts, artifacts, diagnostics);
         ValidateElectrical(project, parts, artifacts, diagnostics);
+        ValidateElectricalPortConnectivity(project, diagnostics);
         ValidateFirmware(project, parts, nets, artifacts, diagnostics);
         ValidateBehavior(project, parts, artifacts, diagnostics);
         ValidateSimulation(project, connections, artifacts, diagnostics);
@@ -370,6 +371,37 @@ public sealed class ProjectValidator
         }
     }
 
+    private static void ValidateElectricalPortConnectivity(
+        EmdProject project,
+        List<Diagnostic> diagnostics)
+    {
+        var connected = new HashSet<(Guid PartId, string PortId)>();
+        foreach (var connection in project.Connections)
+        {
+            if (connection.From.PartId is { } fromPart && connection.From.PortId is { } fromPort)
+                connected.Add((fromPart, fromPort));
+            if (connection.To.PartId is { } toPart && connection.To.PortId is { } toPort)
+                connected.Add((toPart, toPort));
+        }
+
+        foreach (var part in project.Parts)
+        {
+            foreach (var port in part.Ports)
+            {
+                if (port.Domain is not (PortDomain.Electrical or PortDomain.Control))
+                    continue;
+                if (connected.Contains((part.Id, port.Id)))
+                    continue;
+
+                diagnostics.Add(new Diagnostic(
+                    "EMD-ELEC-004",
+                    DiagnosticSeverity.Warning,
+                    $"Port '{port.Id}' on part '{Entity(part)}' is not connected to any net.",
+                    Entity: $"{Entity(part)}.{port.Id}"));
+            }
+        }
+    }
+
     private static void ValidateFirmware(
         EmdProject project,
         IReadOnlyDictionary<Guid, Part> parts,
@@ -379,6 +411,7 @@ public sealed class ProjectValidator
     {
         foreach (var firmware in project.Firmware?.Projects ?? [])
         {
+            var assignedPins = new HashSet<(Guid? Board, string Pin)>();
             RequireArtifact(firmware.SourceArtifactId, artifacts, $"Firmware '{Entity(firmware)}' source", diagnostics);
             RequireArtifact(firmware.BinaryArtifactId, artifacts, $"Firmware '{Entity(firmware)}' binary", diagnostics);
 
@@ -393,6 +426,15 @@ public sealed class ProjectValidator
 
             foreach (var pin in firmware.PinMap)
             {
+                if (!assignedPins.Add((pin.BoardPartId, pin.McuPin)))
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-FW-002",
+                        DiagnosticSeverity.Error,
+                        $"Firmware '{Entity(firmware)}' assigns MCU pin '{pin.McuPin}' more than once.",
+                        Entity: Entity(firmware)));
+                }
+
                 if (!nets.ContainsKey(pin.NetId))
                 {
                     diagnostics.Add(new Diagnostic(

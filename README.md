@@ -4,12 +4,14 @@ An open-source CAD/CAM suite for electromechanical systems: draw the mechanics,
 draw the electronics, write the firmware, and simulate the whole machine as a
 digital twin from one traceable project.
 
-**Status: P1 in progress.** P0 is complete: RFC/schema, .NET 10 core,
-cross-domain validation, content-addressed artifacts, build planner,
-deterministic MechMaker/KiCad importers, FreeCAD artifact references, process
-adapter host, JSON-RPC contract, and CLI. P1 now adds a CAD manifest sidecar,
-pose transforms, an MJCF exporter, a starter FreeCAD adapter, and interference/
-joint-limit checks. The suite has 106 xUnit tests and 10 Python adapter tests.
+**Status: P2 in progress.** P0 and the P1 mechanical slice are complete:
+RFC/schema, .NET 10 core, cross-domain validation, content-addressed artifacts,
+build planning, deterministic MechMaker/KiCad importers, FreeCAD manifest and
+startup adapter, pose transforms, MJCF export, and interference/joint-limit
+checks. P2 adds BOM export, a headless `kicad-cli` adapter (ERC/DRC/netlist/
+BOM/Gerbers/STEP), an ngspice batch adapter, WireViz harness export, and
+cross-domain ERC checks. The suite has 132 xUnit tests and 10 Python adapter
+tests.
 
 ## Principle
 
@@ -65,6 +67,10 @@ emd import kicad <netlist.xml> --out <project.json>
 emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]
 emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]
 emd export mjcf --project <project.json> --out <scene.xml>
+emd export bom --project <project.json> --out <bom.csv>
+emd export harness --project <project.json> --out <harness.yml>
+emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>
+emd spice --netlist <file.cir> --out <log>
 emd artifacts verify <project.json> [--store <dir>]
 emd build plan --project <project.json>
 ```
@@ -73,8 +79,8 @@ emd build plan --project <project.json>
 
 ```
 src/EMD.Core            project graph, schema, validation, importers, MJCF exporter
-src/EMD.Adapters        process tool host + JSON-RPC tool adapter contract
-src/EMD.Cli             validate/import/export/build/artifacts commands
+src/EMD.Adapters        process host, JSON-RPC contract, KiCad CLI adapter
+src/EMD.Cli             validate/import/export/kicad/build/artifacts commands
 adapters/python         starter FreeCAD adapter + pure manifest helpers
 tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI tests
 tests/EMD.Adapters.Tests process host + JSON-RPC adapter tests
@@ -101,7 +107,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.4.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.5.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

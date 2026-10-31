@@ -58,6 +58,32 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Unconnected_electrical_port_is_reported_as_EMD_ELEC_004()
+    {
+        var project = Mutate(root =>
+        {
+            var connections = root["connections"]!.AsArray();
+            var driverPhaseA = connections.First(c => (string?)c!["key"] == "driver_phase_a");
+            connections.Remove(driverPhaseA);
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-004");
+    }
+
+    [Fact]
+    public void Duplicate_firmware_pin_is_reported_as_EMD_FW_002()
+    {
+        var project = Mutate(root =>
+            root["firmware"]!["projects"]![0]!["pin_map"]![1]!["mcu_pin"] = "PA0");
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-FW-002");
+    }
+
+    [Fact]
     public void Firmware_pin_map_with_missing_net_is_reported_as_EMD_FW_001()
     {
         var project = Mutate(root =>

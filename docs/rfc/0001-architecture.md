@@ -326,7 +326,15 @@ Examples:
 | `EMD-ELEC-001` | Netlist and EMD wiring disagree |
 | `EMD-ELEC-002` | KiCad ERC/DRC failures |
 | `EMD-ELEC-003` | Motor/driver voltage or current mismatch |
+| `EMD-ELEC-004` | Electrical/control port is not connected |
 | `EMD-FW-001` | Firmware pin map incomplete or conflicting |
+| `EMD-FW-002` | Duplicate MCU pin assignment |
+| `EMD-KICAD-010` | `kicad-cli` command failed |
+| `EMD-KICAD-011` | Expected `kicad-cli` output is missing |
+| `EMD-SPICE-001` | ngspice command failed |
+| `EMD-SPICE-002` | Expected ngspice log is missing |
+| `EMD-HARNESS-001` | Net is not point-to-point for harness export |
+| `EMD-HARNESS-002` | Harness net endpoint is unresolved |
 | `EMD-SIM-001` | Unbound FMU port or unit mismatch |
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
@@ -408,12 +416,24 @@ Remaining:
 - CadQuery catalog part generation.
 - Reachability/clearance sweeps and board outline/holes from KiCad STEP.
 
-### P2 — Electrical vertical slice
+### P2 — Electrical vertical slice — in progress
 
-- KiCad adapter: ERC/DRC/netlist/BOM/Gerber/STEP via `kicad-cli`.
-- Net/refdes mapping to ports; motor phase/driver/firmware pin checks.
-- ngspice power/analog run; wiring diagram export.
-- Cross-domain ERC rules.
+Implemented:
+
+- Headless KiCad CLI adapter: ERC/DRC, XML netlist, BOM, Gerbers/drill, and
+  STEP export with structured artifacts.
+- BOM exporter and `emd export bom`.
+- CLI: `emd kicad erc|drc|netlist|bom|gerbers|step`.
+- ngspice batch adapter and `emd spice`.
+- WireViz-compatible harness export and `emd export harness`.
+- Cross-domain ERC: unconnected electrical/control ports and duplicate MCU pin
+  assignments.
+
+Remaining:
+
+- Deeper net/refdes mapping and motor phase/driver/firmware checks.
+- Board outline/holes into the mechanical assembly.
+- Co-simulation wiring for SPICE/FMU models.
 
 ### P3 — Digital twin co-simulation
 

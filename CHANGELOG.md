@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
+### Added
+
+- BOM exporter (grouped parts, quantities, refs, mass totals, CSV escaping)
+  and `emd export bom`.
+- Headless KiCad CLI adapter: ERC, DRC, XML netlist, BOM, Gerbers/drill, and
+  STEP export with structured artifacts (`EMD-KICAD-010`/`011`).
+- CLI: `emd kicad erc|drc|netlist|bom|gerbers|step`.
+- ngspice batch adapter and `emd spice` (`EMD-SPICE-001`/`002`).
+- WireViz-compatible harness exporter and `emd export harness`
+  (`EMD-HARNESS-001`/`002`).
+- Cross-domain ERC: unconnected electrical/control ports (`EMD-ELEC-004`) and
+  duplicate MCU pin assignments (`EMD-FW-002`).
+
 ## [0.4.0] - 2026-10-31
 
 ### Added
@@ -79,7 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.5.0
 [0.4.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.4.0
 [0.3.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.3.0
 [0.2.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.2.0

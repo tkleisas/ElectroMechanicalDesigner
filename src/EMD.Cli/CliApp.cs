@@ -1,3 +1,4 @@
+using Emd.Adapters;
 using Emd.Core.Artifacts;
 using Emd.Core.Build;
 using Emd.Core.Diagnostics;
@@ -25,6 +26,16 @@ public static class CliApp
                 "validate" => Validate(args, stdout, stderr),
                 "import" => Import(args, stdout, stderr),
                 "export" => Export(args, stdout, stderr),
+                "kicad" => KiCadCliCommand.Run(
+                    args.Skip(1).ToArray(),
+                    stdout,
+                    stderr,
+                    new KiCadCliAdapter(ProcessToolHost.Default)),
+                "spice" => SpiceCommand.Run(
+                    args.Skip(1).ToArray(),
+                    stdout,
+                    stderr,
+                    new NgSpiceAdapter(ProcessToolHost.Default)),
                 "build" => Build(args, stdout, stderr),
                 "artifacts" => Artifacts(args, stdout, stderr),
                 _ => UsageError(stderr, $"Unknown command '{args[0]}'.")
@@ -198,9 +209,20 @@ public static class CliApp
 
     private static int Export(string[] args, TextWriter stdout, TextWriter stderr)
     {
-        if (args.Length < 2 || !string.Equals(args[1], "mjcf", StringComparison.OrdinalIgnoreCase))
-            return UsageError(stderr, "export expects the 'mjcf' subcommand.");
+        if (args.Length < 2)
+            return UsageError(stderr, "export expects the 'mjcf' or 'bom' subcommand.");
 
+        return args[1].ToLowerInvariant() switch
+        {
+            "mjcf" => ExportMjcf(args, stdout, stderr),
+            "bom" => ExportBom(args, stdout, stderr),
+            "harness" => ExportHarness(args, stdout, stderr),
+            _ => UsageError(stderr, $"Unknown export '{args[1]}'.")
+        };
+    }
+
+    private static int ExportMjcf(string[] args, TextWriter stdout, TextWriter stderr)
+    {
         var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
         if (string.IsNullOrWhiteSpace(projectPath))
             return UsageError(stderr, "export mjcf requires --project <project.json>.");
@@ -219,13 +241,69 @@ public static class CliApp
         if (result.Xml is null)
             return 1;
 
-        var directory = Path.GetDirectoryName(Path.GetFullPath(output));
-        if (!string.IsNullOrEmpty(directory))
-            Directory.CreateDirectory(directory);
-        File.WriteAllText(output, result.Xml);
+        WriteTextFile(output, result.Xml);
 
         stdout.WriteLine(
             $"exported: {loaded.Project.Name} -> {output} ({loaded.Project.Parts.Count} parts)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ExportBom(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "export bom requires --project <project.json>.");
+
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "export bom requires --out <bom.csv>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = BomExporter.Default.Export(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Csv is null)
+            return 1;
+
+        WriteTextFile(output, result.Csv);
+        stdout.WriteLine(
+            $"exported BOM: {loaded.Project.Name} -> {output} ({loaded.Project.Parts.Count} parts)");
+
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ExportHarness(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "export harness requires --project <project.json>.");
+
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "export harness requires --out <harness.yml>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = HarnessExporter.Default.Export(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Yaml is null)
+            return 1;
+
+        WriteTextFile(output, result.Yaml);
+        stdout.WriteLine(
+            $"exported harness: {loaded.Project.Name} -> {output} " +
+            $"({loaded.Project.Electrical?.Nets.Count ?? 0} nets)");
 
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
@@ -322,6 +400,14 @@ public static class CliApp
         return null;
     }
 
+    private static void WriteTextFile(string path, string content)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+        File.WriteAllText(path, content);
+    }
+
     private static void PrintDiagnostics(IEnumerable<Diagnostic> diagnostics, TextWriter writer)
     {
         foreach (var diagnostic in diagnostics)
@@ -349,6 +435,10 @@ public static class CliApp
         writer.WriteLine("  emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]");
         writer.WriteLine("  emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]");
         writer.WriteLine("  emd export mjcf --project <project.json> --out <scene.xml>");
+        writer.WriteLine("  emd export bom --project <project.json> --out <bom.csv>");
+        writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
+        writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
+        writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");
         writer.WriteLine("  emd build plan --project <project.json>");
         writer.WriteLine();

@@ -127,6 +127,44 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Export_bom_writes_a_csv()
+    {
+        using var temp = new TempDirectory();
+        var projectPath = Path.Combine(temp.Path, "manifest_project.json");
+        var imported = FreeCadManifestImporter.Default.Import(
+            File.ReadAllText(TestPaths.Fixture("freecad_manifest.json")), "axis.FCStd");
+        ProjectWriter.Save(imported.Project!, projectPath);
+        var bomPath = Path.Combine(temp.Path, "bom.csv");
+
+        var (exitCode, stdout, stderr) = Run(
+            "export", "bom", "--project", projectPath, "--out", bomPath);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(bomPath), stderr);
+        Assert.Contains("exported BOM:", stdout, StringComparison.OrdinalIgnoreCase);
+        var csv = File.ReadAllText(bomPath);
+        Assert.Contains("item,quantity", csv, StringComparison.Ordinal);
+        Assert.Contains("frame", csv, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Export_harness_writes_wireviz_yaml()
+    {
+        using var temp = new TempDirectory();
+        var harnessPath = Path.Combine(temp.Path, "harness.yml");
+
+        var (exitCode, stdout, stderr) = Run(
+            "export", "harness", "--project", TestPaths.ExampleProject, "--out", harnessPath);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(harnessPath), stderr);
+        Assert.Contains("exported harness:", stdout, StringComparison.OrdinalIgnoreCase);
+        var yaml = File.ReadAllText(harnessPath);
+        Assert.Contains("connectors:", yaml, StringComparison.Ordinal);
+        Assert.Contains("connections:", yaml, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Import_without_out_returns_usage_error()
     {
         var (exitCode, _, stderr) = Run(
