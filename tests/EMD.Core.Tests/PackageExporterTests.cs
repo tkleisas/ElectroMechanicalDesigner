@@ -61,6 +61,60 @@ public class PackageExporterTests
     }
 
     [Fact]
+    public void Export_includes_scenario_trace_artifacts()
+    {
+        using var temp = new TempDirectory();
+        var tracePath = Path.Combine(temp.Path, "run.csv");
+        File.WriteAllText(tracePath, "time,x\n0,0\n");
+        var artifactId = Guid.NewGuid();
+        var artifact = new Artifact
+        {
+            Id = artifactId,
+            Key = "trace_run",
+            Path = tracePath,
+            Format = "csv",
+            Role = ArtifactRole.Simulation,
+            Sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(tracePath))).ToLowerInvariant()
+        };
+        var project = new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "trace package",
+            Parts =
+            [
+                new Part
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "frame",
+                    Name = "Frame",
+                    Kind = PartKind.Component,
+                    Geometry = new PartGeometry { Kind = GeometryKind.Box, Size = [0.1, 0.1, 0.1] },
+                    Ports = []
+                }
+            ],
+            Artifacts = [artifact],
+            Simulation = new SimulationSection
+            {
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = Guid.NewGuid(),
+                        Key = "run",
+                        Name = "Run",
+                        TraceArtifactId = artifactId
+                    }
+                ]
+            }
+        };
+
+        var result = PackageExporter.Default.Export(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.Contains(result.Files, file => file.Name == "traces/run.csv");
+    }
+
+    [Fact]
     public void Export_omits_machine_json_without_catalog_parts()
     {
         var project = new EmdProject

@@ -319,6 +319,17 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Missing_scenario_trace_artifact_is_reported_as_EMD_SIM_004()
+    {
+        var project = Mutate(root =>
+            root["simulation"]!["scenarios"]![0]!["trace_artifact_id"] = Guid.NewGuid().ToString());
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-SIM-004");
+    }
+
+    [Fact]
     public void Missing_mechanical_source_artifact_is_reported_as_EMD_ART_001()
     {
         var project = Mutate(root =>

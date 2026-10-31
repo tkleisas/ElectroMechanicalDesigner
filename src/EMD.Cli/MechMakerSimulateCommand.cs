@@ -1,8 +1,11 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using Emd.Adapters.MechMaker;
 using Emd.Core;
 using Emd.Core.Diagnostics;
 using Emd.Core.Exporters;
+using Emd.Core.Identity;
+using Emd.Core.Model;
 using Emd.Core.Projects;
 using Emd.Core.Simulation;
 
@@ -23,6 +26,7 @@ public static class MechMakerSimulateCommand
         var projectOption = GetOption(args, "--project");
         var scenario = GetOption(args, "--scenario");
         var output = GetOption(args, "--out");
+        var saveTrace = args.Contains("--save-trace");
 
         if (string.IsNullOrWhiteSpace(output))
             return Usage(stderr, "simulate mechmaker requires --out <trace.csv>.");
@@ -30,6 +34,8 @@ public static class MechMakerSimulateCommand
             return Usage(stderr, "simulate mechmaker requires exactly one of --machine or --project.");
         if (!string.IsNullOrWhiteSpace(scenario) && string.IsNullOrWhiteSpace(projectOption))
             return Usage(stderr, "--scenario requires --project.");
+        if (saveTrace && (string.IsNullOrWhiteSpace(projectOption) || string.IsNullOrWhiteSpace(scenario)))
+            return Usage(stderr, "--save-trace requires --project and --scenario.");
 
         if (!TryDouble(args, "--duration", 1.0, out var duration) ||
             !TryDouble(args, "--interval", 0.1, out var interval) ||
@@ -107,6 +113,44 @@ public static class MechMakerSimulateCommand
 
         if (result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
             return 1;
+
+        if (saveTrace)
+        {
+            var content = File.ReadAllBytes(output);
+            var sha256 = Convert.ToHexString(SHA256.HashData(content)).ToLowerInvariant();
+            var artifactId = DeterministicGuid.Create(
+                EmdNamespaces.MechMaker,
+                $"trace:{projectOption}:{scenario}:{sha256}");
+            var artifact = new Artifact
+            {
+                Id = artifactId,
+                Key = $"trace_{scenario}",
+                Path = Path.GetFullPath(output),
+                Format = "csv",
+                Role = ArtifactRole.Simulation,
+                Sha256 = sha256,
+                Bytes = content.LongLength
+            };
+
+            var artifacts = project!.Artifacts
+                .Where(candidate => candidate.Id != artifactId)
+                .ToList();
+            artifacts.Add(artifact);
+
+            var scenarios = project.Simulation!.Scenarios
+                .Select(candidate => candidate.Key == scenario || candidate.Id.ToString() == scenario
+                    ? candidate with { TraceArtifactId = artifactId }
+                    : candidate)
+                .ToList();
+
+            var updated = project with
+            {
+                Artifacts = artifacts,
+                Simulation = project.Simulation with { Scenarios = scenarios }
+            };
+            ProjectWriter.Save(updated, projectOption!);
+            stdout.WriteLine($"saved trace artifact: {artifactId}");
+        }
 
         if (!string.IsNullOrWhiteSpace(scenario))
         {

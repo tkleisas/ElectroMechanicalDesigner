@@ -260,6 +260,8 @@ public sealed record Scenario
 
     public Guid? ArtifactId { get; init; }
 
+    public Guid? TraceArtifactId { get; init; }
+
     public double? DurationS { get; init; }
 
     public long? Seed { get; init; }

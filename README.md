@@ -16,7 +16,7 @@ pin-to-net connectivity), simulation-binding validation, and a MechMaker
 compile hand-off. P3 groundwork adds live MechMaker simulation over MCP and
 trace-assertion checking. P1 adds motor phase topology, clearance checks, and
 slide/hinge motion sweeps. The package exporter bundles the verifiable
-design/manufacturing artifacts. The suite has 203 xUnit tests and 10 Python
+design/manufacturing artifacts. The suite has 208 xUnit tests and 10 Python
 adapter tests.
 
 ## Principle
@@ -81,7 +81,7 @@ emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cl
 emd package --project <project.json> --out-dir <dir> [--trace <csv>]...
 emd package verify --dir <dir>
 emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]
-emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--duration <s>] [--motor <id:rev/s>]
+emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--save-trace] [--duration <s>] [--motor <id:rev/s>]
 emd diff --before <project.json> --after <project.json> [--json]
 emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>
 emd spice --netlist <file.cir> --out <log>
@@ -121,7 +121,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.17.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.18.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

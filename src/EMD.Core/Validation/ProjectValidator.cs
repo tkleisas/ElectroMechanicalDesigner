@@ -780,7 +780,17 @@ public sealed class ProjectValidator
         }
 
         foreach (var scenario in project.Simulation?.Scenarios ?? [])
+        {
             RequireArtifact(scenario.ArtifactId, artifacts, $"Scenario '{Entity(scenario)}'", diagnostics);
+            if (scenario.TraceArtifactId is { } traceId && !artifacts.ContainsKey(traceId))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-SIM-004",
+                    DiagnosticSeverity.Error,
+                    $"Scenario '{Entity(scenario)}' references missing trace artifact '{traceId}'.",
+                    Entity: Entity(scenario)));
+            }
+        }
     }
 
     private static void ValidateSimulationBindings(

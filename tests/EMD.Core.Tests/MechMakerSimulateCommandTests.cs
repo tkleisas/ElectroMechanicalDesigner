@@ -59,6 +59,36 @@ public class MechMakerSimulateCommandTests
     }
 
     [Fact]
+    public async Task Save_trace_records_the_artifact_on_the_scenario()
+    {
+        using var temp = new TempDirectory();
+        var projectPath = Path.Combine(temp.Path, "project.json");
+        ProjectWriter.Save(
+            ScenarioProject("abs(x_motor.actual_rev - 0.3) < 0.01"),
+            projectPath);
+        var output = Path.Combine(temp.Path, "trace.csv");
+        using var stdout = new StringWriter();
+        using var stderr = new StringWriter();
+
+        var exitCode = await MechMakerSimulateCommand.RunAsync(
+            ["mechmaker", "--project", projectPath, "--out", output,
+             "--duration", "0.3", "--interval", "0.1", "--motor", "x_motor:1",
+             "--scenario", "run", "--save-trace"],
+            stdout,
+            stderr,
+            new FakeClient());
+
+        Assert.Equal(0, exitCode);
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        Assert.True(loaded.IsValid, string.Join(Environment.NewLine, loaded.Diagnostics));
+        var scenario = Assert.Single(loaded.Project!.Simulation!.Scenarios);
+        Assert.NotNull(scenario.TraceArtifactId);
+        var artifact = Assert.Single(loaded.Project.Artifacts);
+        Assert.Equal(scenario.TraceArtifactId, artifact.Id);
+        Assert.Equal(Path.GetFullPath(output), artifact.Path);
+    }
+
+    [Fact]
     public async Task Failing_project_scenario_returns_nonzero()
     {
         using var temp = new TempDirectory();

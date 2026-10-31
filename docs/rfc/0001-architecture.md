@@ -373,6 +373,7 @@ Examples:
 | `EMD-SIM-001` | Unbound FMU port or unit mismatch |
 | `EMD-SIM-002` | Co-simulation step/rate mismatch |
 | `EMD-SIM-003` | Simulation binding references an undeclared variable |
+| `EMD-SIM-004` | Scenario trace artifact is missing |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
 | `EMD-BOM-001` | BOM/refdes mismatch |
 
@@ -484,6 +485,7 @@ Remaining:
 - MechMaker compile adapter and `emd compile mechmaker`. **Done.**
 - Live MechMaker simulation over MCP and `emd simulate mechmaker`. **Done.**
 - Project → machine.json → live run → trace → scenario assertion loop. **Done.**
+- Scenario trace evidence persisted in the project and packaged. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).

@@ -65,6 +65,37 @@ public sealed class PackageExporter
                 "Package omitted scene.xml because MJCF export failed."));
         }
 
+        foreach (var scenario in project.Simulation?.Scenarios ?? [])
+        {
+            if (scenario.TraceArtifactId is not { } traceId)
+                continue;
+
+            var artifact = project.Artifacts.FirstOrDefault(candidate => candidate.Id == traceId);
+            if (artifact is null)
+                continue;
+
+            if (artifact.Path.StartsWith("artifact://", StringComparison.Ordinal) ||
+                !File.Exists(artifact.Path))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-PACKAGE-001",
+                    DiagnosticSeverity.Warning,
+                    $"Scenario '{scenario.Key}' trace artifact '{artifact.Key ?? artifact.Id.ToString()}' " +
+                    "could not be read; omitted.",
+                    Entity: scenario.Key));
+                continue;
+            }
+
+            if (files.Any(file => file.Name == $"traces/{scenario.Key}.csv"))
+                continue;
+
+            Add(
+                $"traces/{scenario.Key}.csv",
+                "csv",
+                "simulation",
+                File.ReadAllText(artifact.Path));
+        }
+
         var machine = MechMakerMachineExporter.Default.Export(project);
         if (machine.Machine is not null)
         {

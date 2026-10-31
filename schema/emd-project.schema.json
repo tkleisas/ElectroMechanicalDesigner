@@ -1413,6 +1413,9 @@
         "artifact_id": {
           "$ref": "#/definitions/uuid"
         },
+        "trace_artifact_id": {
+          "$ref": "#/definitions/uuid"
+        },
         "duration_s": {
           "type": "number",
           "exclusiveMinimum": 0
