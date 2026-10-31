@@ -25,3 +25,8 @@ Thumbs.db
 
 # Generated FMU artifacts
 tools/mechmaker_fmu/*.fmu
+
+# Generated FMU resources
+tools/mechmaker_fmu/resources/
+
+tools/mechmaker_fmu/payload/

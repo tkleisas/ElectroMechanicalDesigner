@@ -4,9 +4,12 @@
 FMU. The FMU starts `MechMaker.Server`, opens a `machine.json`, runs the
 virtual MCU/physics loop, and exposes up to four stepper channels.
 
-This is a **proxy FMU**: the host needs the .NET runtime and a built MechMaker
-server. It is intended for co-simulation experiments and SSP systems, not for
-standalone distribution.
+The default build embeds a self-contained MechMaker server, the part catalog,
+and `linear_axis_v0.json` in the FMU resources. The host therefore does not need
+a .NET runtime; the parameters below are optional overrides.
+
+Building the FMU still requires a sibling MechMaker checkout so the server can
+be published once. The resulting FMU is large (~183 MB).
 
 ## Build
 
@@ -21,9 +24,9 @@ This produces `MechMakerSlave.fmu`.
 
 | Parameter | Meaning |
 |---|---|
-| `machine_path` | Absolute path to a MechMaker `machine.json` |
-| `server_path` | Absolute path to `MechMaker.Server.dll` |
-| `catalog_path` | MechMaker catalog directory (`MECHMAKER_CATALOG`) |
+| `machine_path` | Optional path to a MechMaker `machine.json` (defaults to the embedded machine) |
+| `server_path` | Optional path to a MechMaker server executable or DLL |
+| `catalog_path` | Optional catalog directory (defaults to the embedded catalog) |
 | `microsteps` | Microsteps per full step (default 16) |
 
 ## Variables
@@ -39,11 +42,9 @@ Channels are assigned to the first four wired `step` components in the machine.
 
 ```bash
 python3 -m pip install fmpy
-python3 verify_fmpy.py \
-  --machine /path/to/MechMaker/examples/linear_axis_v0.json \
-  --server /path/to/MechMaker/src/MechMaker.Server/bin/Debug/net10.0/MechMaker.Server.dll \
-  --catalog /path/to/MechMaker/catalog \
-  --velocity 1.0 --stop-time 0.1 --step-size 0.01
+python3 verify_fmpy.py --velocity 1.0 --stop-time 0.1 --step-size 0.01
 ```
+
+The script accepts optional `--machine`, `--server`, and `--catalog` overrides.
 
 The FMU can also be referenced from an SSP composition.

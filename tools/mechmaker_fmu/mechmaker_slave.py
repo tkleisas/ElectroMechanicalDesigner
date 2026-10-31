@@ -135,22 +135,46 @@ class MechMakerSlave(Fmi2Slave):
     def _start(self):
         if self._process is not None:
             return
-        if not self.machine_path or not self.server_path:
-            raise RuntimeError(
-                "machine_path and server_path parameters are required")
+
+        base = self.resources or os.path.dirname(__file__)
+        roots = [base, os.path.join(base, "payload")]
+
+        def find(relative):
+            for root in roots:
+                candidate = os.path.join(root, relative)
+                if os.path.exists(candidate):
+                    return candidate
+            return os.path.join(roots[-1], relative)
+
+        machine = (self.machine_path or "").strip() or find("machine.json")
+        server = (self.server_path or "").strip()
+        if not server:
+            server = find(os.path.join("server", "MechMaker.Server"))
+            if not os.path.exists(server):
+                server = find(os.path.join("server", "MechMaker.Server.dll"))
+        catalog = (self.catalog_path or "").strip() or find("catalog")
+
+        if not os.path.exists(machine):
+            raise RuntimeError(f"MechMaker machine not found: {machine}")
+        if not os.path.exists(server):
+            raise RuntimeError(f"MechMaker server not found: {server}")
+
+        if not server.endswith(".dll") and not os.access(server, os.X_OK):
+            os.chmod(server, 0o755)
 
         environment = os.environ.copy()
-        if self.catalog_path:
-            environment["MECHMAKER_CATALOG"] = self.catalog_path
+        if os.path.isdir(catalog):
+            environment["MECHMAKER_CATALOG"] = catalog
 
+        command = ["dotnet", server] if server.endswith(".dll") else [server]
         self._process = subprocess.Popen(
-            ["dotnet", self.server_path],
+            command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
             bufsize=1,
-            cwd=os.path.dirname(self.server_path) or None,
+            cwd=os.path.dirname(server) or None,
             env=environment,
         )
 
@@ -161,7 +185,7 @@ class MechMakerSlave(Fmi2Slave):
         })
         self._write({"jsonrpc": "2.0", "method": "notifications/initialized"})
 
-        self._call_tool("open_machine", {"path": self.machine_path})
+        self._call_tool("open_machine", {"path": machine})
         self._call_tool("start_run", {"microsteps": int(self.microsteps)})
 
         machine = json.loads(self._call_tool("get_machine_json"))
