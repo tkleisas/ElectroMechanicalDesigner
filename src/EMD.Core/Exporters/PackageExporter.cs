@@ -27,7 +27,9 @@ public sealed class PackageExporter
 {
     public static PackageExporter Default { get; } = new();
 
-    public PackageExportResult Export(EmdProject project)
+    public PackageExportResult Export(
+        EmdProject project,
+        IReadOnlyList<PackageFile>? extraFiles = null)
     {
         var diagnostics = new List<Diagnostic>();
         var files = new List<PackageFile>();
@@ -75,6 +77,24 @@ public sealed class PackageExporter
                 "EMD-PACKAGE-001",
                 DiagnosticSeverity.Warning,
                 "machine.json omitted: the project has no MechMaker-compatible parts."));
+        }
+
+        foreach (var extra in extraFiles ?? [])
+        {
+            if (files.Any(file => string.Equals(file.Name, extra.Name, StringComparison.Ordinal)))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-PACKAGE-008",
+                    DiagnosticSeverity.Warning,
+                    $"Duplicate package member '{extra.Name}' was ignored.",
+                    Entity: extra.Name));
+                continue;
+            }
+
+            files.Add(extra with
+            {
+                Sha256 = Convert.ToHexString(SHA256.HashData(extra.Content)).ToLowerInvariant()
+            });
         }
 
         var manifestFiles = new JsonArray();

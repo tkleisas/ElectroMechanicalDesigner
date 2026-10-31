@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-31
+
+### Added
+
+- Package attachments: `emd package --trace <csv>` adds simulation traces under
+  `traces/` and includes them in the hashed manifest.
+
 ## [0.16.0] - 2026-10-31
 
 ### Added
@@ -181,7 +188,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.17.0
 [0.16.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.16.0
 [0.15.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.15.0
 [0.14.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.14.0

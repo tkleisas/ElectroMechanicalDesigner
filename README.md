@@ -78,7 +78,7 @@ emd export bom --project <project.json> --out <bom.csv>
 emd export harness --project <project.json> --out <harness.yml>
 emd export mechmaker --project <project.json> --out <machine.json>
 emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]
-emd package --project <project.json> --out-dir <dir>
+emd package --project <project.json> --out-dir <dir> [--trace <csv>]...
 emd package verify --dir <dir>
 emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]
 emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--duration <s>] [--motor <id:rev/s>]
@@ -121,7 +121,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.16.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.17.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

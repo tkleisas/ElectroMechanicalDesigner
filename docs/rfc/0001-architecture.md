@@ -363,6 +363,7 @@ Examples:
 | `EMD-PACKAGE-005` | Package member hash/size mismatch |
 | `EMD-PACKAGE-006` | Package contains an unlisted file |
 | `EMD-PACKAGE-007` | Package member escapes the package directory |
+| `EMD-PACKAGE-008` | Duplicate package member was ignored |
 | `EMD-TRACE-001` | Trace CSV or assertion expression is invalid |
 | `EMD-TRACE-002` | Assertion references an unknown trace signal |
 | `EMD-TRACE-003` | Scenario assertion failed |
@@ -483,7 +484,7 @@ Remaining:
 - MechMaker compile adapter and `emd compile mechmaker`. **Done.**
 - Live MechMaker simulation over MCP and `emd simulate mechmaker`. **Done.**
 - Project → machine.json → live run → trace → scenario assertion loop. **Done.**
-- Deterministic package bundle and verifier (`emd package`, `emd package verify`). **Done.**
+- Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic).
 - OpenModelica thermal/motor FMU; Renode firmware bridge.

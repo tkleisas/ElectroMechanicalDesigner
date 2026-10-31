@@ -437,14 +437,37 @@ public static class CliApp
         if (loaded.Project is null)
             return 1;
 
-        var result = PackageExporter.Default.Export(loaded.Project);
+        var traceFiles = new List<PackageFile>();
+        foreach (var tracePath in GetOptions(args, "--trace"))
+        {
+            if (!File.Exists(tracePath))
+            {
+                stderr.WriteLine($"emd: trace file '{tracePath}' was not found.");
+                return 1;
+            }
+
+            traceFiles.Add(new PackageFile(
+                $"traces/{Path.GetFileName(tracePath)}",
+                "csv",
+                "simulation",
+                File.ReadAllBytes(tracePath),
+                ""));
+        }
+
+        var result = PackageExporter.Default.Export(loaded.Project, traceFiles);
         PrintDiagnostics(result.Diagnostics, stderr);
         if (result.Files.Count == 0)
             return 1;
 
         Directory.CreateDirectory(outputDirectory);
         foreach (var file in result.Files)
-            File.WriteAllBytes(Path.Combine(outputDirectory, file.Name), file.Content);
+        {
+            var path = Path.Combine(outputDirectory, file.Name);
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+            File.WriteAllBytes(path, file.Content);
+        }
 
         stdout.WriteLine(
             $"packaged: {loaded.Project.Name} -> {outputDirectory} ({result.Files.Count} files)");
@@ -629,6 +652,17 @@ public static class CliApp
         return 0;
     }
 
+    private static IEnumerable<string> GetOptions(string[] args, string name)
+    {
+        for (var index = 0; index < args.Length; index++)
+        {
+            if (args[index] == name && index + 1 < args.Length)
+                yield return args[index + 1];
+            else if (args[index].StartsWith(name + "=", StringComparison.Ordinal))
+                yield return args[index][(name.Length + 1)..];
+        }
+    }
+
     private static string? GetOption(string[] args, string name)
     {
         var prefix = name + "=";
@@ -686,7 +720,7 @@ public static class CliApp
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");
-        writer.WriteLine("  emd package --project <project.json> --out-dir <dir>");
+        writer.WriteLine("  emd package --project <project.json> --out-dir <dir> [--trace <csv>]...");
         writer.WriteLine("  emd package verify --dir <dir>");
         writer.WriteLine("  emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]");
         writer.WriteLine("  emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--duration <s>] [--motor <id:rev/s>]");

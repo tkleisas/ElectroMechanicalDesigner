@@ -252,6 +252,22 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Package_includes_a_trace_file()
+    {
+        using var temp = new TempDirectory();
+        var outputDir = Path.Combine(temp.Path, "package");
+        var trace = Path.Combine(temp.Path, "run.csv");
+        File.WriteAllText(trace, "time,x\n0,0\n");
+
+        var (exitCode, _, stderr) = Run(
+            "package", "--project", TestPaths.ExampleProject, "--out-dir", outputDir,
+            "--trace", trace);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(Path.Combine(outputDir, "traces", "run.csv")), stderr);
+    }
+
+    [Fact]
     public void Export_bom_writes_a_csv()
     {
         using var temp = new TempDirectory();

@@ -41,6 +41,26 @@ public class PackageExporterTests
     }
 
     [Fact]
+    public void Export_includes_extra_trace_files()
+    {
+        var loaded = ProjectLoader.Default.LoadFile(TestPaths.ExampleProject);
+        var trace = new PackageFile(
+            "traces/run.csv",
+            "csv",
+            "simulation",
+            Encoding.UTF8.GetBytes("time,x\n0,0\n"),
+            "");
+
+        var result = PackageExporter.Default.Export(loaded.Project!, [trace]);
+
+        Assert.Contains(result.Files, file => file.Name == "traces/run.csv");
+        var manifest = JsonNode.Parse(Encoding.UTF8.GetString(
+            result.Files.Single(file => file.Name == "manifest.json").Content))!.AsObject();
+        Assert.Contains(manifest["files"]!.AsArray(), entry =>
+            (string?)entry!["name"] == "traces/run.csv");
+    }
+
+    [Fact]
     public void Export_omits_machine_json_without_catalog_parts()
     {
         var project = new EmdProject
