@@ -18,7 +18,7 @@ trace-assertion checking. P1 adds motor phase topology, clearance checks, and
 slide/hinge motion sweeps. The package exporter bundles the verifiable
 design/manufacturing artifacts. The runnable MVP SSP test moves the linear axis
 40 mm, checks the scenario trace, exports a BOM, and rejects a swapped motor
-phase. The suite has 234 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+phase. The suite has 245 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -86,6 +86,9 @@ emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]
 emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--save-trace] [--duration <s>] [--motor <id:rev/s>]
 emd diff --before <project.json> --after <project.json> [--json]
 emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>
+emd gcode check --gcode <file.gcode> --envelope 0,0,0,400,400,100
+emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper
+emd kicad fabrication --schematic <file.kicad_sch> --pcb <file.kicad_pcb> --out axis-fab.zip
 emd spice --netlist <file.cir> --out <log>
 emd spice fmu --netlist <file.cir> --out <file.fmu> \
   --signals v(out),i(v1) --stop-time 0.01 --step-size 0.0001
@@ -126,7 +129,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.31.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.32.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

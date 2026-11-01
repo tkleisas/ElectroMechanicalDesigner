@@ -37,6 +37,7 @@ public static class CliApp
                     stdout,
                     stderr,
                     new KiCadCliAdapter(ProcessToolHost.Default)),
+                "gcode" => GCodeCommand.Run(args.Skip(1).ToArray(), stdout, stderr),
                 "spice" => SpiceCommand.Run(
                     args.Skip(1).ToArray(),
                     stdout,
@@ -834,7 +835,10 @@ public static class CliApp
         writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
         writer.WriteLine("  emd export mechmaker --project <project.json> --out <machine.json>");
         writer.WriteLine("  emd export ssp --project <project.json> --out <file.ssp> [--version 1.0|2.0]");
-        writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>");
+        writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|pos|step --schematic|--pcb <file> --out <path>");
+        writer.WriteLine("  emd kicad fabrication --schematic <file> --pcb <file> --out <file.zip>");
+        writer.WriteLine("  emd gcode check --gcode <file.gcode> [--envelope xmin,ymin,zmin,xmax,ymax,zmax] [--max-feed <mm/min>]");
+        writer.WriteLine("  emd gcode post --gcode <file.gcode> --out <file.gcode> [--flavor klipper|linuxcnc]");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd spice fmu --netlist <file.cir> --out <file.fmu> --signals <v(out),...> [--stop-time <s>] [--step-size <s>]");
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");

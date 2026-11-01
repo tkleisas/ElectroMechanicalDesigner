@@ -75,6 +75,17 @@ public sealed class KiCadCliAdapter
             ArtifactRole.Manufacturing,
             cancellationToken);
 
+    public Task<AdapterResult> ExportPosAsync(
+        string pcbPath,
+        string outputPath,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(
+            ["pcb", "export", "pos", "--format", "csv", "--output", outputPath, pcbPath],
+            outputPath,
+            "pos",
+            ArtifactRole.Manufacturing,
+            cancellationToken);
+
     public Task<AdapterResult> ExportStepAsync(
         string pcbPath,
         string outputPath,

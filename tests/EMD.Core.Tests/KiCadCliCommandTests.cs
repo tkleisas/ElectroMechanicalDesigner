@@ -63,6 +63,66 @@ public class KiCadCliCommandTests
         Assert.Contains("EMD-KICAD-010", stderr.ToString(), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Fabrication_command_creates_a_zip_package()
+    {
+        using var temp = new TempDirectory();
+        var schematic = Path.Combine(temp.Path, "axis.kicad_sch");
+        var pcb = Path.Combine(temp.Path, "axis.kicad_pcb");
+        var output = Path.Combine(temp.Path, "axis-fab.zip");
+        File.WriteAllText(schematic, "schematic");
+        File.WriteAllText(pcb, "pcb");
+        var runner = new FabricationRunner();
+        var adapter = new KiCadCliAdapter(runner);
+        using var stdout = new StringWriter();
+        using var stderr = new StringWriter();
+
+        var exitCode = KiCadCliCommand.Run(
+            ["fabrication", "--schematic", schematic, "--pcb", pcb, "--out", output],
+            stdout, stderr, adapter);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(output), stderr.ToString());
+        using var archive = System.IO.Compression.ZipFile.OpenRead(output);
+        Assert.Contains(archive.Entries, entry => entry.FullName == "gerbers/axis-F_Cu.gbr");
+        Assert.Contains(archive.Entries, entry => entry.FullName == "bom.csv");
+        Assert.Contains(archive.Entries, entry => entry.FullName == "positions.csv");
+        Assert.Contains(archive.Entries, entry => entry.FullName == "board.step");
+    }
+
+    private sealed class FabricationRunner : IToolProcessRunner
+    {
+        public Task<ToolProcessResult> RunAsync(
+            string executable,
+            IEnumerable<string>? arguments = null,
+            string? stdin = null,
+            TimeSpan? timeout = null,
+            CancellationToken cancellationToken = default)
+        {
+            var values = (arguments ?? []).ToArray();
+            var output = values[values.ToList().IndexOf("--output") + 1];
+            if (values.Contains("gerbers"))
+            {
+                Directory.CreateDirectory(output);
+                File.WriteAllText(Path.Combine(output, "axis-F_Cu.gbr"), "gerber");
+                File.WriteAllText(Path.Combine(output, "axis.drl"), "drill");
+            }
+            else if (values.Contains("bom"))
+            {
+                File.WriteAllText(output, "bom");
+            }
+            else if (values.Contains("pos"))
+            {
+                File.WriteAllText(output, "positions");
+            }
+            else if (values.Contains("step"))
+            {
+                File.WriteAllText(output, "step");
+            }
+            return Task.FromResult(new ToolProcessResult(0, "", "", []));
+        }
+    }
+
     private sealed class FakeRunner : IToolProcessRunner
     {
         private readonly ToolProcessResult _result;

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-11-01
+
+### Added
+
+- G-code parser, envelope/feed validator, and Klipper/LinuxCNC postprocessor
+  (`emd gcode check|post`).
+- KiCad fabrication package exporter with Gerbers, drill, BOM, pick-and-place,
+  STEP, hashes, and a deterministic manifest.
+
 ## [0.31.0] - 2026-11-01
 
 ### Added
@@ -332,7 +341,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.31.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.32.0
 [0.31.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.31.0
 [0.30.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.30.0
 [0.29.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.29.0

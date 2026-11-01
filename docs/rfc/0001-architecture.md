@@ -536,8 +536,17 @@ Remaining:
 
 ### P4 — CAM and manufacturing
 
-- FreeCAD Path jobs and post-processors; KiCad fabrication/assembly packages;
-  slicer CLI; CAMotics verification; BOM and assembly docs.
+Implemented:
+
+- G-code ingestion, work-envelope/feed validation, and Klipper/LinuxCNC
+  postprocessing (`emd gcode check|post`).
+- Deterministic KiCad fabrication package with Gerbers, drill, BOM,
+  pick-and-place, STEP, hashes, and a manifest (`emd kicad fabrication`).
+
+Remaining:
+
+- FreeCAD Path jobs and multi-axis post-processors; slicer CLI; full CAMotics
+  material-removal verification; assembly documentation.
 
 ### P5 — Hub, agents, and CI
 

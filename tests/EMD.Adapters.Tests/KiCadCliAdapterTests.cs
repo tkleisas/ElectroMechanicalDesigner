@@ -63,6 +63,24 @@ public class KiCadCliAdapterTests
     }
 
     [Fact]
+    public async Task Pos_export_uses_csv_format()
+    {
+        using var temp = new DirectoryFixture();
+        var pcb = temp.File("axis.kicad_pcb", "pcb");
+        var positions = temp.File("positions.csv", "ref,x,y");
+        var runner = new FakeToolProcessRunner(new ToolProcessResult(0, "", "", []));
+        var adapter = new KiCadCliAdapter(runner);
+
+        var result = await adapter.ExportPosAsync(pcb, positions);
+
+        Assert.True(result.Success);
+        Assert.Equal(
+            ["pcb", "export", "pos", "--format", "csv", "--output", positions, pcb],
+            runner.Arguments);
+        Assert.Equal("pos", Assert.Single(result.Artifacts).Format);
+    }
+
+    [Fact]
     public async Task Nonzero_exit_reports_EMD_KICAD_010()
     {
         using var temp = new DirectoryFixture();
