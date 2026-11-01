@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.1] - 2026-11-01
+
+### Fixed
+
+- Imported MCU components without `PartKind.Board` now produce an
+  `EMD-FW-007` warning instead of an error, matching KiCad-imported projects.
+
 ## [0.36.0] - 2026-11-01
 
 ### Added
@@ -384,7 +391,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.36.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.36.1...HEAD
+[0.36.1]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.1
 [0.36.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.0
 [0.35.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.35.0
 [0.34.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.34.0

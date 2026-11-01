@@ -40,7 +40,7 @@ public sealed class FirmwarePinMapVerifier
             {
                 diagnostics.Add(new Diagnostic(
                     "EMD-FW-007",
-                    DiagnosticSeverity.Error,
+                    DiagnosticSeverity.Warning,
                     $"Firmware '{firmware.Key}' board is not a board part.",
                     Entity: firmware.Key));
             }

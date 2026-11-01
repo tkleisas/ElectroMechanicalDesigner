@@ -169,7 +169,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.36.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.36.1`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
