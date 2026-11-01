@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Emd.Desktop.MainWindow"
+        Title="EMD system view"
+        Width="1200" Height="800">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="2*,1*" Margin="12">
+    <Grid Grid.Row="0" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto">
+      <TextBox Grid.Column="0" x:Name="ProjectPath" Text="examples/project.json" />
+      <Button Grid.Column="1" Content="Load project" Click="LoadProject" Margin="8,0,0,0" />
+    </Grid>
+    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" x:Name="Status" Margin="0,8" TextWrapping="Wrap" />
+    <Border Grid.Row="2" Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="0,0,8,8">
+      <ScrollViewer>
+        <Canvas x:Name="SystemCanvas" Background="Transparent" MinHeight="520" />
+      </ScrollViewer>
+    </Border>
+    <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="Auto,*,Auto,*">
+      <TextBlock Grid.Row="0" Text="Parts" FontWeight="Bold" />
+      <ListBox Grid.Row="1" x:Name="PartsList" />
+      <TextBlock Grid.Row="2" Text="Validation" FontWeight="Bold" Margin="0,8,0,0" />
+      <ListBox Grid.Row="3" x:Name="DiagnosticsList" />
+    </Grid>
+    <TextBlock Grid.Row="3" Grid.ColumnSpan="2" x:Name="PathStatus" Opacity="0.7" />
+  </Grid>
+</Window>

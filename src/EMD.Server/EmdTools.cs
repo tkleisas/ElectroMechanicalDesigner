@@ -2,8 +2,10 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Emd.Core.Artifacts;
 using Emd.Core.Diagnostics;
 using Emd.Core.Exporters;
+using Emd.Core.Importers;
 using Emd.Core.Manufacturing;
 using Emd.Core.Model;
 using Emd.Core.Packaging;
@@ -30,6 +32,88 @@ public static class EmdTools
         return all.Count == 0
             ? $"valid: {loaded.Project.Name} ({loaded.Project.Parts.Count} parts, {loaded.Project.Connections.Count} connections)"
             : Diagnostics(all);
+    }
+
+    [McpServerTool(Name = "import_mechmaker")]
+    [Description("Import a MechMaker machine JSON into an EMD project.")]
+    public static string ImportMechMaker(
+        [Description("Path to machine.json")] string machinePath,
+        [Description("Output project JSON")] string outputPath,
+        [Description("Optional MechMaker catalog directory")] string? catalogPath = null)
+    {
+        MechMakerCatalog? catalog = null;
+        if (!string.IsNullOrWhiteSpace(catalogPath))
+        {
+            try { catalog = MechMakerCatalog.Load(catalogPath); }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                return $"error: could not read catalog '{catalogPath}': {exception.Message}";
+            }
+        }
+        var result = MechMakerImporter.Default.ImportFile(machinePath, catalog);
+        if (result.Project is null)
+            return Diagnostics(result.Diagnostics);
+        ProjectWriter.Save(result.Project, outputPath);
+        return $"imported: {result.Project.Name} -> {outputPath} " +
+               $"({result.Project.Parts.Count} parts, {result.Project.Connections.Count} connections)";
+    }
+
+    [McpServerTool(Name = "import_kicad")]
+    [Description("Import a KiCad XML netlist into an EMD project.")]
+    public static string ImportKiCad(
+        [Description("Path to KiCad XML netlist")] string netlistPath,
+        [Description("Output project JSON")] string outputPath)
+    {
+        var result = KiCadNetlistImporter.Default.ImportFile(netlistPath);
+        if (result.Project is null)
+            return Diagnostics(result.Diagnostics);
+        ProjectWriter.Save(result.Project, outputPath);
+        return $"imported: {result.Project.Name} -> {outputPath} " +
+               $"({result.Project.Parts.Count} parts, {result.Project.Electrical?.Nets.Count ?? 0} nets)";
+    }
+
+    [McpServerTool(Name = "import_freecad_manifest")]
+    [Description("Import a FreeCAD manifest into an EMD project.")]
+    public static string ImportFreeCadManifest(
+        [Description("Path to CAD manifest JSON")] string manifestPath,
+        [Description("Output project JSON")] string outputPath,
+        [Description("Optional artifact store directory")] string? storePath = null)
+    {
+        ArtifactStore? store = string.IsNullOrWhiteSpace(storePath) ? null : new ArtifactStore(storePath);
+        var result = FreeCadManifestImporter.Default.ImportFile(manifestPath, store);
+        if (result.Project is null)
+            return Diagnostics(result.Diagnostics);
+        ProjectWriter.Save(result.Project, outputPath);
+        return $"imported: {result.Project.Name} -> {outputPath} " +
+               $"({result.Project.Parts.Count} parts, {result.Project.Artifacts.Count} artifacts)";
+    }
+
+    [McpServerTool(Name = "list_scenarios")]
+    [Description("List scenario keys, durations, records, and assertions in a project.")]
+    public static string ListScenarios([Description("Path to emd-project JSON")] string projectPath)
+    {
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        if (loaded.Project is null)
+            return Diagnostics(loaded.Diagnostics);
+        var scenarios = new JsonArray();
+        foreach (var scenario in loaded.Project.Simulation?.Scenarios ?? [])
+        {
+            scenarios.Add(new JsonObject
+            {
+                ["key"] = scenario.Key,
+                ["name"] = scenario.Name,
+                ["duration_s"] = scenario.DurationS,
+                ["record"] = new JsonArray((scenario.Record ?? [])
+                    .Select(signal => JsonValue.Create(signal)).ToArray()),
+                ["assertions"] = new JsonArray((scenario.Assertions ?? [])
+                    .Select(assertion => (JsonNode?)new JsonObject
+                    {
+                        ["name"] = assertion.Name,
+                        ["expression"] = assertion.Expression
+                    }).ToArray())
+            });
+        }
+        return new JsonObject { ["scenarios"] = scenarios }.ToJsonString();
     }
 
     [McpServerTool(Name = "project_summary")]
@@ -81,6 +165,91 @@ public static class EmdTools
         return $"gcode: {parsed.Program.Moves.Count} moves, " +
                $"{parsed.Program.CutLengthMm:0.###} mm cutting, " +
                $"{parsed.Program.RapidLengthMm:0.###} mm rapid";
+    }
+
+    [McpServerTool(Name = "export_mjcf")]
+    [Description("Export a project to MJCF.")]
+    public static string ExportMjcf(string projectPath, string outputPath)
+    {
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        if (loaded.Project is null)
+            return Diagnostics(loaded.Diagnostics);
+        var result = MjcfExporter.Default.Export(loaded.Project);
+        if (result.Xml is null)
+            return Diagnostics(result.Diagnostics);
+        File.WriteAllText(outputPath, result.Xml);
+        return $"exported MJCF: {loaded.Project.Name} -> {outputPath}";
+    }
+
+    [McpServerTool(Name = "export_bom")]
+    [Description("Export a project BOM as CSV.")]
+    public static string ExportBom(string projectPath, string outputPath)
+    {
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        if (loaded.Project is null)
+            return Diagnostics(loaded.Diagnostics);
+        var result = BomExporter.Default.Export(loaded.Project);
+        if (result.Csv is null)
+            return Diagnostics(result.Diagnostics);
+        File.WriteAllText(outputPath, result.Csv);
+        return $"exported BOM: {loaded.Project.Name} -> {outputPath}";
+    }
+
+    [McpServerTool(Name = "export_mechmaker")]
+    [Description("Export a project to a MechMaker machine JSON.")]
+    public static string ExportMechMaker(string projectPath, string outputPath)
+    {
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        if (loaded.Project is null)
+            return Diagnostics(loaded.Diagnostics);
+        var result = MechMakerMachineExporter.Default.Export(loaded.Project);
+        if (result.Machine is null)
+            return Diagnostics(result.Diagnostics);
+        File.WriteAllText(outputPath, result.Machine.ToJsonString(Emd.Core.CoreJson.Options));
+        return $"exported MechMaker machine: {loaded.Project.Name} -> {outputPath}";
+    }
+
+    [McpServerTool(Name = "export_assembly_doc")]
+    [Description("Export assembly Markdown with BOM, harness, boards, firmware, and manufacturing.")]
+    public static string ExportAssemblyDoc(string projectPath, string outputPath)
+    {
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        if (loaded.Project is null)
+            return Diagnostics(loaded.Diagnostics);
+        var result = AssemblyDocExporter.Default.Export(loaded.Project);
+        if (result.Markdown is null)
+            return Diagnostics(result.Diagnostics);
+        File.WriteAllText(outputPath, result.Markdown);
+        return $"exported assembly doc: {loaded.Project.Name} -> {outputPath}";
+    }
+
+    [McpServerTool(Name = "verify_artifacts")]
+    [Description("Verify project artifacts against the content-addressed store.")]
+    public static string VerifyArtifacts(
+        [Description("Path to emd-project JSON")] string projectPath,
+        [Description("Optional artifact store directory")] string? storePath = null)
+    {
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        if (loaded.Project is null)
+            return Diagnostics(loaded.Diagnostics);
+        var root = string.IsNullOrWhiteSpace(storePath)
+            ? Path.Combine(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, ".emd", "artifacts")
+            : storePath;
+        var store = new ArtifactStore(root);
+        var checkedCount = 0;
+        var failures = new List<string>();
+        foreach (var artifact in loaded.Project.Artifacts)
+        {
+            if (artifact.Sha256 is null)
+                continue;
+            checkedCount++;
+            if (!store.Verify(artifact.Sha256))
+                failures.Add($"{artifact.Key ?? artifact.Id.ToString()}: {artifact.Sha256}");
+        }
+        return failures.Count == 0
+            ? $"verified {checkedCount} artifact(s)"
+            : $"missing/corrupt artifacts ({root}):{Environment.NewLine}" +
+              string.Join(Environment.NewLine, failures);
     }
 
     [McpServerTool(Name = "package_project")]
@@ -145,6 +314,36 @@ public static class EmdTools
         return $"exported SSP: {loaded.Project.Name} -> {full}";
     }
 
+    [McpServerTool(Name = "simulate_cam")]
+    [Description("Run the 2.5D heightmap material-removal check against an STL target.")]
+    public static string SimulateCam(
+        [Description("Path to G-code")] string gcodePath,
+        [Description("Path to target STL")] string targetPath,
+        [Description("Stock bounds: xmin,ymin,zmin,xmax,ymax,zmax")] string stock,
+        [Description("Tool diameter in mm")] double toolDiameter,
+        [Description("Heightmap cell size in mm")] double cell,
+        [Description("Output JSON report path")] string outputPath)
+    {
+        var bounds = ParseEnvelope(stock);
+        if (bounds is null)
+            return "error: stock must be xmin,ymin,zmin,xmax,ymax,zmax";
+        var parsed = GCodeParser.Default.Parse(File.ReadAllText(gcodePath), gcodePath);
+        if (parsed.Program is null)
+            return Diagnostics(parsed.Diagnostics);
+        var mesh = StlMeshLoader.Default.LoadFile(targetPath);
+        if (mesh.Triangles is null)
+            return Diagnostics(mesh.Diagnostics);
+        var min = bounds[..3];
+        var max = bounds[3..];
+        var target = Heightmap.FromStl(mesh.Triangles, min, max, cell);
+        var stockMap = Heightmap.Stock(min, max, cell);
+        stockMap.Simulate(parsed.Program, toolDiameter);
+        var report = stockMap.Compare(target);
+        File.WriteAllText(outputPath, target.ToJson(report).ToJsonString());
+        return $"gouge {report.GougeCells} cell(s), max {report.MaxGougeMm:0.###} mm; " +
+               $"remaining {report.RemainingCells} cell(s), max {report.MaxRemainingMm:0.###} mm";
+    }
+
     [McpServerTool(Name = "verify_package")]
     [Description("Verify a package directory against its manifest.json.")]
     public static string VerifyPackage(
@@ -173,6 +372,84 @@ public static class EmdTools
             .Validate(project)
             .Count(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
     };
+
+    public static JsonObject GraphJson(EmdProject project)
+    {
+        var parts = new JsonArray();
+        foreach (var part in project.Parts)
+        {
+            parts.Add(new JsonObject
+            {
+                ["id"] = part.Id.ToString(),
+                ["key"] = part.Key,
+                ["name"] = part.Name,
+                ["kind"] = part.Kind.ToString(),
+                ["category"] = part.Category?.ToString()
+            });
+        }
+
+        var edges = new JsonArray();
+        foreach (var connection in project.Connections)
+        {
+            edges.Add(new JsonObject
+            {
+                ["key"] = connection.Key,
+                ["kind"] = connection.Kind.ToString(),
+                ["from"] = EndpointId(connection.From),
+                ["to"] = EndpointId(connection.To)
+            });
+        }
+        return new JsonObject { ["nodes"] = parts, ["edges"] = edges };
+    }
+
+    public static JsonObject SceneJson(EmdProject project)
+    {
+        var parts = new JsonArray();
+        foreach (var part in project.Parts)
+        {
+            var position = part.Pose?.Pos ?? [0d, 0d, 0d];
+            var size = part.Geometry?.Size ?? [0.02d, 0.02d, 0.02d];
+            parts.Add(new JsonObject
+            {
+                ["key"] = part.Key,
+                ["name"] = part.Name,
+                ["pos"] = new JsonArray(position.Select(value => JsonValue.Create(value)).ToArray()),
+                ["size"] = new JsonArray(size.Select(value => JsonValue.Create(value)).ToArray())
+            });
+        }
+        return new JsonObject { ["parts"] = parts };
+    }
+
+    public static JsonArray ValidationJson(EmdProject project) =>
+        new(ProjectValidator.Default.Validate(project)
+            .Select(diagnostic => (JsonNode?)new JsonObject
+            {
+                ["code"] = diagnostic.Code,
+                ["severity"] = diagnostic.Severity.ToString(),
+                ["message"] = diagnostic.Message,
+                ["entity"] = diagnostic.Entity
+            }).ToArray());
+
+    public static JsonObject TraceChartJson(string tracePath)
+    {
+        var trace = TraceCsvLoader.Default.LoadFile(tracePath);
+        if (trace.Trace is null)
+            return new JsonObject { ["error"] = Diagnostics(trace.Diagnostics) };
+        var rows = new JsonArray();
+        foreach (var row in trace.Trace.Rows.Take(5000))
+        {
+            var item = new JsonObject();
+            foreach (var signal in trace.Trace.Signals)
+                item[signal] = row.TryGetValue(signal, out var value) ? value : null;
+            rows.Add(item);
+        }
+        return new JsonObject
+        {
+            ["signals"] = new JsonArray(trace.Trace.Signals
+                .Select(signal => JsonValue.Create(signal)).ToArray()),
+            ["rows"] = rows
+        };
+    }
 
     public static JsonObject TraceSummaryJson(string tracePath)
     {
@@ -207,6 +484,10 @@ public static class EmdTools
                 .ToArray())
         };
     }
+
+    private static string? EndpointId(Endpoint endpoint) =>
+        endpoint.PartId?.ToString() ?? endpoint.NetId?.ToString() ??
+        endpoint.ArtifactId?.ToString() ?? endpoint.Uri;
 
     private static string Diagnostics(IEnumerable<Diagnostic> diagnostics)
     {

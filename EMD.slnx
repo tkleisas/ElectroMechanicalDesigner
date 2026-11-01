@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/EMD.Adapters/EMD.Adapters.csproj" />
     <Project Path="src/EMD.Cli/EMD.Cli.csproj" />
+    <Project Path="src/EMD.Desktop/EMD.Desktop.csproj" />
     <Project Path="src/EMD.Core/EMD.Core.csproj" />
     <Project Path="src/EMD.Server/EMD.Server.csproj" />
   </Folder>

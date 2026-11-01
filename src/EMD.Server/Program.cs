@@ -33,7 +33,29 @@ if (args.Contains("--http"))
             ? Results.Json(new { error = "invalid project", diagnostics = loaded.Diagnostics.Select(d => d.ToString()) }, statusCode: 400)
             : Results.Json(EmdTools.SummaryJson(loaded.Project));
     });
+    app.MapGet("/api/graph", (string path) =>
+    {
+        var loaded = Emd.Core.Projects.ProjectLoader.Default.LoadFile(path);
+        return loaded.Project is null
+            ? Results.Json(new { error = "invalid project" }, statusCode: 400)
+            : Results.Json(EmdTools.GraphJson(loaded.Project));
+    });
+    app.MapGet("/api/scene", (string path) =>
+    {
+        var loaded = Emd.Core.Projects.ProjectLoader.Default.LoadFile(path);
+        return loaded.Project is null
+            ? Results.Json(new { error = "invalid project" }, statusCode: 400)
+            : Results.Json(EmdTools.SceneJson(loaded.Project));
+    });
+    app.MapGet("/api/validate", (string path) =>
+    {
+        var loaded = Emd.Core.Projects.ProjectLoader.Default.LoadFile(path);
+        return loaded.Project is null
+            ? Results.Json(new { error = "invalid project" }, statusCode: 400)
+            : Results.Json(EmdTools.ValidationJson(loaded.Project));
+    });
     app.MapGet("/api/trace", (string path) => Results.Json(EmdTools.TraceSummaryJson(path)));
+    app.MapGet("/api/trace-chart", (string path) => Results.Json(EmdTools.TraceChartJson(path)));
     app.MapGet("/api/package", (string dir) => Results.Json(EmdTools.PackageSummaryJson(dir)));
     app.MapGet("/api/gcode", (string path, string? envelope, double? maxFeed) =>
         Results.Text(EmdTools.CheckGCode(path, envelope, maxFeed), "text/plain"));

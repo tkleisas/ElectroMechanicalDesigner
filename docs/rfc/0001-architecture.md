@@ -571,14 +571,18 @@ Remaining:
 
 Implemented:
 
-- MCP stdio/HTTP tools for validation, project summaries, trace checks, G-code
-  checks, packaging, and SSP export.
-- Read-only HTTP project/package/trace viewer.
+- MCP stdio/HTTP tools for validation, imports/exports, scenarios, trace and
+  G-code checks, CAM simulation, packaging, artifacts, and SSP export.
+- Read-only HTTP project graph, isometric scene, validation dashboard, package
+  manifest, and trace chart viewer.
+- Avalonia system view with project loading, part list, validation, and a 2D
+  system canvas.
+- Deterministic CI container with pinned .NET/Python co-simulation tools and
+  ngspice, exercised in CI.
 
 Remaining:
 
-- Avalonia system view and 3D overview; open-in-tool and re-import.
-- MCP tools for every domain; richer web viewer; deterministic CI container.
+- Open-in-tool/re-import flows; true 3D viewport; broader MCP domain coverage.
 
 ### MVP acceptance
 

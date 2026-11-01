@@ -22,14 +22,16 @@ Current capabilities:
 - **Manufacturing/CAM:** G-code validation and postprocessing, KiCad fabrication
   packages, OrcaSlicer/PrusaSlicer adapters, CAMotics checks, 2.5D heightmap
   material-removal comparison, and assembly documentation.
-- **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project,
-  trace, package, and G-code viewer.
+- **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project
+  graph, isometric scene, trace chart, package, validation, and G-code viewer.
+- **Desktop:** Avalonia system view with project loading, part list, validation,
+  and a 2D system canvas.
 
 Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE; Renode
 firmware bridge; OpenModelica thermal/motor models; HIL; true multi-axis/3D CAM;
 Avalonia system view; groovebox real-project integration.
 
-The suite has 270 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 273 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -61,10 +63,11 @@ cross-domain identity and bindings.
 - [MCP and HTTP server](docs/mcp-server.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
-Run the MCP server:
+Run the MCP server or desktop viewer:
 
 ```bash
 dotnet run --project src/EMD.Server -- --http 8080
+dotnet run --project src/EMD.Desktop
 ```
 
 Run the suite and the CLI:
@@ -129,13 +132,15 @@ src/EMD.Core            project graph, schema, validation, importers, MJCF expor
 src/EMD.Adapters        process host, JSON-RPC contract, tool adapters
 src/EMD.Cli             validate/import/export/kicad/build/CAM commands
 src/EMD.Server          MCP tools and read-only HTTP project viewer
+src/EMD.Desktop         Avalonia system view
 adapters/python         FreeCAD adapter + manifest helpers
+docker                  deterministic CI image and smoke script
 tools/mechmaker_fmu     MechMaker proxy and direct NativeAOT FMU
 tools/spice_fmu         ngspice trace source-FMU generator
 tools/cadquery          parametric catalog generator
 tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI, CAM tests
 tests/EMD.Adapters.Tests process host + tool adapter tests
-tests/EMD.Server.Tests  MCP tool and viewer contract tests
+tests/EMD.Server.Tests  MCP tool, graph, and viewer contract tests
 ```
 
 Planned additions:
@@ -159,7 +164,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.34.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.35.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

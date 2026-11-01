@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-11-01
+
 ### Added
 
-- MCP stdio/HTTP server exposing validation, summaries, trace checks, G-code
-  checks, packaging, and SSP export.
-- Read-only HTTP project/package/trace viewer.
+- MCP stdio/HTTP server exposing validation, summaries, imports/exports,
+  scenarios, trace/G-code checks, CAM simulation, packaging, artifacts, and SSP
+  export.
+- Read-only HTTP viewer with project graph, isometric scene, validation
+  dashboard, package manifest, and trace charts.
+- Avalonia desktop system view.
+- Deterministic CI container with pinned .NET/Python co-simulation tools and
+  ngspice, exercised by a container CI job.
 
 ## [0.34.0] - 2026-11-01
 
@@ -366,7 +373,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.34.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.35.0
 [0.34.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.34.0
 [0.33.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.33.0
 [0.32.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.32.0

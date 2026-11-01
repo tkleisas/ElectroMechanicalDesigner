@@ -118,6 +118,15 @@ jobs:
       - name: Run machine fixture coverage on Windows
         run: python tools/mechmaker_fmu/verify_machines.py --mechmaker-dir "${{ github.workspace }}/MechMaker"
 
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build deterministic CI image
+        run: docker build -f docker/ci.Dockerfile -t emd-ci .
+      - name: Run tests in the container
+        run: docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e NUGET_PACKAGES=/tmp/nuget -v "${{ github.workspace }}:/work" -w /work emd-ci bash docker/ci-smoke.sh
+
   schema:
     runs-on: ubuntu-latest
     steps:

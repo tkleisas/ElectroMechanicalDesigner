@@ -1,0 +1,7 @@
+.git
+**/bin
+**/obj
+**/__pycache__
+tools/mechmaker_fmu/payload
+tools/mechmaker_fmu/.cache
+tools/mechmaker_fmu/*.fmu
