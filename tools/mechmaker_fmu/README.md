@@ -36,6 +36,11 @@ This produces `MechMakerDirect.fmu` and runs the same MVP scenario against it.
 `verify_omsim.py --mechmaker-fmu MechMakerDirect.fmu` also verifies the direct
 FMU and its parameter bindings in OMSimulator.
 
+`verify_machines.py` runs the direct FMU against four MechMaker fixtures:
+`linear_axis_v0` (belt + endstop), `phone_gantry_rig` (three steppers, servo,
+rail, leadscrew), `parametric_gear_pair` (gears + parametric parts), and
+`leadscrew_z_axis` (leadscrew + nut).
+
 ## Parameters
 
 | Parameter | Meaning |

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-01
+
+### Added
+
+- Direct-FMU machine fixture coverage: linear axis, phone gantry, parametric
+  gear pair, and leadscrew Z axis (belt, rail, leadscrew, gears, servo part).
+
 ## [0.25.0] - 2026-11-01
 
 ### Added
@@ -274,7 +281,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.25.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.26.0...HEAD
+[0.26.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.26.0
 [0.25.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.25.0
 [0.24.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.24.0
 [0.23.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.23.0

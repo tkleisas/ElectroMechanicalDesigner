@@ -500,6 +500,11 @@ Remaining:
 - Package manufacturing artifacts, FreeCAD+KiCad import merge fixture, and
   firmware pin bindings. **Done.**
 - Direct NativeAOT FMU removes the proxy process and host .NET dependency.
+- Direct FMU coverage spans belt-driven, multi-axis gantry, gear-train, and
+  leadscrew machine fixtures.
+- Groovebox real-project integration is deferred: import PCB outlines,
+  enclosure dimensions, and firmware GPIO maps; electrical nets await a
+  `netlist-spec.md` parser or `kicad-cli` netlist export.
 - Torque-level and HIL interfaces remain future work; both FMUs expose
   velocity/enable.
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)

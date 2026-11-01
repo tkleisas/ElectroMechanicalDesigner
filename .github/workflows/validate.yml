@@ -75,6 +75,8 @@ jobs:
         run: python tools/mechmaker_fmu/verify_ssp.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
       - name: Verify direct FMU in OMSimulator
         run: python tools/mechmaker_fmu/verify_omsim.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
+      - name: Run machine fixture coverage
+        run: python tools/mechmaker_fmu/verify_machines.py --mechmaker-dir "${{ github.workspace }}/MechMaker"
 
   schema:
     runs-on: ubuntu-latest
@@ -107,4 +109,4 @@ jobs:
           cd adapters/python
           python -m unittest discover -s . -p 'test_*.py'
           python -m py_compile freecad_adapter.py emd_cad_manifest.py
-          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py
+          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py
