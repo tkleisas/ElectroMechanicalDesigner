@@ -18,7 +18,7 @@ trace-assertion checking. P1 adds motor phase topology, clearance checks, and
 slide/hinge motion sweeps. The package exporter bundles the verifiable
 design/manufacturing artifacts. The runnable MVP SSP test moves the linear axis
 40 mm, checks the scenario trace, exports a BOM, and rejects a swapped motor
-phase. The suite has 223 xUnit tests and 10 Python adapter tests.
+phase. The suite has 227 xUnit tests and 10 Python adapter tests.
 
 ## Principle
 
@@ -124,7 +124,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.28.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.29.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

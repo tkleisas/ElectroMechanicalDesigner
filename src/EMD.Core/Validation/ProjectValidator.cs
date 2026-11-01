@@ -315,7 +315,15 @@ public sealed class ProjectValidator
             if (part.Category != PartCategory.Motor)
                 continue;
 
-            foreach (var port in part.Ports.Where(port => port.Domain == PortDomain.Electrical))
+            var phasePorts = part.Ports
+                .Where(port => port.Domain == PortDomain.Electrical)
+                .ToList();
+            var phaseNets = new HashSet<Guid>();
+            var driverEndpoints = new HashSet<(Guid PartId, string PortId)>();
+            var hasMappingMismatch = false;
+            var hasMultipleDriverEndpoints = false;
+
+            foreach (var port in phasePorts)
             {
                 var nets = NetsOfPort(project, part.Id, port.Id).Distinct().ToList();
                 if (nets.Count == 0)
@@ -328,10 +336,32 @@ public sealed class ProjectValidator
                     continue;
                 }
 
-                var hasBoardEndpoint = nets.Any(netId =>
-                    netEndpoints.TryGetValue(netId, out var endpoints) &&
-                    endpoints.Any(endpoint => boardPartIds.Contains(endpoint.PartId)));
+                if (nets.Count > 1)
+                {
+                    diagnostics.Add(new Diagnostic(
+                        "EMD-ELEC-009",
+                        DiagnosticSeverity.Error,
+                        $"Motor phase '{port.Id}' on part '{Entity(part)}' maps to multiple nets.",
+                        Entity: $"{Entity(part)}.{port.Id}"));
+                    continue;
+                }
 
+                var netId = nets[0];
+                phaseNets.Add(netId);
+                if (!netEndpoints.TryGetValue(netId, out var endpoints))
+                    continue;
+
+                var motorEndpoints = endpoints.Count(endpoint => endpoint.PartId == part.Id);
+                if (motorEndpoints > 1)
+                    continue;
+
+                var boardEndpoints = endpoints
+                    .Where(endpoint => boardPartIds.Contains(endpoint.PartId))
+                    .ToList();
+                if (boardEndpoints.Count > 1)
+                    hasMultipleDriverEndpoints = true;
+
+                var hasBoardEndpoint = boardEndpoints.Count > 0;
                 if (!hasBoardEndpoint)
                 {
                     diagnostics.Add(new Diagnostic(
@@ -340,8 +370,69 @@ public sealed class ProjectValidator
                         $"Motor phase '{port.Id}' on part '{Entity(part)}' has no board/driver endpoint.",
                         Entity: $"{Entity(part)}.{port.Id}"));
                 }
+
+                foreach (var driver in boardEndpoints)
+                {
+                    driverEndpoints.Add(driver);
+                    var motorPhase = PhaseToken(port.Id);
+                    var driverPhase = PhaseToken(driver.PortId);
+                    if (motorPhase is not null && driverPhase is not null &&
+                        !string.Equals(motorPhase, driverPhase, StringComparison.Ordinal))
+                    {
+                        hasMappingMismatch = true;
+                    }
+                }
+            }
+
+            if (phaseNets.Count != phasePorts.Count || driverEndpoints.Count != phasePorts.Count)
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-ELEC-008",
+                    DiagnosticSeverity.Error,
+                    $"Motor '{Entity(part)}' has {phasePorts.Count} phase port(s), " +
+                    $"{phaseNets.Count} phase net(s), and {driverEndpoints.Count} driver endpoint(s).",
+                    Entity: Entity(part)));
+            }
+
+            if (hasMappingMismatch)
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-ELEC-009",
+                    DiagnosticSeverity.Error,
+                    $"Motor '{Entity(part)}' phase mapping does not match the driver phase names.",
+                    Entity: Entity(part)));
+            }
+
+            if (hasMultipleDriverEndpoints)
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-ELEC-010",
+                    DiagnosticSeverity.Error,
+                    $"Motor '{Entity(part)}' phase net has multiple driver endpoints.",
+                    Entity: Entity(part)));
             }
         }
+    }
+
+    private static string? PhaseToken(string portId)
+    {
+        var id = portId.Trim().ToLowerInvariant();
+        if (id.Length == 0)
+            return null;
+
+        var last = id[^1];
+        if (!char.IsLetter(last))
+            return null;
+
+        var prefix = id[..^1].TrimEnd('_', '-', '.');
+        if (prefix is "phase" or "ph" ||
+            (prefix.Length > 1 && prefix[0] == 'm' &&
+             prefix[1..].All(char.IsDigit)))
+        {
+            return last.ToString();
+        }
+
+        return null;
     }
 
     private static Dictionary<Guid, List<(Guid PartId, string PortId)>> BuildNetEndpoints(EmdProject project)

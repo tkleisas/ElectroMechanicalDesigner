@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-01
+
+### Added
+
+- Deeper motor phase topology checks: phase/driver count consistency
+  (`EMD-ELEC-008`), phase-name mapping (`EMD-ELEC-009`), and multiple driver
+  endpoints per phase net (`EMD-ELEC-010`).
+
 ## [0.28.0] - 2026-11-01
 
 ### Added
@@ -308,7 +316,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.28.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.29.0...HEAD
+[0.29.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.29.0
 [0.28.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.28.0
 [0.27.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.27.0
 [0.26.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.26.0

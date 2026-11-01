@@ -334,6 +334,9 @@ Examples:
 | `EMD-ELEC-005` | Net and port voltage mismatch |
 | `EMD-ELEC-006` | Motor phase has no board/driver endpoint |
 | `EMD-ELEC-007` | Multiple motor phases share one net |
+| `EMD-ELEC-008` | Motor phase, net, and driver endpoint counts disagree |
+| `EMD-ELEC-009` | Motor phase name does not match driver phase name |
+| `EMD-ELEC-010` | Motor phase net has multiple driver endpoints |
 | `EMD-FW-001` | Firmware pin map incomplete or conflicting |
 | `EMD-FW-002` | Duplicate MCU pin assignment |
 | `EMD-FW-003` | Firmware pin is not connected to its mapped net |
@@ -480,11 +483,11 @@ Implemented:
   ports; `emd import kicad-pcb`.
 - Cross-domain ERC: unconnected electrical/control ports, duplicate MCU pins,
   duplicate refdes, net/port voltage mismatch, firmware pin-to-net
-  connectivity, and basic motor phase topology (board endpoints and shared nets).
+  connectivity, and motor phase topology (board endpoints, shared nets,
+  phase-count consistency, phase-name mapping, and driver endpoint count).
 
 Remaining:
 
-- Deeper motor phase-count/mapping checks.
 - SPICE models are included in SSP when backed by an FMU artifact; generating
   that FMU from a raw ngspice netlist is the remaining step.
 

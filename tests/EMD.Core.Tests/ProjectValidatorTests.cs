@@ -116,6 +116,64 @@ public class ProjectValidatorTests
     }
 
     [Fact]
+    public void Swapped_motor_phase_mapping_is_reported_as_EMD_ELEC_009()
+    {
+        var project = Mutate(root =>
+        {
+            var connections = root["connections"]!.AsArray();
+            var nets = root["electrical"]!["nets"]!.AsArray();
+            var m1a = nets.First(n => (string?)n!["key"] == "m1a")!["id"]!.GetValue<string>();
+            var m1b = nets.First(n => (string?)n!["key"] == "m1b")!["id"]!.GetValue<string>();
+            connections.First(c => (string?)c!["key"] == "motor_phase_a")!["to"]!["net_id"] = m1b;
+            connections.First(c => (string?)c!["key"] == "motor_phase_b")!["to"]!["net_id"] = m1a;
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        var diagnostic = Assert.Single(diagnostics, d => d.Code == "EMD-ELEC-009");
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+    }
+
+    [Fact]
+    public void Missing_driver_phase_is_reported_as_EMD_ELEC_008()
+    {
+        var project = Mutate(root =>
+        {
+            var connections = root["connections"]!.AsArray();
+            connections.Remove(connections.First(c => (string?)c!["key"] == "driver_phase_c"));
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-008");
+    }
+
+    [Fact]
+    public void Phase_net_with_two_driver_endpoints_is_reported_as_EMD_ELEC_010()
+    {
+        var project = Mutate(root =>
+        {
+            var connections = root["connections"]!.AsArray();
+            var m1a = root["electrical"]!["nets"]!.AsArray()
+                .First(n => (string?)n!["key"] == "m1a")!["id"]!.GetValue<string>();
+            connections.First(c => (string?)c!["key"] == "driver_phase_b")!["to"]!["net_id"] = m1a;
+        });
+
+        var diagnostics = _validator.Validate(project);
+
+        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-010");
+    }
+
+    [Fact]
+    public void Valid_example_has_no_motor_phase_mapping_errors()
+    {
+        var diagnostics = _validator.Validate(LoadExample());
+
+        Assert.DoesNotContain(diagnostics, d =>
+            d.Code is "EMD-ELEC-008" or "EMD-ELEC-009" or "EMD-ELEC-010");
+    }
+
+    [Fact]
     public void Valid_example_has_no_motor_topology_warnings()
     {
         var diagnostics = _validator.Validate(LoadExample());
