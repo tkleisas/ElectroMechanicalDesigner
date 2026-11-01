@@ -48,6 +48,34 @@ jobs:
       - name: Run SSP integration test
         run: python tools/mechmaker_fmu/verify_ssp.py
 
+  fmu-direct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tkleisas/MechMaker
+          ref: 54e76b55c82f6ab82e647447d56d874e81804172
+          path: MechMaker
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install NativeAOT dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+      - name: Install co-simulation tools
+        run: python -m pip install pythonfmu==0.7.0 fmpy==0.3.32 omsimulator==3.0.0.post198
+      - name: Build direct NativeAOT FMU
+        env:
+          MECHMAKER_DIR: ${{ github.workspace }}/MechMaker
+        run: tools/mechmaker_fmu/build_direct.sh
+      - name: Run SSP integration test with direct FMU
+        run: python tools/mechmaker_fmu/verify_ssp.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
+      - name: Verify direct FMU in OMSimulator
+        run: python tools/mechmaker_fmu/verify_omsim.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
+
   schema:
     runs-on: ubuntu-latest
     steps:

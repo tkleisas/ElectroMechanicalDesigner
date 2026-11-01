@@ -499,14 +499,15 @@ Remaining:
 - OMSimulator confirms parameter bindings are applied at runtime. **Done.**
 - Package manufacturing artifacts, FreeCAD+KiCad import merge fixture, and
   firmware pin bindings. **Done.**
-- Proxy FMU exposes velocity/enable; torque-level fidelity needs a direct
-  in-process FMU. **Documented gap.**
+- Direct NativeAOT FMU removes the proxy process and host .NET dependency.
+- Torque-level and HIL interfaces remain future work; both FMUs expose
+  velocity/enable.
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)
   verified with FMPy. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**
 - Trace assertion evaluator and `emd trace check`. **Done.**
-- MechMaker FMU wrapper (fixed step, deterministic). **Proxy FMU done** via
-  PythonFMU + MCP; direct in-process FMU remains future work.
+- MechMaker FMU wrapper (fixed step, deterministic). **Done** in both forms:
+  PythonFMU + MCP proxy and direct .NET NativeAOT in-process FMU.
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
 - Record/replay and HIL mode through Klipper/adb.
 

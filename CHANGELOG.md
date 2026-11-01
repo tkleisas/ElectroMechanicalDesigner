@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-01
+
+### Added
+
+- Direct in-process MechMaker FMI 2.0 FMU built with .NET NativeAOT: loads
+  `MechMaker.Engine` directly, requires no server/subprocess/host .NET runtime,
+  and is ~7 MB instead of ~183 MB.
+- `build_direct.sh` and CI coverage for the direct FMU in the MVP SSP scenario,
+  including OMSimulator parameter bindings.
+
 ## [0.24.0] - 2026-11-01
 
 ### Added
@@ -264,7 +274,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.24.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.25.0
 [0.24.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.24.0
 [0.23.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.23.0
 [0.22.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.22.0

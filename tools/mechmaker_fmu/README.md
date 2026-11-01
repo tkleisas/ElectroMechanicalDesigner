@@ -4,6 +4,11 @@
 FMU. The FMU starts `MechMaker.Server`, opens a `machine.json`, runs the
 virtual MCU/physics loop, and exposes up to four stepper channels.
 
+`direct/DirectFmu.cs` is the direct NativeAOT implementation: it loads
+`MechMaker.Engine` inside the FMU process, with no server, MCP, subprocess, or
+host .NET runtime. The direct FMU is about 8 MB instead of ~183 MB and exposes
+the same variables.
+
 The default build embeds a self-contained MechMaker server, the part catalog,
 and `linear_axis_v0.json` in the FMU resources. The host therefore does not need
 a .NET runtime; the parameters below are optional overrides.
@@ -19,6 +24,17 @@ python3 -m pip install pythonfmu
 ```
 
 This produces `MechMakerSlave.fmu`.
+
+For the direct FMU (requires the .NET 10 SDK, `clang`, and `zlib1g-dev`):
+
+```bash
+./build_direct.sh
+python3 verify_ssp.py --mechmaker-fmu MechMakerDirect.fmu
+```
+
+This produces `MechMakerDirect.fmu` and runs the same MVP scenario against it.
+`verify_omsim.py --mechmaker-fmu MechMakerDirect.fmu` also verifies the direct
+FMU and its parameter bindings in OMSimulator.
 
 ## Parameters
 
@@ -80,7 +96,8 @@ combined project.
 
 ## Fidelity limit
 
-The proxy exposes motor velocity and enable per channel, not an external torque
+Both FMUs expose motor velocity and enable per channel, not an external torque
 input. MechMaker computes stepper magnetic torque internally from the commanded
-motion. Torque-level, MCU-level, and HIL fidelity need a direct in-process
-MechMaker FMU; use this proxy for kinematic and position co-simulation.
+motion. The direct FMU removes the process boundary but still models the motor
+through MechMaker's stepper/MCU loop; true torque-level and HIL interfaces
+remain future work.

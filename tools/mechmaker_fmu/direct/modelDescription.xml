@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription fmiVersion="2.0" modelName="MechMakerDirect" guid="6d5ef0b0-1d8d-4f4a-9e8e-8e4d1d6a6a11" generationTool="ElectroMechanicalDesigner" generationDateAndTime="2026-11-01T00:00:00Z" variableNamingConvention="structured" description="Direct in-process MechMaker linear-axis FMU" author="ElectroMechanicalDesigner">
+  <CoSimulation modelIdentifier="MechMakerDirect" needsExecutionTool="false" canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false" canBeInstantiatedOnlyOncePerProcess="false" canGetAndSetFMUstate="false" canSerializeFMUstate="false" canNotUseMemoryManagementFunctions="true"/>
+  <DefaultExperiment startTime="0" stopTime="5" stepSize="0.01"/>
+  <ModelVariables>
+    <ScalarVariable name="machine_path" valueReference="0" causality="parameter" variability="tunable">
+      <String start=""/>
+    </ScalarVariable>
+    <ScalarVariable name="server_path" valueReference="1" causality="parameter" variability="tunable">
+      <String start=""/>
+    </ScalarVariable>
+    <ScalarVariable name="catalog_path" valueReference="2" causality="parameter" variability="tunable">
+      <String start=""/>
+    </ScalarVariable>
+    <ScalarVariable name="microsteps" valueReference="3" causality="parameter" variability="tunable">
+      <Integer start="16"/>
+    </ScalarVariable>
+    <ScalarVariable name="carriage_m_per_rev" valueReference="4" causality="parameter" variability="tunable">
+      <Real start="0.04"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor1_velocity" valueReference="5" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor1_enable" valueReference="6" causality="input" variability="discrete">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor1_angle" valueReference="7" causality="output">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="motor2_velocity" valueReference="8" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor2_enable" valueReference="9" causality="input" variability="discrete">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor2_angle" valueReference="10" causality="output">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="motor3_velocity" valueReference="11" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor3_enable" valueReference="12" causality="input" variability="discrete">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor3_angle" valueReference="13" causality="output">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="motor4_velocity" valueReference="14" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor4_enable" valueReference="15" causality="input" variability="discrete">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <ScalarVariable name="motor4_angle" valueReference="16" causality="output">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="x_carriage_m" valueReference="17" causality="output">
+      <Real/>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="8"/>
+      <Unknown index="11"/>
+      <Unknown index="14"/>
+      <Unknown index="17"/>
+      <Unknown index="18"/>
+    </Outputs>
+  </ModelStructure>
+</fmiModelDescription>

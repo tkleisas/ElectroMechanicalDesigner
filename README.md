@@ -110,7 +110,7 @@ src/EMD.Electrical      KiCad/ngspice adapter, netlist<->wiring, harness
 src/EMD.Twin            FMU wrappers, SSP composer, OMSimulator, HIL
 src/EMD.Cam             CAM and manufacturing outputs
 src/EMD.Hub             Avalonia shell, MCP server, web viewer
-tools/mechmaker_fmu     self-contained PythonFMU proxy wrapping MechMaker
+tools/mechmaker_fmu     self-contained MechMaker proxy and direct NativeAOT FMU
 ```
 
 ## Development
@@ -124,7 +124,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.24.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.25.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
