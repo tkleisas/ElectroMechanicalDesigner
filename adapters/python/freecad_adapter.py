@@ -17,7 +17,12 @@ import os
 import sys
 from pathlib import Path
 
-from emd_cad_manifest import matrix_to_euler_xyz_deg, sanitize_id, sha256_file
+from emd_cad_manifest import (
+    matrix_to_euler_xyz_deg,
+    part_metadata,
+    sanitize_id,
+    sha256_file,
+)
 
 
 class RpcError(Exception):
@@ -114,6 +119,7 @@ def handle(request):
             except json.JSONDecodeError:
                 pass
 
+        part.update(part_metadata(obj))
         parts.append(part)
 
     if not parts:

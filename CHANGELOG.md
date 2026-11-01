@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-01
+
+### Added
+
+- Richer FreeCAD manifest properties: `EMD_Description`, `EMD_Tags`,
+  `EMD_Features`, and `EMD_Bom` are exported and preserved in part metadata.
+- CadQuery catalog plan/generator for standoffs, 2020 spacers, and belt clamps.
+
 ## [0.30.0] - 2026-11-01
 
 ### Added
@@ -324,7 +332,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.31.0
 [0.30.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.30.0
 [0.29.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.29.0
 [0.28.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.28.0

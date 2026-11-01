@@ -154,7 +154,8 @@ public sealed class FreeCadManifestImporter
                 {
                     Mechanical = new DomainRef { Tool = "freecad", Ref = partManifest.Id }
                 },
-                Ports = ports.OrderBy(port => port.Id, StringComparer.Ordinal).ToList()
+                Ports = ports.OrderBy(port => port.Id, StringComparer.Ordinal).ToList(),
+                Metadata = ToMetadata(partManifest)
             });
         }
 
@@ -438,6 +439,20 @@ public sealed class FreeCadManifestImporter
         _ => ArtifactRole.Generated
     };
 
+    private static JsonObject? ToMetadata(CadPart part)
+    {
+        var metadata = new JsonObject();
+        if (!string.IsNullOrWhiteSpace(part.Description))
+            metadata["description"] = part.Description;
+        if (part.Tags is { Count: > 0 })
+            metadata["tags"] = new JsonArray(part.Tags.Select(tag => JsonValue.Create(tag)).ToArray());
+        if (part.Features is { Count: > 0 })
+            metadata["features"] = JsonSerializer.SerializeToNode(part.Features, CoreJson.Options);
+        if (part.Bom is not null)
+            metadata["bom"] = JsonSerializer.SerializeToNode(part.Bom, CoreJson.Options);
+        return metadata.Count == 0 ? null : metadata;
+    }
+
     private static string NormalizeFormat(string format) => format switch
     {
         "stp" => "step",
@@ -476,6 +491,8 @@ public sealed class FreeCadManifestImporter
 
         public string? Name { get; init; }
 
+        public string? Description { get; init; }
+
         public string? Category { get; init; }
 
         public CadPose? Pose { get; init; }
@@ -487,6 +504,42 @@ public sealed class FreeCadManifestImporter
         public CadGeometry? Geometry { get; init; }
 
         public List<CadConnector>? Connectors { get; init; }
+
+        public List<string>? Tags { get; init; }
+
+        public List<CadFeature>? Features { get; init; }
+
+        public CadBom? Bom { get; init; }
+    }
+
+    private sealed record CadFeature
+    {
+        public string? Name { get; init; }
+
+        public CadPose? Pose { get; init; }
+
+        public CadGeometry? Geometry { get; init; }
+
+        public CadMaterial? Material { get; init; }
+
+        public List<string>? Tags { get; init; }
+    }
+
+    private sealed record CadBom
+    {
+        public string? Manufacturer { get; init; }
+
+        public string? ManufacturerPartNumber { get; init; }
+
+        public string? Supplier { get; init; }
+
+        public string? SupplierPartNumber { get; init; }
+
+        public double? UnitCost { get; init; }
+
+        public string? Currency { get; init; }
+
+        public double? Quantity { get; init; }
     }
 
     private sealed record CadPose

@@ -5,6 +5,7 @@ CAD installation.
 """
 
 import hashlib
+import json
 import math
 import re
 
@@ -25,6 +26,34 @@ def sha256_file(path, chunk_size=1024 * 1024):
         for chunk in iter(lambda: stream.read(chunk_size), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def read_json_property(value):
+    """Parse an optional FreeCAD JSON property; invalid JSON is ignored."""
+    if not value:
+        return None
+    try:
+        return json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+
+def part_metadata(obj):
+    """Read the richer EMD_* properties from a FreeCAD-like object."""
+    metadata = {}
+    description = getattr(obj, "EMD_Description", None)
+    if description:
+        metadata["description"] = str(description)
+    tags = read_json_property(getattr(obj, "EMD_Tags", None))
+    if isinstance(tags, list):
+        metadata["tags"] = [str(tag) for tag in tags]
+    features = read_json_property(getattr(obj, "EMD_Features", None))
+    if isinstance(features, list):
+        metadata["features"] = features
+    bom = read_json_property(getattr(obj, "EMD_Bom", None))
+    if isinstance(bom, dict):
+        metadata["bom"] = bom
+    return metadata
 
 
 def matrix_to_euler_xyz_deg(matrix):

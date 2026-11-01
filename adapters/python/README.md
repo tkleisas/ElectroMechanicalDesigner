@@ -41,6 +41,12 @@ emd export mjcf --project out/axis.json --out out/axis.xml
     { "pos": [...], "rot": [...] } }`.
   - `EMD_Material` — JSON object with `name`, `density_kg_m3`,
     `youngs_modulus_pa`, `poisson_ratio`, `thermal_conductivity_w_m_k`.
+  - `EMD_Description` — human-readable part description.
+  - `EMD_Tags` — JSON array of catalog/search tags.
+  - `EMD_Features` — JSON array of `{ "name", "pose", "geometry", "material" }`
+    records for per-feature geometry metadata.
+  - `EMD_Bom` — JSON object with `manufacturer`, `manufacturer_part_number`,
+    `supplier`, `supplier_part_number`, `unit_cost`, `currency`, `quantity`.
 - Optional sidecar `axis.emd.json` next to `axis.FCStd`:
 
 ```json
@@ -61,9 +67,10 @@ emd export mjcf --project out/axis.json --out out/axis.xml
 }
 ```
 
-The adapter is a starter: it uses bounding boxes rather than per-feature
-connector frames, and it cannot infer joints without the sidecar. A future
-version can read a richer FreeCAD property scheme or a dedicated workbench.
+The adapter uses bounding boxes for simulation proxies and preserves real
+connector frames, materials, BOM data, and feature metadata from the properties.
+It cannot infer joints without the sidecar; a dedicated workbench export remains
+future work.
 
 ## Tests
 

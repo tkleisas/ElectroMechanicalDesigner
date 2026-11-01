@@ -77,6 +77,19 @@ public class FreeCadManifestImporterTests
     }
 
     [Fact]
+    public void Importer_preserves_rich_part_metadata()
+    {
+        var result = FreeCadManifestImporter.Default.Import(FixtureJson, "axis.FCStd");
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        var frame = result.Project!.Parts.Single(part => part.Key == "frame");
+        Assert.Equal("Machined frame plate", (string?)frame.Metadata!["description"]);
+        Assert.Equal("FR-2020", (string?)frame.Metadata["bom"]!["manufacturer_part_number"]);
+        Assert.Equal("motor_boss", (string?)frame.Metadata["features"]![0]!["name"]);
+        Assert.Equal("frame", (string?)frame.Metadata["tags"]![0]);
+    }
+
+    [Fact]
     public void Malformed_json_reports_EMD_IMPORT_002()
     {
         var result = FreeCadManifestImporter.Default.Import("{ not json");

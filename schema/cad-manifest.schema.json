@@ -137,6 +137,64 @@
         }
       }
     },
+    "feature": {
+      "type": "object",
+      "required": [
+        "name",
+        "geometry"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pose": {
+          "$ref": "#/definitions/pose"
+        },
+        "geometry": {
+          "$ref": "#/definitions/geometry"
+        },
+        "material": {
+          "$ref": "#/definitions/material"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "bom": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manufacturer": {
+          "type": "string"
+        },
+        "manufacturer_part_number": {
+          "type": "string"
+        },
+        "supplier": {
+          "type": "string"
+        },
+        "supplier_part_number": {
+          "type": "string"
+        },
+        "unit_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
     "connector": {
       "type": "object",
       "required": [
@@ -170,6 +228,15 @@
         "name": {
           "type": "string"
         },
+        "description": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "category": {
           "enum": [
             "structure",
@@ -201,6 +268,15 @@
           "items": {
             "$ref": "#/definitions/connector"
           }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/feature"
+          }
+        },
+        "bom": {
+          "$ref": "#/definitions/bom"
         }
       }
     },

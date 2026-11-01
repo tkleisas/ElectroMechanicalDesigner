@@ -463,12 +463,15 @@ Implemented:
 - CLI: `import freecad-manifest` and `export mjcf`.
 - KiCad STEP export artifacts can be attached to board parts with
   `emd import kicad-step`, including header/bounding-box metadata.
+- FreeCAD manifest properties cover description, tags, per-feature geometry, and
+  per-part BOM data; CadQuery can generate a small parametric part catalog.
 
 Remaining:
 
-- A richer FreeCAD property scheme or workbench export (real connector frames,
-  materials, BOM, per-feature geometry).
-- CadQuery catalog part generation.
+- A dedicated FreeCAD workbench export; the current manifest property contract
+  covers connector frames, materials, BOM, and per-feature geometry metadata.
+- CadQuery-generated STEP/STL geometry is available when CadQuery is installed;
+  CI covers the dependency-free catalog plan.
 - Full swept-volume checks; exact STEP outline/hole reconstruction (PCB
   Edge.Cuts remains canonical for now).
 

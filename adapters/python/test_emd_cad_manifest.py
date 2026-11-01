@@ -3,7 +3,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from emd_cad_manifest import matrix_to_euler_xyz_deg, sanitize_id, sha256_file
+from types import SimpleNamespace
+
+from emd_cad_manifest import (
+    matrix_to_euler_xyz_deg,
+    part_metadata,
+    read_json_property,
+    sanitize_id,
+    sha256_file,
+)
 
 
 class SanitizeIdTests(unittest.TestCase):
@@ -26,6 +34,28 @@ class Sha256Tests(unittest.TestCase):
                 sha256_file(path),
                 hashlib.sha256(b"hello manifest").hexdigest(),
             )
+
+
+class JsonPropertyTests(unittest.TestCase):
+    def test_reads_valid_json_and_ignores_invalid(self):
+        self.assertEqual({"a": 1}, read_json_property('{"a": 1}'))
+        self.assertIsNone(read_json_property("{not json"))
+        self.assertIsNone(read_json_property(None))
+
+    def test_part_metadata_reads_rich_properties(self):
+        obj = SimpleNamespace(
+            EMD_Description="Belt tensioner",
+            EMD_Tags='["mechanical", "printed"]',
+            EMD_Features='[{"name": "boss", "geometry": {"kind": "cylinder", "size": [0.01, 0.02, 0]}}]',
+            EMD_Bom='{"manufacturer": "EMD", "manufacturer_part_number": "BT-01"}',
+        )
+
+        metadata = part_metadata(obj)
+
+        self.assertEqual("Belt tensioner", metadata["description"])
+        self.assertEqual(["mechanical", "printed"], metadata["tags"])
+        self.assertEqual("boss", metadata["features"][0]["name"])
+        self.assertEqual("BT-01", metadata["bom"]["manufacturer_part_number"])
 
 
 class EulerTests(unittest.TestCase):

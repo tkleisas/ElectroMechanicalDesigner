@@ -7,6 +7,8 @@
     {
       "id": "frame",
       "name": "Frame",
+      "description": "Machined frame plate",
+      "tags": ["frame", "cnc"],
       "category": "structure",
       "pose": {
         "pos": [0, 0, 0]
@@ -32,7 +34,26 @@
             "pos": [0, 0, 0.01]
           }
         }
-      ]
+      ],
+      "features": [
+        {
+          "name": "motor_boss",
+          "geometry": {
+            "kind": "cylinder",
+            "size": [0.01, 0.02, 0]
+          },
+          "pose": {
+            "pos": [0, 0, 0.01]
+          }
+        }
+      ],
+      "bom": {
+        "manufacturer": "EMD",
+        "manufacturer_part_number": "FR-2020",
+        "quantity": 1,
+        "unit_cost": 12.5,
+        "currency": "EUR"
+      }
     },
     {
       "id": "carriage",
