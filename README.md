@@ -18,7 +18,7 @@ trace-assertion checking. P1 adds motor phase topology, clearance checks, and
 slide/hinge motion sweeps. The package exporter bundles the verifiable
 design/manufacturing artifacts. The runnable MVP SSP test moves the linear axis
 40 mm, checks the scenario trace, exports a BOM, and rejects a swapped motor
-phase. The suite has 258 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+phase. The suite has 265 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -89,10 +89,12 @@ emd diff --before <project.json> --after <project.json> [--json]
 emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>
 emd slice --model <file.stl> --out <file.gcode> --slicer orca --profile <profile.ini>
 emd cam verify --gcode <file.gcode> --envelope 0,0,0,400,400,100
+emd cam verify --gcode <file.gcode> --project out/axis.json
+emd cam simulate --gcode <file.gcode> --target design.stl --stock 0,0,0,400,400,100 --out cam-report.json
 emd import freecad-path --job <path-job.json> --project out/axis.json
 emd export assembly-doc --project out/axis.json --out out/assembly.md
 emd gcode check --gcode <file.gcode> --envelope 0,0,0,400,400,100
-emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper
+emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper|linuxcnc|grbl|marlin
 emd kicad fabrication --schematic <file.kicad_sch> --pcb <file.kicad_pcb> --out axis-fab.zip
 emd spice --netlist <file.cir> --out <log>
 emd spice fmu --netlist <file.cir> --out <file.fmu> \
@@ -134,7 +136,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.33.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.34.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

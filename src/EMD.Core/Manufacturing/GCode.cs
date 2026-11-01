@@ -272,12 +272,15 @@ public sealed class GCodePostProcessor
     public string Process(string text, string flavor)
     {
         var normalized = text.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd();
-        var header = flavor.ToLowerInvariant() switch
+        var (header, footer) = flavor.ToLowerInvariant() switch
         {
-            "klipper" => "; EMD postprocessor: Klipper",
-            "linuxcnc" => "; EMD postprocessor: LinuxCNC",
-            _ => $"; EMD postprocessor: {flavor}"
+            "klipper" => ("; EMD postprocessor: Klipper", ""),
+            "linuxcnc" => ("; EMD postprocessor: LinuxCNC", "M30"),
+            "grbl" => ("; EMD postprocessor: GRBL", "M2"),
+            "marlin" => ("; EMD postprocessor: Marlin", "M84"),
+            "reprap" => ("; EMD postprocessor: RepRap", "M2"),
+            _ => ($"; EMD postprocessor: {flavor}", "")
         };
-        return header + "\n" + normalized + "\n";
+        return header + "\n" + normalized + (footer.Length == 0 ? "\n" : $"\n{footer}\n");
     }
 }

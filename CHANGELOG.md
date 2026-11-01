@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-01
+
+### Added
+
+- 2.5D heightmap material-removal simulation with STL target comparison,
+  gouge/remaining volume reporting, and `emd cam simulate`.
+- Project-aware CAM verification using FreeCAD Path stock bounds.
+- GRBL, Marlin, LinuxCNC, Klipper, and RepRap postprocessor flavors.
+
 ## [0.33.0] - 2026-11-01
 
 ### Added
@@ -351,7 +360,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.34.0
 [0.33.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.33.0
 [0.32.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.32.0
 [0.31.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.31.0

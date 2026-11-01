@@ -60,4 +60,13 @@ public class GCodeTests
         Assert.StartsWith("; EMD postprocessor: Klipper\n", output);
         Assert.Contains("G1 X1\nG1 X2", output);
     }
+
+    [Fact]
+    public void Postprocessor_adds_flavor_footer()
+    {
+        var output = GCodePostProcessor.Default.Process("G1 X1\n", "grbl");
+
+        Assert.StartsWith("; EMD postprocessor: GRBL", output);
+        Assert.EndsWith("M2\n", output);
+    }
 }

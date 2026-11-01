@@ -963,7 +963,8 @@ public static class CliApp
         writer.WriteLine("  emd export ssp --project <project.json> --out <file.ssp> [--version 1.0|2.0]");
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|pos|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd kicad fabrication --schematic <file> --pcb <file> --out <file.zip>");
-        writer.WriteLine("  emd cam verify --gcode <file.gcode> [--envelope ...] [--max-feed <mm/min>] [--camotics <exe> --out <surface.stl>]");
+        writer.WriteLine("  emd cam verify --gcode <file.gcode> [--project <project.json>] [--envelope ...] [--max-feed <mm/min>] [--camotics <exe> --out <surface.stl>]");
+        writer.WriteLine("  emd cam simulate --gcode <file.gcode> --target <design.stl> --stock <min,max> --out <report.json> [--tool-diameter <mm>] [--cell <mm>]");
         writer.WriteLine("  emd slice --model <file.stl> --out <file.gcode> --slicer orca|prusa [--profile <ini>]... [--envelope ...]");
         writer.WriteLine("  emd gcode check --gcode <file.gcode> [--envelope xmin,ymin,zmin,xmax,ymax,zmax] [--max-feed <mm/min>]");
         writer.WriteLine("  emd gcode post --gcode <file.gcode> --out <file.gcode> [--flavor klipper|linuxcnc]");

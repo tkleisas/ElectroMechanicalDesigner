@@ -357,6 +357,7 @@ Examples:
 | `EMD-CAM-007` | CAMotics did not create a surface |
 | `EMD-CAM-008` | Invalid FreeCAD Path job |
 | `EMD-CAM-009` | Path job G-code is missing |
+| `EMD-CAM-010` | Invalid or unreadable STL mesh |
 | `EMD-SLICER-001` | Slicer command failed |
 | `EMD-SLICER-002` | Slicer did not create G-code |
 | `EMD-KICAD-023` | Invalid STEP header/footer |
@@ -555,13 +556,16 @@ Implemented:
 - OrcaSlicer/PrusaSlicer CLI slicing and G-code validation (`emd slice`).
 - FreeCAD Path job manifests linked to manufacturing processes.
 - CAMotics adapter plus built-in envelope/feed verification (`emd cam verify`).
+- 2.5D heightmap material-removal simulation against an STL target with
+  gouge/remaining volume reporting (`emd cam simulate`).
 - Assembly documentation from BOM, harness, boards, firmware, and processes
   (`emd export assembly-doc`).
+- Klipper, LinuxCNC, GRBL, Marlin, and RepRap postprocessor flavors.
 
 Remaining:
 
-- FreeCAD Path multi-axis post-processor variants; full CAMotics
-  material-removal comparison and gouge reporting.
+- True multi-axis/rotary postprocessor kinematics; full 3D CAMotics
+  comparison; slicer-specific profile management.
 
 ### P5 — Hub, agents, and CI
 
