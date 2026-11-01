@@ -569,8 +569,16 @@ Remaining:
 
 ### P5 — Hub, agents, and CI
 
+Implemented:
+
+- MCP stdio/HTTP tools for validation, project summaries, trace checks, G-code
+  checks, packaging, and SSP export.
+- Read-only HTTP project/package/trace viewer.
+
+Remaining:
+
 - Avalonia system view and 3D overview; open-in-tool and re-import.
-- MCP tools for every domain; HTTP/web viewer; deterministic CI container.
+- MCP tools for every domain; richer web viewer; deterministic CI container.
 
 ### MVP acceptance
 

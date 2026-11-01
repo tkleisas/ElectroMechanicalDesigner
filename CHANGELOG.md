@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- MCP stdio/HTTP server exposing validation, summaries, trace checks, G-code
+  checks, packaging, and SSP export.
+- Read-only HTTP project/package/trace viewer.
+
 ## [0.34.0] - 2026-11-01
 
 ### Added
