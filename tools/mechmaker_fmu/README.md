@@ -28,6 +28,7 @@ This produces `MechMakerSlave.fmu`.
 | `server_path` | Optional path to a MechMaker server executable or DLL |
 | `catalog_path` | Optional catalog directory (defaults to the embedded catalog) |
 | `microsteps` | Microsteps per full step (default 16) |
+| `carriage_m_per_rev` | Carriage travel per motor revolution (default 0.04 m) |
 
 ## Variables
 
@@ -35,6 +36,9 @@ For channels 1–4:
 
 - inputs: `motorN_velocity` (rev/s), `motorN_enable` (Boolean)
 - outputs: `motorN_angle` (actual revolutions)
+
+There is also an output `x_carriage_m`, computed as
+`motor1_angle * carriage_m_per_rev`.
 
 Channels are assigned to the first four wired `step` components in the machine.
 
@@ -51,9 +55,11 @@ The FMU can also be referenced from an SSP composition.
 
 ## SSP integration test
 
-`verify_ssp.py` builds a small `CommandSlave.fmu`, generates an EMD project,
-exports an SSP 1.0 archive, and co-simulates Command → MechMaker through FMPy.
-It exercises Real and Boolean connectors and asserts that the stepper turns.
+`verify_ssp.py` builds a small `CommandSlave.fmu`, loads the MVP project
+template, exports an SSP 1.0 archive, and co-simulates Command → MechMaker
+through FMPy. It runs the `move_40mm` scenario for 5 s, writes a trace, and
+checks the scenario assertion through `emd trace check`. It also exports a BOM
+and verifies that a swapped motor phase fails validation with `EMD-ELEC-007`.
 
 ```bash
 ./build.sh
@@ -61,3 +67,7 @@ python3 verify_ssp.py
 ```
 
 The test is also run in CI after publishing MechMaker at a pinned revision.
+
+The generated SSP carries behavior-model parameters as standard SSP
+`ParameterBindings`; the MVP project sets `microsteps` and
+`carriage_m_per_rev` this way.

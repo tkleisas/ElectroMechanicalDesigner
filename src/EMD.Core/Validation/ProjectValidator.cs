@@ -304,7 +304,7 @@ public sealed class ProjectValidator
                     ?? netId.ToString();
                 diagnostics.Add(new Diagnostic(
                     "EMD-ELEC-007",
-                    DiagnosticSeverity.Warning,
+                    DiagnosticSeverity.Error,
                     $"Net '{netName}' connects {motorPhases} motor phases; expected one motor per phase net.",
                     Entity: netName));
             }

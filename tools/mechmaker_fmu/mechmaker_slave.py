@@ -40,6 +40,8 @@ class MechMakerSlave(Fmi2Slave):
         self.server_path = ""
         self.catalog_path = ""
         self.microsteps = 16
+        self.carriage_m_per_rev = 0.04
+        self.x_carriage_m = 0.0
 
         for channel in range(1, CHANNELS + 1):
             setattr(self, f"motor{channel}_velocity", 0.0)
@@ -58,6 +60,10 @@ class MechMakerSlave(Fmi2Slave):
         self.register_variable(Integer(
             "microsteps", start=16, causality=Fmi2Causality.parameter,
             variability=Fmi2Variability.tunable))
+        self.register_variable(Real(
+            "carriage_m_per_rev", start=0.04,
+            causality=Fmi2Causality.parameter,
+            variability=Fmi2Variability.tunable))
 
         for channel in range(1, CHANNELS + 1):
             self.register_variable(Real(
@@ -70,6 +76,9 @@ class MechMakerSlave(Fmi2Slave):
             self.register_variable(Real(
                 f"motor{channel}_angle",
                 causality=Fmi2Causality.output))
+
+        self.register_variable(Real(
+            "x_carriage_m", causality=Fmi2Causality.output))
 
         self.default_experiment = DefaultExperiment(
             start_time=0.0, stop_time=1.0, step_size=0.01)
@@ -113,6 +122,8 @@ class MechMakerSlave(Fmi2Slave):
             if actual is not None:
                 setattr(self, f"motor{index + 1}_angle", actual)
 
+        self.x_carriage_m = (
+            float(self.motor1_angle) * float(self.carriage_m_per_rev))
         return True
 
     def terminate(self):

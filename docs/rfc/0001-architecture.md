@@ -493,6 +493,9 @@ Remaining:
 - SSP 1.0/2.0 composition of FMU behavior models and FMU-to-FMU bindings. **Done.**
 - SSP execution verified with OMSimulator and FMPy using real FMUs. **Done.**
 - Typed SSP connectors and Command → MechMaker end-to-end SSP test in CI. **Done.**
+- MVP `move_40mm` SSP scenario: 40 mm carriage arrival, trace assertion, BOM export,
+  and swapped-phase failure. **Done.**
+- Behavior model parameters serialized as SSP `ParameterBindings`. **Done.**
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)
   verified with FMPy. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**

@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using Emd.Core.Exporters;
 using Emd.Core.Model;
@@ -10,6 +11,7 @@ public class SspComposerTests
 {
     private static readonly XNamespace Ssd = "http://ssp-standard.org/SSP1/SystemStructureDescription";
     private static readonly XNamespace Ssc = "http://ssp-standard.org/SSP1/SystemStructureCommon";
+    private static readonly XNamespace Ssv = "http://ssp-standard.org/SSP1/SystemStructureParameterValues";
 
     [Fact]
     public void Compose_builds_the_ssd_and_fmu_resources()
@@ -102,6 +104,48 @@ public class SspComposerTests
         var enableIn = Assert.Single(plant.Descendants(Ssd + "Connector"),
             connector => (string?)connector.Attribute("name") == "enable_in");
         Assert.NotNull(enableIn.Element(Ssc + "Boolean"));
+    }
+
+    [Fact]
+    public void Compose_emits_parameter_bindings_from_model_parameters()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+        project.Behavior!.Models[0] = project.Behavior.Models[0] with
+        {
+            Parameters = new JsonObject
+            {
+                ["microsteps"] = 16,
+                ["carriage_m_per_rev"] = 0.04,
+                ["enabled"] = true,
+                ["mode"] = "fast"
+            }
+        };
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        using var archive = new ZipArchive(new MemoryStream(result.Archive!), ZipArchiveMode.Read);
+        var document = XDocument.Parse(ReadEntry(archive, "SystemStructure.ssd"));
+        var controller = document.Root!.Descendants(Ssd + "Component")
+            .Single(component => (string?)component.Attribute("name") == "controller");
+        var parameterSet = controller
+            .Element(Ssd + "ParameterBindings")!
+            .Element(Ssd + "ParameterBinding")!
+            .Element(Ssd + "ParameterValues")!
+            .Element(Ssv + "ParameterSet")!;
+        Assert.Equal("1.0", (string?)parameterSet.Attribute("version"));
+        var parameters = parameterSet
+            .Element(Ssv + "Parameters")!
+            .Elements(Ssv + "Parameter")
+            .ToDictionary(
+                parameter => (string)parameter.Attribute("name")!,
+                parameter => parameter);
+
+        Assert.Equal("16", (string?)parameters["microsteps"].Element(Ssv + "Integer")!.Attribute("value"));
+        Assert.Equal("0.04", (string?)parameters["carriage_m_per_rev"].Element(Ssv + "Real")!.Attribute("value"));
+        Assert.Equal("true", (string?)parameters["enabled"].Element(Ssv + "Boolean")!.Attribute("value"));
+        Assert.Equal("fast", (string?)parameters["mode"].Element(Ssv + "String")!.Attribute("value"));
     }
 
     [Fact]

@@ -111,7 +111,8 @@ public class ProjectValidatorTests
 
         var diagnostics = _validator.Validate(project);
 
-        Assert.Contains(diagnostics, d => d.Code == "EMD-ELEC-007");
+        var diagnostic = Assert.Single(diagnostics, d => d.Code == "EMD-ELEC-007");
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
     }
 
     [Fact]

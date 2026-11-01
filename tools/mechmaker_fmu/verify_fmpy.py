@@ -32,7 +32,7 @@ def main():
         stop_time=args.stop_time,
         step_size=args.step_size,
         start_values=start_values,
-        output=["motor1_angle", "motor2_angle", "motor1_velocity"],
+        output=["motor1_angle", "motor2_angle", "motor1_velocity", "x_carriage_m"],
     )
 
     for row in result:

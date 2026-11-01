@@ -16,8 +16,9 @@ pin-to-net connectivity), simulation-binding validation, and a MechMaker
 compile hand-off. P3 groundwork adds live MechMaker simulation over MCP and
 trace-assertion checking. P1 adds motor phase topology, clearance checks, and
 slide/hinge motion sweeps. The package exporter bundles the verifiable
-design/manufacturing artifacts. The suite has 216 xUnit tests and 10 Python
-adapter tests.
+design/manufacturing artifacts. The runnable MVP SSP test moves the linear axis
+40 mm, checks the scenario trace, exports a BOM, and rejects a swapped motor
+phase. The suite has 217 xUnit tests and 10 Python adapter tests.
 
 ## Principle
 
@@ -123,7 +124,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.22.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.23.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-01
+
+### Added
+
+- Runnable MVP SSP scenario: Command FMU → MechMaker FMU, `move_40mm`,
+  trace-checked assertion, BOM export, and swapped-phase failure case.
+- `x_carriage_m` output and `carriage_m_per_rev` parameter on the MechMaker FMU.
+- SSP parameter bindings generated from behavior model parameters (Real,
+  Integer, Boolean, String), so project parameters travel with the archive.
+
+### Changed
+
+- `EMD-ELEC-007` (multiple motor phases share one net) is now an error.
+
 ## [0.22.0] - 2026-11-01
 
 ### Added
@@ -236,7 +250,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.23.0
 [0.22.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.22.0
 [0.21.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.21.0
 [0.20.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.20.0

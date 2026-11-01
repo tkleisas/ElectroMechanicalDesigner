@@ -9,7 +9,7 @@ class CommandSlave(Fmi2Slave):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.velocity = 1.0
+        self.velocity = 0.2
         self.enable = True
 
         self.register_variable(Real(

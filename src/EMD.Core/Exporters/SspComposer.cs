@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using Emd.Core.Diagnostics;
 using Emd.Core.Importers;
@@ -21,6 +22,7 @@ public sealed class SspComposer
 {
     private static readonly XNamespace Ssd = "http://ssp-standard.org/SSP1/SystemStructureDescription";
     private static readonly XNamespace Ssc = "http://ssp-standard.org/SSP1/SystemStructureCommon";
+    private static readonly XNamespace Ssv = "http://ssp-standard.org/SSP1/SystemStructureParameterValues";
     private static readonly DateTimeOffset FixedTimestamp =
         new(1980, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -162,6 +164,7 @@ public sealed class SspComposer
         var root = new XElement(Ssd + "SystemStructureDescription",
             new XAttribute(XNamespace.Xmlns + "ssd", Ssd),
             new XAttribute(XNamespace.Xmlns + "ssc", Ssc),
+            new XAttribute(XNamespace.Xmlns + "ssv", Ssv),
             new XAttribute("version", version),
             new XAttribute("name", project.Name),
             new XElement(Ssd + "System",
@@ -174,7 +177,8 @@ public sealed class SspComposer
                             new XAttribute("source", component.Source),
                             component.Connectors.Count == 0
                                 ? null
-                                : new XElement(Ssd + "Connectors", component.Connectors)))),
+                                : new XElement(Ssd + "Connectors", component.Connectors),
+                            ParameterBindings(component)))),
                 connections.Count == 0
                     ? null
                     : new XElement(Ssd + "Connections", connections)),
@@ -212,6 +216,53 @@ public sealed class SspComposer
         entry.LastWriteTime = FixedTimestamp;
         using var stream = entry.Open();
         stream.Write(content);
+    }
+
+    private static XElement? ParameterBindings(ComponentInfo component)
+    {
+        if (component.Model.Parameters is not { Count: > 0 } parameters)
+            return null;
+
+        var values = parameters
+            .OrderBy(parameter => parameter.Key, StringComparer.Ordinal)
+            .Select(parameter => ParameterElement(parameter.Key, parameter.Value))
+            .Where(parameter => parameter is not null)
+            .ToList();
+        if (values.Count == 0)
+            return null;
+
+        return new XElement(Ssd + "ParameterBindings",
+            new XElement(Ssd + "ParameterBinding",
+                new XElement(Ssd + "ParameterValues",
+                    new XElement(Ssv + "ParameterSet",
+                        new XAttribute("version", "1.0"),
+                        new XAttribute("name", $"{component.Name}.parameters"),
+                        new XElement(Ssv + "Parameters", values)))));
+    }
+
+    private static XElement? ParameterElement(string name, JsonNode? node)
+    {
+        if (node is not JsonValue value)
+            return null;
+
+        XElement? typed;
+        if (value.TryGetValue<bool>(out var boolean))
+            typed = new XElement(Ssv + "Boolean",
+                new XAttribute("value", boolean ? "true" : "false"));
+        else if (value.TryGetValue<int>(out var integer))
+            typed = new XElement(Ssv + "Integer",
+                new XAttribute("value", integer.ToString(CultureInfo.InvariantCulture)));
+        else if (value.TryGetValue<double>(out var real))
+            typed = new XElement(Ssv + "Real",
+                new XAttribute("value", real.ToString("R", CultureInfo.InvariantCulture)));
+        else if (value.TryGetValue<string>(out var text))
+            typed = new XElement(Ssv + "String", new XAttribute("value", text));
+        else
+            return null;
+
+        return new XElement(Ssv + "Parameter",
+            new XAttribute("name", name),
+            typed);
     }
 
     private static string ConnectorTypeName(string? type) =>
