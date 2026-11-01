@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-11-01
+
+### Added
+
+- OrcaSlicer/PrusaSlicer CLI adapter with sliced G-code validation.
+- CAMotics verification adapter and built-in toolpath envelope/feed checks.
+- FreeCAD Path job manifest import into manufacturing processes.
+- Assembly documentation export from BOM, harness, boards, firmware, and
+  manufacturing data.
+
 ## [0.32.0] - 2026-11-01
 
 ### Added
@@ -341,7 +351,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.32.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.33.0...HEAD
+[0.33.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.33.0
 [0.32.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.32.0
 [0.31.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.31.0
 [0.30.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.30.0

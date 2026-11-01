@@ -217,6 +217,56 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Import_freecad_path_adds_a_manufacturing_process()
+    {
+        using var temp = new TempDirectory();
+        var projectPath = Path.Combine(temp.Path, "project.json");
+        ProjectWriter.Save(MinimalProject(), projectPath);
+        var gcode = Path.Combine(temp.Path, "frame.gcode");
+        File.WriteAllText(gcode, "G21\nG1 X1 F500\n");
+        var job = Path.Combine(temp.Path, "path_job.json");
+        File.WriteAllText(job, """
+            {
+              "schema_version": "0.1",
+              "name": "frame_profile",
+              "units": "mm",
+              "stock": { "min": [0, 0, 0], "max": [220, 120, 20] },
+              "tools": [{ "id": 1, "diameter_mm": 3.175 }],
+              "operations": [{ "name": "profile", "tool": 1 }],
+              "gcode": "frame.gcode",
+              "postprocessor": "klipper"
+            }
+            """);
+
+        var (exitCode, stdout, stderr) = Run(
+            "import", "freecad-path", "--job", job, "--project", projectPath);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("imported path job", stdout);
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        Assert.True(loaded.IsValid, string.Join(Environment.NewLine, loaded.Diagnostics));
+        var process = Assert.Single(loaded.Project!.Manufacturing!.Processes);
+        Assert.Equal(ProcessKind.Cnc, process.Kind);
+        Assert.Equal("klipper", process.Postprocessor);
+        Assert.Contains(loaded.Project.Artifacts, artifact => artifact.Format == "gcode");
+    }
+
+    [Fact]
+    public void Export_assembly_doc_writes_markdown()
+    {
+        using var temp = new TempDirectory();
+        var output = Path.Combine(temp.Path, "assembly.md");
+
+        var (exitCode, stdout, stderr) = Run(
+            "export", "assembly-doc", "--project", TestPaths.ExampleProject, "--out", output);
+
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(output), stderr);
+        Assert.Contains("assembly doc", stdout, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("## Bill of materials", File.ReadAllText(output));
+    }
+
+    [Fact]
     public void Package_writes_a_reproducible_bundle()
     {
         using var temp = new TempDirectory();

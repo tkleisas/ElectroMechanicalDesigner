@@ -38,6 +38,12 @@ public static class CliApp
                     stderr,
                     new KiCadCliAdapter(ProcessToolHost.Default)),
                 "gcode" => GCodeCommand.Run(args.Skip(1).ToArray(), stdout, stderr),
+                "cam" => CamCommand.Run(
+                    args.Skip(1).ToArray(), stdout, stderr,
+                    new CamoticsAdapter(ProcessToolHost.Default)),
+                "slice" => SliceCommand.Run(
+                    args.Skip(1).ToArray(), stdout, stderr,
+                    new SlicerAdapter(ProcessToolHost.Default)),
                 "spice" => SpiceCommand.Run(
                     args.Skip(1).ToArray(),
                     stdout,
@@ -95,6 +101,7 @@ public static class CliApp
             "freecad-manifest" => ImportFreeCadManifest(args, stdout, stderr),
             "kicad-pcb" => ImportKiCadPcb(args, stdout, stderr),
             "kicad-step" => ImportKiCadStep(args, stdout, stderr),
+            "freecad-path" => ImportFreeCadPath(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown import source '{args[1]}'.")
         };
     }
@@ -321,6 +328,96 @@ public static class CliApp
         return 0;
     }
 
+    private static int ImportFreeCadPath(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var jobPath = GetOption(args, "--job");
+        if (string.IsNullOrWhiteSpace(jobPath))
+            return UsageError(stderr, "import freecad-path requires --job <path-job.json>.");
+        var projectPath = GetOption(args, "--project");
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "import freecad-path requires --project <project.json>.");
+        var output = GetOption(args, "--out") ?? projectPath;
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+        var imported = PathJobImporter.Default.ImportFile(jobPath);
+        PrintDiagnostics(imported.Diagnostics, stderr);
+        if (!imported.IsValid || imported.Job is null)
+            return 1;
+
+        var jobBytes = File.ReadAllBytes(jobPath);
+        var jobSha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(jobBytes))
+            .ToLowerInvariant();
+        var jobArtifact = new Artifact
+        {
+            Id = Guid.NewGuid(),
+            Key = "path_job",
+            Path = Path.GetFullPath(jobPath),
+            Format = "path-job",
+            Role = ArtifactRole.Manufacturing,
+            Sha256 = jobSha,
+            Bytes = jobBytes.LongLength,
+            ProducedBy = new ToolRef { Tool = "freecad-path" }
+        };
+        var artifacts = new List<Artifact>(loaded.Project.Artifacts) { jobArtifact };
+
+        Guid? gcodeId = null;
+        if (!string.IsNullOrWhiteSpace(imported.Job.GCodePath) &&
+            File.Exists(imported.Job.GCodePath))
+        {
+            var gcodeBytes = File.ReadAllBytes(imported.Job.GCodePath);
+            gcodeId = Guid.NewGuid();
+            artifacts.Add(new Artifact
+            {
+                Id = gcodeId.Value,
+                Key = "path_job_gcode",
+                Path = Path.GetFullPath(imported.Job.GCodePath),
+                Format = "gcode",
+                Role = ArtifactRole.Manufacturing,
+                Sha256 = Convert.ToHexString(
+                    System.Security.Cryptography.SHA256.HashData(gcodeBytes)).ToLowerInvariant(),
+                Bytes = gcodeBytes.LongLength,
+                ProducedBy = new ToolRef { Tool = "freecad-path" }
+            });
+        }
+
+        var manufacturing = loaded.Project.Manufacturing ?? new ManufacturingSection();
+        var processes = manufacturing.Processes
+            .Where(process => !string.Equals(process.Key, "path_job", StringComparison.Ordinal))
+            .ToList();
+        processes.Add(new ManufacturingProcess
+        {
+            Id = Guid.NewGuid(),
+            Key = "path_job",
+            Name = imported.Job.Name,
+            Kind = ProcessKind.Cnc,
+            SourceArtifactId = jobArtifact.Id,
+            Postprocessor = imported.Job.Postprocessor,
+            OutputArtifactIds = gcodeId is null ? null : [gcodeId.Value],
+            Parameters = new System.Text.Json.Nodes.JsonObject
+            {
+                ["tool_count"] = imported.Job.ToolCount,
+                ["operation_count"] = imported.Job.OperationCount,
+                ["stock_min_mm"] = string.Join(',', imported.Job.StockMin),
+                ["stock_max_mm"] = string.Join(',', imported.Job.StockMax)
+            }
+        });
+        manufacturing = manufacturing with { Processes = processes };
+
+        ProjectWriter.Save(loaded.Project with
+        {
+            Artifacts = artifacts,
+            Manufacturing = manufacturing
+        }, output);
+        stdout.WriteLine(
+            $"imported path job: {imported.Job.Name} -> {output} " +
+            $"({imported.Job.ToolCount} tool(s), {imported.Job.OperationCount} operation(s), " +
+            $"post {imported.Job.Postprocessor})");
+        return 0;
+    }
+
     private static int ImportFreeCadManifest(string[] args, TextWriter stdout, TextWriter stderr)
     {
         var input = args[2];
@@ -359,6 +456,7 @@ public static class CliApp
             "mjcf" => ExportMjcf(args, stdout, stderr),
             "bom" => ExportBom(args, stdout, stderr),
             "harness" => ExportHarness(args, stdout, stderr),
+            "assembly-doc" => ExportAssemblyDoc(args, stdout, stderr),
             "mechmaker" => ExportMechMaker(args, stdout, stderr),
             "ssp" => ExportSsp(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown export '{args[1]}'.")
@@ -390,6 +488,33 @@ public static class CliApp
         stdout.WriteLine(
             $"exported: {loaded.Project.Name} -> {output} ({loaded.Project.Parts.Count} parts)");
 
+        return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            ? 1
+            : 0;
+    }
+
+    private static int ExportAssemblyDoc(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var projectPath = GetOption(args, "--project") ?? (args.Length > 2 ? args[2] : null);
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "export assembly-doc requires --project <project.json>.");
+
+        var output = GetOption(args, "--out");
+        if (string.IsNullOrWhiteSpace(output))
+            return UsageError(stderr, "export assembly-doc requires --out <file.md>.");
+
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = AssemblyDocExporter.Default.Export(loaded.Project);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Markdown is null)
+            return 1;
+
+        WriteTextFile(output, result.Markdown);
+        stdout.WriteLine($"exported assembly doc: {loaded.Project.Name} -> {output}");
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
             : 0;
@@ -832,11 +957,14 @@ public static class CliApp
         writer.WriteLine("  emd import kicad-pcb <board.kicad_pcb> --project <project.json> [--out <project.json>]");
         writer.WriteLine("  emd export mjcf --project <project.json> --out <scene.xml>");
         writer.WriteLine("  emd export bom --project <project.json> --out <bom.csv>");
+        writer.WriteLine("  emd export assembly-doc --project <project.json> --out <assembly.md>");
         writer.WriteLine("  emd export harness --project <project.json> --out <harness.yml>");
         writer.WriteLine("  emd export mechmaker --project <project.json> --out <machine.json>");
         writer.WriteLine("  emd export ssp --project <project.json> --out <file.ssp> [--version 1.0|2.0]");
         writer.WriteLine("  emd kicad erc|drc|netlist|bom|gerbers|pos|step --schematic|--pcb <file> --out <path>");
         writer.WriteLine("  emd kicad fabrication --schematic <file> --pcb <file> --out <file.zip>");
+        writer.WriteLine("  emd cam verify --gcode <file.gcode> [--envelope ...] [--max-feed <mm/min>] [--camotics <exe> --out <surface.stl>]");
+        writer.WriteLine("  emd slice --model <file.stl> --out <file.gcode> --slicer orca|prusa [--profile <ini>]... [--envelope ...]");
         writer.WriteLine("  emd gcode check --gcode <file.gcode> [--envelope xmin,ymin,zmin,xmax,ymax,zmax] [--max-feed <mm/min>]");
         writer.WriteLine("  emd gcode post --gcode <file.gcode> --out <file.gcode> [--flavor klipper|linuxcnc]");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");

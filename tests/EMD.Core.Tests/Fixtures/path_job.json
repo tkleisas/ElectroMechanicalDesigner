@@ -1,0 +1,17 @@
+{
+  "schema_version": "0.1",
+  "name": "frame_profile",
+  "units": "mm",
+  "stock": {
+    "min": [0, 0, 0],
+    "max": [220, 120, 20]
+  },
+  "tools": [
+    { "id": 1, "diameter_mm": 3.175, "type": "endmill" }
+  ],
+  "operations": [
+    { "name": "profile", "tool": 1 }
+  ],
+  "gcode": "frame.gcode",
+  "postprocessor": "klipper"
+}

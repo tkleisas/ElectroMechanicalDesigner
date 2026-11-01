@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://emd.dev/schemas/path-job-0.1.json",
+  "title": "EMD FreeCAD Path job manifest",
+  "type": "object",
+  "required": ["schema_version", "name", "units", "stock", "tools", "operations"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "name": { "type": "string", "minLength": 1 },
+    "units": { "const": "mm" },
+    "stock": {
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "$ref": "#/definitions/vec3" },
+        "max": { "$ref": "#/definitions/vec3" }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "diameter_mm"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer", "minimum": 1 },
+          "diameter_mm": { "type": "number", "exclusiveMinimum": 0 },
+          "type": { "type": "string" }
+        }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "tool"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "tool": { "type": "integer", "minimum": 1 },
+          "gcode": { "type": "string" }
+        }
+      }
+    },
+    "gcode": { "type": "string" },
+    "postprocessor": {
+      "enum": ["klipper", "linuxcnc", "grbl", "marlin"]
+    }
+  },
+  "definitions": {
+    "vec3": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

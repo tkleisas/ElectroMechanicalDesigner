@@ -349,6 +349,16 @@ Examples:
 | `EMD-SPICE-003` | ngspice did not create the trace CSV |
 | `EMD-SPICE-004` | pythonfmu failed to build the SPICE FMU |
 | `EMD-SPICE-005` | Invalid or empty SPICE trace |
+| `EMD-CAM-001` | G-code leaves the work envelope |
+| `EMD-CAM-002` | Cutting move has no positive feed |
+| `EMD-CAM-003` | Feed exceeds the configured limit |
+| `EMD-CAM-005` | Fabrication package input is missing |
+| `EMD-CAM-006` | CAMotics verification failed |
+| `EMD-CAM-007` | CAMotics did not create a surface |
+| `EMD-CAM-008` | Invalid FreeCAD Path job |
+| `EMD-CAM-009` | Path job G-code is missing |
+| `EMD-SLICER-001` | Slicer command failed |
+| `EMD-SLICER-002` | Slicer did not create G-code |
 | `EMD-KICAD-023` | Invalid STEP header/footer |
 | `EMD-KICAD-024` | STEP has no usable bounding-box points |
 | `EMD-SPICE-002` | Expected ngspice log is missing |
@@ -542,11 +552,16 @@ Implemented:
   postprocessing (`emd gcode check|post`).
 - Deterministic KiCad fabrication package with Gerbers, drill, BOM,
   pick-and-place, STEP, hashes, and a manifest (`emd kicad fabrication`).
+- OrcaSlicer/PrusaSlicer CLI slicing and G-code validation (`emd slice`).
+- FreeCAD Path job manifests linked to manufacturing processes.
+- CAMotics adapter plus built-in envelope/feed verification (`emd cam verify`).
+- Assembly documentation from BOM, harness, boards, firmware, and processes
+  (`emd export assembly-doc`).
 
 Remaining:
 
-- FreeCAD Path jobs and multi-axis post-processors; slicer CLI; full CAMotics
-  material-removal verification; assembly documentation.
+- FreeCAD Path multi-axis post-processor variants; full CAMotics
+  material-removal comparison and gouge reporting.
 
 ### P5 — Hub, agents, and CI
 

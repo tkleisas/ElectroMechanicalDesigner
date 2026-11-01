@@ -142,6 +142,11 @@ jobs:
           Draft7Validator.check_schema(manifest_schema)
           manifest = json.load(open("tests/EMD.Core.Tests/Fixtures/freecad_manifest.json", encoding="utf-8"))
           Draft7Validator(manifest_schema).validate(manifest)
+
+          path_schema = json.load(open("schema/path-job.schema.json", encoding="utf-8"))
+          Draft7Validator.check_schema(path_schema)
+          path_job = json.load(open("tests/EMD.Core.Tests/Fixtures/path_job.json", encoding="utf-8"))
+          Draft7Validator(path_schema).validate(path_job)
           print("schemas and fixtures are valid")
           PY
       - name: Python adapter tests
