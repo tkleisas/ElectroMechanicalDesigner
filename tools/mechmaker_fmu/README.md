@@ -48,3 +48,16 @@ python3 verify_fmpy.py --velocity 1.0 --stop-time 0.1 --step-size 0.01
 The script accepts optional `--machine`, `--server`, and `--catalog` overrides.
 
 The FMU can also be referenced from an SSP composition.
+
+## SSP integration test
+
+`verify_ssp.py` builds a small `CommandSlave.fmu`, generates an EMD project,
+exports an SSP 1.0 archive, and co-simulates Command → MechMaker through FMPy.
+It exercises Real and Boolean connectors and asserts that the stepper turns.
+
+```bash
+./build.sh
+python3 verify_ssp.py
+```
+
+The test is also run in CI after publishing MechMaker at a pinned revision.

@@ -41,6 +41,24 @@ public class SchemaValidatorTests
     }
 
     [Fact]
+    public void Model_port_connector_type_is_validated()
+    {
+        var root = JsonNode.Parse(File.ReadAllText(TestPaths.ExampleProject))!.AsObject();
+        var input = root["behavior"]!["models"]![0]!["inputs"]![0]!.AsObject();
+        input["type"] = "boolean";
+
+        var diagnostics = _validator.Validate(root.ToJsonString());
+
+        Assert.Empty(diagnostics);
+
+        input["type"] = "matrix";
+
+        diagnostics = _validator.Validate(root.ToJsonString());
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-SCHEMA-001");
+    }
+
+    [Fact]
     public void Wrong_property_type_is_reported()
     {
         var root = JsonNode.Parse(File.ReadAllText(TestPaths.ExampleProject))!.AsObject();

@@ -1209,6 +1209,15 @@
         "name": {
           "type": "string"
         },
+        "type": {
+          "enum": [
+            "real",
+            "integer",
+            "boolean",
+            "string"
+          ],
+          "default": "real"
+        },
         "unit": {
           "type": "string"
         },

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-01
+
+### Added
+
+- SSP connector types from behavior model ports (`real`, `integer`, `boolean`,
+  `string`), including Boolean co-simulation bindings.
+- End-to-end SSP integration test: Command FMU → MechMaker FMU through FMPy,
+  exported by `emd export ssp` and run in CI.
+
 ## [0.21.0] - 2026-10-31
 
 ### Added
@@ -227,7 +236,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.22.0
 [0.21.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.21.0
 [0.20.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.20.0
 [0.19.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.19.0

@@ -58,6 +58,53 @@ public class SspComposerTests
     }
 
     [Fact]
+    public void Compose_emits_connector_types_from_model_ports()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+        var controllerArtifactId = project.Artifacts[0].Id;
+        var plantArtifactId = project.Artifacts[1].Id;
+
+        project.Behavior!.Models[0] = project.Behavior.Models[0] with
+        {
+            Outputs = [new ModelPort { Name = "enable", Variable = "enable", Type = "boolean" }]
+        };
+        project.Behavior.Models[1] = project.Behavior.Models[1] with
+        {
+            Inputs = [new ModelPort { Name = "enable_in", Variable = "enable_in", Type = "boolean" }]
+        };
+        project.Connections.Clear();
+        project.Connections.Add(new Connection
+        {
+            Id = Guid.NewGuid(),
+            Key = "enable_to_plant",
+            Kind = ConnectionKind.SimulationBinding,
+            From = new Endpoint { ArtifactId = controllerArtifactId, Variable = "enable" },
+            To = new Endpoint { ArtifactId = plantArtifactId, Variable = "enable_in" }
+        });
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        using var archive = new ZipArchive(new MemoryStream(result.Archive!), ZipArchiveMode.Read);
+        var document = XDocument.Parse(ReadEntry(archive, "SystemStructure.ssd"));
+        var controllers = document.Root!.Descendants(Ssd + "Component")
+            .Where(component => (string?)component.Attribute("name") == "controller")
+            .ToList();
+        var controller = Assert.Single(controllers);
+        var enable = Assert.Single(controller.Descendants(Ssd + "Connector"),
+            connector => (string?)connector.Attribute("name") == "enable");
+        Assert.NotNull(enable.Element(Ssc + "Boolean"));
+        Assert.Null(enable.Element(Ssc + "Real"));
+
+        var plant = document.Root.Descendants(Ssd + "Component")
+            .Single(component => (string?)component.Attribute("name") == "plant");
+        var enableIn = Assert.Single(plant.Descendants(Ssd + "Connector"),
+            connector => (string?)connector.Attribute("name") == "enable_in");
+        Assert.NotNull(enableIn.Element(Ssc + "Boolean"));
+    }
+
+    [Fact]
     public void Compose_can_emit_an_ssp_1_0_compatibility_archive()
     {
         using var temp = new TempDirectory();

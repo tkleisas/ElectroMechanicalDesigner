@@ -200,6 +200,8 @@ public sealed record ModelPort
 {
     public string Name { get; init; } = "";
 
+    public string Type { get; init; } = "real";
+
     public string? Unit { get; init; }
 
     public Guid? PartId { get; init; }

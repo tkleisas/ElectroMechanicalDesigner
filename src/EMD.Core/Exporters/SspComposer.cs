@@ -89,7 +89,7 @@ public sealed class SspComposer
                 connectors.Add(new XElement(Ssd + "Connector",
                     new XAttribute("name", variable),
                     new XAttribute("kind", kind),
-                    new XElement(Ssc + "Real")));
+                    new XElement(Ssc + ConnectorTypeName(port.Type))));
             }
 
             foreach (var input in model.Inputs ?? [])
@@ -213,6 +213,15 @@ public sealed class SspComposer
         using var stream = entry.Open();
         stream.Write(content);
     }
+
+    private static string ConnectorTypeName(string? type) =>
+        type?.ToLowerInvariant() switch
+        {
+            "integer" => "Integer",
+            "boolean" => "Boolean",
+            "string" => "String",
+            _ => "Real"
+        };
 
     private static string Format(double value) =>
         value.ToString("0.######", CultureInfo.InvariantCulture);

@@ -492,6 +492,7 @@ Remaining:
 - Scenario trace evidence persisted in the project and packaged. **Done.**
 - SSP 1.0/2.0 composition of FMU behavior models and FMU-to-FMU bindings. **Done.**
 - SSP execution verified with OMSimulator and FMPy using real FMUs. **Done.**
+- Typed SSP connectors and Command → MechMaker end-to-end SSP test in CI. **Done.**
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)
   verified with FMPy. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**
@@ -499,8 +500,7 @@ Remaining:
 - MechMaker FMU wrapper (fixed step, deterministic). **Proxy FMU done** via
   PythonFMU + MCP; direct in-process FMU remains future work.
 - OpenModelica thermal/motor FMU; Renode firmware bridge.
-- SSP composition + OMSimulator/FMPy; record/replay; assertions.
-- HIL mode through Klipper/adb.
+- Record/replay and HIL mode through Klipper/adb.
 
 ### P4 — CAM and manufacturing
 
