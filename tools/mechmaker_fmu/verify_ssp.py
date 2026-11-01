@@ -30,13 +30,20 @@ def build_command_fmu():
     )
 
 
-def write_project(path, mechmaker_fmu, stop_time, step_size, swapped=False):
+def write_project(path, mechmaker_fmu, stop_time, step_size, swapped=False, gcode_path=None):
     project = json.loads(TEMPLATE.read_text(encoding="utf-8"))
     project["id"] = uid()
     project["name"] = "Runnable motorized axis MVP"
 
     command_artifact = uid()
     mechmaker_artifact = uid()
+    if gcode_path is not None:
+        gcode_artifact = next(
+            artifact for artifact in project["artifacts"]
+            if artifact.get("key") == "frame_gcode"
+        )
+        gcode_artifact["path"] = str(gcode_path)
+
     project["artifacts"].extend([
         {
             "id": command_artifact,
@@ -181,10 +188,17 @@ def main():
         ssp_path = work / "axis.ssp"
         trace_path = work / "trace.csv"
         bom_path = work / "bom.csv"
+        gcode_path = work / "frame.gcode"
+        package_path = work / "package"
+        gcode_path.write_text(
+            "G21\nG90\nG1 X40 F1200\n",
+            encoding="utf-8",
+        )
 
-        write_project(project_path, mechmaker_fmu, args.stop_time, args.step_size)
+        write_project(project_path, mechmaker_fmu, args.stop_time, args.step_size,
+                      gcode_path=gcode_path)
         write_project(swapped_path, mechmaker_fmu, args.stop_time, args.step_size,
-                      swapped=True)
+                      swapped=True, gcode_path=gcode_path)
 
         valid = run_cli("validate", str(project_path))
         if valid.returncode != 0:
@@ -235,6 +249,22 @@ def main():
             "--scenario", "move_40mm",
         )
 
+        package = run_cli(
+            "package",
+            "--project", str(project_path),
+            "--out-dir", str(package_path),
+            "--trace", str(trace_path),
+        )
+        packaged_gcode = package_path / "manufacturing" / "frame_gcode.gcode"
+        if not packaged_gcode.exists():
+            raise SystemExit(f"manufacturing artifact missing from package: {packaged_gcode}")
+        verified = run_cli("package", "verify", "--dir", str(package_path))
+
+        project = json.loads(project_path.read_text(encoding="utf-8"))
+        firmware_pins = project["firmware"]["projects"][0]["pin_map"]
+        if len(firmware_pins) < 3:
+            raise SystemExit("MVP project is missing firmware pin bindings")
+
     if abs(carriage - 0.040) >= 0.001:
         raise SystemExit(f"expected carriage at 40 mm, got {carriage:.6f} m")
 
@@ -242,6 +272,9 @@ def main():
     print(f"swapped phase: {swapped_line.strip()}")
     print(f"bom: {bom.stdout.strip()}")
     print(f"trace check: {tracecheck.stdout.strip()}")
+    print(f"package: {package.stdout.strip()}")
+    print(f"package verify: {verified.stdout.strip()}")
+    print(f"firmware pins: {len(firmware_pins)}")
     print(f"x_carriage_m: {carriage:.6f} m")
     print("MVP SSP integration OK")
 

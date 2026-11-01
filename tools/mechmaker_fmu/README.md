@@ -70,4 +70,17 @@ The test is also run in CI after publishing MechMaker at a pinned revision.
 
 The generated SSP carries behavior-model parameters as standard SSP
 `ParameterBindings`; the MVP project sets `microsteps` and
-`carriage_m_per_rev` this way.
+`carriage_m_per_rev` this way. `verify_omsim.py` runs the same archive through
+OMSimulator and confirms that a `PI.yMax` binding changes the controller output
+from 12 to 6.
+
+`verify_imports.py` runs the real FreeCAD-manifest and KiCad-netlist importers,
+merges a linear-axis fixture, adds firmware pin bindings, and validates the
+combined project.
+
+## Fidelity limit
+
+The proxy exposes motor velocity and enable per channel, not an external torque
+input. MechMaker computes stepper magnetic torque internally from the commanded
+motion. Torque-level, MCU-level, and HIL fidelity need a direct in-process
+MechMaker FMU; use this proxy for kinematic and position co-simulation.

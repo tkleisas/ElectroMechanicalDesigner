@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-01
+
+### Added
+
+- Package export includes project manufacturing artifacts such as G-code.
+- FreeCAD+KiCad import integration fixture with merged mechanical/electrical
+  data and firmware pin bindings.
+- OMSimulator parameter-binding integration test.
+
+### Documented
+
+- MechMaker FMU velocity/enable proxy fidelity limit; direct in-process FMU
+  required for torque, MCU-level, and HIL simulation.
+
 ## [0.23.0] - 2026-11-01
 
 ### Added
@@ -250,7 +264,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.23.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.24.0
 [0.23.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.23.0
 [0.22.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.22.0
 [0.21.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.21.0

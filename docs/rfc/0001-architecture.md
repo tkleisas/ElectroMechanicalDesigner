@@ -496,6 +496,11 @@ Remaining:
 - MVP `move_40mm` SSP scenario: 40 mm carriage arrival, trace assertion, BOM export,
   and swapped-phase failure. **Done.**
 - Behavior model parameters serialized as SSP `ParameterBindings`. **Done.**
+- OMSimulator confirms parameter bindings are applied at runtime. **Done.**
+- Package manufacturing artifacts, FreeCAD+KiCad import merge fixture, and
+  firmware pin bindings. **Done.**
+- Proxy FMU exposes velocity/enable; torque-level fidelity needs a direct
+  in-process FMU. **Documented gap.**
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)
   verified with FMPy. **Done.**
 - Deterministic package bundle, trace attachments, and verifier (`emd package`, `emd package verify`). **Done.**

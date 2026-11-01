@@ -143,6 +143,49 @@ public class PackageExporterTests
     }
 
     [Fact]
+    public void Export_includes_manufacturing_artifacts()
+    {
+        using var temp = new TempDirectory();
+        var gcodePath = Path.Combine(temp.Path, "frame.gcode");
+        File.WriteAllText(gcodePath, "G28\nG1 X40\n");
+        var project = new EmdProject
+        {
+            Id = Guid.NewGuid(),
+            Name = "manufacturing package",
+            Parts =
+            [
+                new Part
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "frame",
+                    Name = "Frame",
+                    Kind = PartKind.Component,
+                    Geometry = new PartGeometry { Kind = GeometryKind.Box, Size = [0.1, 0.1, 0.1] },
+                    Ports = []
+                }
+            ],
+            Artifacts =
+            [
+                new Artifact
+                {
+                    Id = Guid.NewGuid(),
+                    Key = "frame_gcode",
+                    Path = gcodePath,
+                    Format = "gcode",
+                    Role = ArtifactRole.Manufacturing
+                }
+            ]
+        };
+
+        var result = PackageExporter.Default.Export(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        var file = Assert.Single(result.Files, candidate => candidate.Name == "manufacturing/frame_gcode.gcode");
+        Assert.Equal("G28\nG1 X40\n", Encoding.UTF8.GetString(file.Content));
+        Assert.Equal("manufacturing", file.Role);
+    }
+
+    [Fact]
     public void Export_is_deterministic()
     {
         var loaded = ProjectLoader.Default.LoadFile(TestPaths.ExampleProject);

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using Emd.Core.Diagnostics;
+using Emd.Core.Importers;
 using Emd.Core.Model;
 using Emd.Core.Projects;
 
@@ -96,6 +97,32 @@ public sealed class PackageExporter
                 File.ReadAllText(artifact.Path));
         }
 
+        foreach (var artifact in project.Artifacts
+                     .Where(artifact => artifact.Role == ArtifactRole.Manufacturing)
+                     .OrderBy(artifact => artifact.Key ?? artifact.Id.ToString(), StringComparer.Ordinal))
+        {
+            if (artifact.Path.StartsWith("artifact://", StringComparison.Ordinal) ||
+                !File.Exists(artifact.Path))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-PACKAGE-001",
+                    DiagnosticSeverity.Warning,
+                    $"Manufacturing artifact '{artifact.Key ?? artifact.Id.ToString()}' could not be read; omitted.",
+                    Entity: artifact.Key ?? artifact.Id.ToString()));
+                continue;
+            }
+
+            var key = Slug.Key(artifact.Key ?? artifact.Id.ToString(), "artifact");
+            var extension = Path.GetExtension(artifact.Path);
+            if (string.IsNullOrWhiteSpace(extension))
+                extension = "." + artifact.Format;
+            var name = $"manufacturing/{key}{extension}";
+            if (files.Any(file => string.Equals(file.Name, name, StringComparison.Ordinal)))
+                continue;
+
+            AddBytes(name, artifact.Format, "manufacturing", File.ReadAllBytes(artifact.Path));
+        }
+
         var machine = MechMakerMachineExporter.Default.Export(project);
         if (machine.Machine is not null)
         {
@@ -153,9 +180,11 @@ public sealed class PackageExporter
         files.Sort((left, right) => string.CompareOrdinal(left.Name, right.Name));
         return new PackageExportResult(files, diagnostics);
 
-        void Add(string name, string format, string role, string content)
+        void Add(string name, string format, string role, string content) =>
+            AddBytes(name, format, role, Encoding.UTF8.GetBytes(content));
+
+        void AddBytes(string name, string format, string role, byte[] bytes)
         {
-            var bytes = Encoding.UTF8.GetBytes(content);
             files.Add(new PackageFile(
                 name,
                 format,
