@@ -4,21 +4,32 @@ An open-source CAD/CAM suite for electromechanical systems: draw the mechanics,
 draw the electronics, write the firmware, and simulate the whole machine as a
 digital twin from one traceable project.
 
-**Status: P2 in progress.** P0 and the P1 mechanical slice are complete:
-RFC/schema, .NET 10 core, cross-domain validation, content-addressed artifacts,
-build planning, deterministic MechMaker/KiCad importers, FreeCAD manifest and
-startup adapter, pose transforms, MJCF export, and interference/joint-limit
-checks. P2 adds BOM export, a headless `kicad-cli` adapter (ERC/DRC/netlist/
-BOM/Gerbers/STEP), KiCad PCB outline/mounting-hole import, an ngspice batch
-adapter, WireViz harness export, a round-trippable MechMaker machine exporter,
-and cross-domain ERC checks (refdes uniqueness, net/port voltages, firmware
-pin-to-net connectivity), simulation-binding validation, and a MechMaker
-compile hand-off. P3 groundwork adds live MechMaker simulation over MCP and
-trace-assertion checking. P1 adds motor phase topology, clearance checks, and
-slide/hinge motion sweeps. The package exporter bundles the verifiable
-design/manufacturing artifacts. The runnable MVP SSP test moves the linear axis
-40 mm, checks the scenario trace, exports a BOM, and rejects a swapped motor
-phase. The suite has 265 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+**Status: P0–P3 core slices implemented; P4 manufacturing/CAM and P5 agent/server
+in progress.**
+
+Current capabilities:
+
+- **Project graph and lifecycle:** JSON Schema, stable IDs, content-addressed
+  artifacts, build planning, project diff/impact, deterministic packages, and
+  package verification.
+- **Imports/exports:** MechMaker machines, KiCad netlists/PCB outlines/STEP,
+  FreeCAD manifests and artifacts, MJCF, BOM, harness, SSP, and assembly docs.
+- **Validation:** cross-domain electrical/mechanical/firmware checks, motor
+  phase count/mapping topology, artifact integrity, and simulation bindings.
+- **Digital twin:** direct in-process NativeAOT MechMaker FMU (~7 MB), legacy
+  PythonFMU proxy, SSP 1.0/2.0, FMPy/OMSimulator execution, parameter bindings,
+  trace assertions, and the runnable 40 mm axis MVP.
+- **Manufacturing/CAM:** G-code validation and postprocessing, KiCad fabrication
+  packages, OrcaSlicer/PrusaSlicer adapters, CAMotics checks, 2.5D heightmap
+  material-removal comparison, and assembly documentation.
+- **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project,
+  trace, package, and G-code viewer.
+
+Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE; Renode
+firmware bridge; OpenModelica thermal/motor models; HIL; true multi-axis/3D CAM;
+Avalonia system view; groovebox real-project integration.
+
+The suite has 270 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -47,7 +58,14 @@ cross-domain identity and bindings.
 - [Example project](examples/project.json)
 - [Tool adapter protocol](docs/adapter-protocol.md)
 - [Starter FreeCAD adapter](adapters/python/README.md)
+- [MCP and HTTP server](docs/mcp-server.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
+
+Run the MCP server:
+
+```bash
+dotnet run --project src/EMD.Server -- --http 8080
+```
 
 Run the suite and the CLI:
 
@@ -75,6 +93,7 @@ emd import kicad <netlist.xml> --out <project.json>
 emd import freecad <file.FCStd|.step|.stl|...> --project <project.json> [--out <project.json>] [--store <dir>]
 emd import freecad-manifest <manifest.json> --out <project.json> [--store <dir>]
 emd import kicad-pcb <board.kicad_pcb> --project <project.json> [--out <project.json>]
+emd import kicad-step --step <board.step> --project <project.json> [--board <key>] [--out <project.json>]
 emd export mjcf --project <project.json> --out <scene.xml>
 emd export bom --project <project.json> --out <bom.csv>
 emd export harness --project <project.json> --out <harness.yml>
@@ -86,7 +105,8 @@ emd package verify --dir <dir>
 emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]
 emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--save-trace] [--duration <s>] [--motor <id:rev/s>]
 emd diff --before <project.json> --after <project.json> [--json]
-emd kicad erc|drc|netlist|bom|gerbers|step --schematic|--pcb <file> --out <path>
+emd kicad erc|drc|netlist|bom|gerbers|pos|step --schematic|--pcb <file> --out <path>
+emd kicad fabrication --schematic <file.kicad_sch> --pcb <file.kicad_pcb> --out axis-fab.zip
 emd slice --model <file.stl> --out <file.gcode> --slicer orca --profile <profile.ini>
 emd cam verify --gcode <file.gcode> --envelope 0,0,0,400,400,100
 emd cam verify --gcode <file.gcode> --project out/axis.json
@@ -94,8 +114,7 @@ emd cam simulate --gcode <file.gcode> --target design.stl --stock 0,0,0,400,400,
 emd import freecad-path --job <path-job.json> --project out/axis.json
 emd export assembly-doc --project out/axis.json --out out/assembly.md
 emd gcode check --gcode <file.gcode> --envelope 0,0,0,400,400,100
-emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper|linuxcnc|grbl|marlin
-emd kicad fabrication --schematic <file.kicad_sch> --pcb <file.kicad_pcb> --out axis-fab.zip
+emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper|linuxcnc|grbl|marlin|reprap
 emd spice --netlist <file.cir> --out <log>
 emd spice fmu --netlist <file.cir> --out <file.fmu> \
   --signals v(out),i(v1) --stop-time 0.01 --step-size 0.0001
@@ -107,22 +126,26 @@ emd build plan --project <project.json>
 
 ```
 src/EMD.Core            project graph, schema, validation, importers, MJCF exporter
-src/EMD.Adapters        process host, JSON-RPC contract, KiCad CLI adapter
-src/EMD.Cli             validate/import/export/kicad/build/artifacts commands
-adapters/python         starter FreeCAD adapter + pure manifest helpers
-tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI tests
-tests/EMD.Adapters.Tests process host + JSON-RPC adapter tests
+src/EMD.Adapters        process host, JSON-RPC contract, tool adapters
+src/EMD.Cli             validate/import/export/kicad/build/CAM commands
+src/EMD.Server          MCP tools and read-only HTTP project viewer
+adapters/python         FreeCAD adapter + manifest helpers
+tools/mechmaker_fmu     MechMaker proxy and direct NativeAOT FMU
+tools/spice_fmu         ngspice trace source-FMU generator
+tools/cadquery          parametric catalog generator
+tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI, CAM tests
+tests/EMD.Adapters.Tests process host + tool adapter tests
+tests/EMD.Server.Tests  MCP tool and viewer contract tests
 ```
 
 Planned additions:
 
 ```
-src/EMD.Mechanical      richer FreeCAD/CadQuery export, MCAD<->ECAD
-src/EMD.Electrical      KiCad/ngspice adapter, netlist<->wiring, harness
-src/EMD.Twin            FMU wrappers, SSP composer, OMSimulator, HIL
-src/EMD.Cam             CAM and manufacturing outputs
-src/EMD.Hub             Avalonia shell, MCP server, web viewer
-tools/mechmaker_fmu     self-contained MechMaker proxy and direct NativeAOT FMU
+src/EMD.Mechanical      dedicated FreeCAD workbench, richer MCAD<->ECAD
+src/EMD.Electrical      closed-loop SPICE, netlist<->wiring
+src/EMD.Twin            Renode/OpenModelica bridges, HIL
+src/EMD.Cam             true multi-axis and full 3D CAM verification
+src/EMD.Hub             Avalonia system view and richer web UI
 ```
 
 ## Development
