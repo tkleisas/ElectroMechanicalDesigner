@@ -10,10 +10,43 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 
 CASES = [
-    ("linear_axis_v0", 2, 0.005),
-    ("phone_gantry_rig", 3, 0.005),
-    ("parametric_gear_pair", 2, 0.001),
-    ("leadscrew_z_axis", 1, 0.01),
+    {
+        "name": "linear_axis_v0",
+        "machine": "examples/linear_axis_v0.json",
+        "motors": 2,
+        "min_angle": 0.005,
+        "start": {"endstop_joint": "j_carriage", "endstop_trigger_m": 1.0},
+        "endstop": True,
+    },
+    {
+        "name": "phone_gantry_rig",
+        "machine": "examples/phone_gantry_rig.json",
+        "motors": 3,
+        "min_angle": 0.005,
+        "start": {"servo_target": 0.02},
+        "servo_target": 0.02,
+    },
+    {
+        "name": "parametric_gear_pair",
+        "machine": "examples/parametric_gear_pair.json",
+        "motors": 2,
+        "min_angle": 0.001,
+    },
+    {
+        "name": "leadscrew_z_axis",
+        "machine": "examples/leadscrew_z_axis.json",
+        "motors": 1,
+        "min_angle": 0.01,
+    },
+    {
+        "name": "aux_fan_heater",
+        "machine": "fixtures/aux_fan_heater.json",
+        "motors": 0,
+        "min_angle": 0.0,
+        "start": {"fan_duty": 1.0, "heater_duty": 1.0},
+        "fan": True,
+        "heater": True,
+    },
 ]
 
 
@@ -36,8 +69,9 @@ def main():
     if not catalog.is_dir():
         raise SystemExit(f"MechMaker catalog not found: {catalog}")
 
-    for name, minimum_motors, minimum_angle in CASES:
-        machine = mechmaker / "examples" / f"{name}.json"
+    for case in CASES:
+        machine = HERE / case["machine"] if case["machine"].startswith("fixtures/") \
+            else mechmaker / case["machine"]
         start_values = {
             "machine_path": str(machine),
             "catalog_path": str(catalog),
@@ -46,23 +80,48 @@ def main():
         for channel in range(1, 4):
             start_values[f"motor{channel}_velocity"] = 0.2
             start_values[f"motor{channel}_enable"] = True
+        start_values.update(case.get("start", {}))
 
         result = simulate_fmu(
             str(fmu),
             stop_time=args.stop_time,
             step_size=args.step_size,
             start_values=start_values,
-            output=["motor1_angle", "motor2_angle", "motor3_angle", "x_carriage_m"],
+            output=[
+                "motor1_angle", "motor2_angle", "motor3_angle", "x_carriage_m",
+                "servo_position", "endstop_triggered", "fan_rpm",
+                "heater_temperature_c",
+            ],
         )
         final = result[-1]
         angles = [float(final["motor1_angle"]), float(final["motor2_angle"]),
                   float(final["motor3_angle"])]
-        moving = sum(abs(angle) >= minimum_angle for angle in angles)
-        if moving < minimum_motors:
+        moving = sum(abs(angle) >= case["min_angle"] for angle in angles)
+        if moving < case["motors"]:
             raise SystemExit(
-                f"{name}: expected {minimum_motors} moving motors, got {angles}")
+                f"{case['name']}: expected {case['motors']} moving motors, got {angles}")
 
-        print(f"{name}: {angles[0]:+.6f} {angles[1]:+.6f} {angles[2]:+.6f} rev")
+        if "servo_target" in case:
+            servo = float(final["servo_position"])
+            if abs(servo - case["servo_target"]) > 0.005:
+                raise SystemExit(
+                    f"{case['name']}: servo_position {servo} outside expectation")
+
+        if case.get("endstop") and not bool(final["endstop_triggered"]):
+            raise SystemExit(f"{case['name']}: endstop did not trigger")
+
+        if case.get("fan") and float(final["fan_rpm"]) <= 100:
+            raise SystemExit(f"{case['name']}: fan did not spin")
+
+        if case.get("heater") and float(final["heater_temperature_c"]) <= 25:
+            raise SystemExit(f"{case['name']}: heater did not heat")
+
+        print(
+            f"{case['name']}: {angles[0]:+.6f} {angles[1]:+.6f} {angles[2]:+.6f} rev; "
+            f"servo={float(final['servo_position']):+.4f}; "
+            f"endstop={int(bool(final['endstop_triggered']))}; "
+            f"fan={float(final['fan_rpm']):.0f} rpm; "
+            f"heater={float(final['heater_temperature_c']):.2f} C")
 
     print("machine fixture coverage OK")
 

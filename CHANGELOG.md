@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-01
+
+### Added
+
+- Direct FMU servo target/position, endstop state, fan duty/rpm, and heater
+  duty/temperature channels.
+- `aux_fan_heater` machine fixture and expanded fixture coverage.
+- Direct/proxy deterministic parity test across the MechMaker machine fixtures.
+- Windows NativeAOT FMU build and CI coverage.
+- Linux/Windows direct-FMU CI matrix.
+
+### Changed
+
+- The 183 MB PythonFMU/MCP proxy is marked legacy; the direct NativeAOT FMU is
+  the primary backend.
+
 ## [0.26.0] - 2026-11-01
 
 ### Added
@@ -281,7 +297,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.26.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.27.0
 [0.26.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.26.0
 [0.25.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.25.0
 [0.24.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.24.0

@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "name": "aux_fan_heater",
+  "parts": [
+    { "id": "base", "part": "beam_2020_400", "pose": {} },
+    { "id": "fan_plate", "part": "motor_mount_plate_2020", "pose": {} },
+    { "id": "fan", "part": "fan_40mm", "pose": {} },
+    { "id": "hotend_plate", "part": "motor_mount_plate_2020", "pose": {} },
+    { "id": "hotend", "part": "hotend_e3d_style", "pose": {} }
+  ],
+  "connections": [
+    { "id": "fan_plate_on_base", "part_a": "base", "connector_a": "top_a", "part_b": "fan_plate", "connector_b": "tslot" },
+    { "id": "fan_on_plate", "part_a": "fan_plate", "connector_a": "motor_face", "part_b": "fan", "connector_b": "mount" },
+    { "id": "hotend_plate_on_base", "part_a": "base", "connector_a": "top_b", "part_b": "hotend_plate", "connector_b": "tslot" },
+    { "id": "hotend_on_plate", "part_a": "hotend_plate", "connector_a": "motor_face", "part_b": "hotend", "connector_b": "mount" }
+  ],
+  "boards": [
+    { "id": "main", "type": "skr-pico", "pins": { "fan": "P1_1", "heater": "P2_1" } }
+  ],
+  "wiring": [
+    { "component": "fan", "signal": "pwm", "board": "main", "pin": "P1_1" },
+    { "component": "hotend", "signal": "heater", "board": "main", "pin": "P2_1" }
+  ]
+}

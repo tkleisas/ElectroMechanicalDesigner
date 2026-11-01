@@ -1,5 +1,8 @@
 # MechMaker FMU (FMI 2.0 co-simulation proxy)
 
+The direct NativeAOT FMU is the primary backend. The PythonFMU/MCP proxy is
+kept as a legacy parity reference.
+
 `mechmaker_slave.py` wraps the MechMaker MCP server as an FMI 2.0 co-simulation
 FMU. The FMU starts `MechMaker.Server`, opens a `machine.json`, runs the
 virtual MCU/physics loop, and exposes up to four stepper channels.
@@ -36,10 +39,14 @@ This produces `MechMakerDirect.fmu` and runs the same MVP scenario against it.
 `verify_omsim.py --mechmaker-fmu MechMakerDirect.fmu` also verifies the direct
 FMU and its parameter bindings in OMSimulator.
 
-`verify_machines.py` runs the direct FMU against four MechMaker fixtures:
+`verify_machines.py` runs the direct FMU against five fixtures:
 `linear_axis_v0` (belt + endstop), `phone_gantry_rig` (three steppers, servo,
-rail, leadscrew), `parametric_gear_pair` (gears + parametric parts), and
-`leadscrew_z_axis` (leadscrew + nut).
+rail, leadscrew), `parametric_gear_pair` (gears + parametric parts),
+`leadscrew_z_axis` (leadscrew + nut), and `aux_fan_heater` (fan + hotend
+thermal model).
+
+`verify_parity.py` compares the direct and proxy FMUs on the four MechMaker
+machine fixtures.
 
 ## Parameters
 
@@ -50,6 +57,8 @@ rail, leadscrew), `parametric_gear_pair` (gears + parametric parts), and
 | `catalog_path` | Optional catalog directory (defaults to the embedded catalog) |
 | `microsteps` | Microsteps per full step (default 16) |
 | `carriage_m_per_rev` | Carriage travel per motor revolution (default 0.04 m) |
+| `endstop_joint` | Optional MechMaker joint name to watch |
+| `endstop_trigger_m` | Endstop trigger position in metres (default 0) |
 
 ## Variables
 
@@ -57,6 +66,14 @@ For channels 1–4:
 
 - inputs: `motorN_velocity` (rev/s), `motorN_enable` (Boolean)
 - outputs: `motorN_angle` (actual revolutions)
+
+Additional direct-FMU variables:
+
+- inputs: `servo_target`, `fan_duty`, `heater_duty`
+- outputs: `servo_position`, `endstop_triggered`, `fan_rpm`,
+  `heater_temperature_c`
+- `servo_target`/`servo_position` are metres for slide servos and degrees for
+  hinge servos
 
 There is also an output `x_carriage_m`, computed as
 `motor1_angle * carriage_m_per_rev`.

@@ -359,9 +359,13 @@ public static unsafe class DirectFmu
         DllImportSearchPath? searchPath)
     {
         var fileName = libraryName;
-        if (!fileName.EndsWith(".so", StringComparison.Ordinal) &&
-            !fileName.EndsWith(".dylib", StringComparison.Ordinal) &&
-            !fileName.EndsWith(".dll", StringComparison.Ordinal))
+        if (OperatingSystem.IsWindows())
+        {
+            if (!fileName.EndsWith(".dll", StringComparison.Ordinal))
+                fileName = $"{fileName}.dll";
+        }
+        else if (!fileName.EndsWith(".so", StringComparison.Ordinal) &&
+                 !fileName.EndsWith(".dylib", StringComparison.Ordinal))
         {
             fileName = $"lib{fileName}.so";
         }
@@ -397,15 +401,29 @@ public static unsafe class DirectFmu
         public int Microsteps = 16;
         public double CarriageMPerRev = 0.04;
         public double XCarriage;
+        public double ServoTarget;
+        public double ServoPosition;
+        public string EndstopJoint = "";
+        public double EndstopTriggerM;
+        public bool EndstopTriggered;
+        public double FanDuty;
+        public double FanRpm;
+        public double HeaterDuty;
+        public double HeaterTemperatureC;
 
         private readonly double[] _velocity = new double[Channels];
         private readonly bool[] _enable = new bool[Channels];
         private readonly double[] _angle = new double[Channels];
         private readonly List<StepperChannel> _channels = [];
         private MachineSimulation? _simulation;
+        private ServoChannel? _servo;
+        private EndstopChannel? _endstop;
+        private FanChannel? _fan;
+        private ThermalChannel? _heater;
         private IntPtr _machinePathPtr;
         private IntPtr _serverPathPtr;
         private IntPtr _catalogPathPtr;
+        private IntPtr _endstopJointPtr;
 
         public int Initialize()
         {
@@ -415,8 +433,9 @@ public static unsafe class DirectFmu
             if (!Directory.Exists(payload))
                 payload = baseDirectory;
 
+            var platform = OperatingSystem.IsWindows() ? "win64" : "linux64";
             var binaries = Path.GetFullPath(Path.Combine(
-                baseDirectory, "..", "binaries", "linux64"));
+                baseDirectory, "..", "binaries", platform));
             EnsureNativeResolver(binaries);
 
             var machinePath = string.IsNullOrWhiteSpace(MachinePath)
@@ -428,6 +447,11 @@ public static unsafe class DirectFmu
             var machine = DirectJson.LoadMachine(machinePath);
             var catalog = DirectJson.LoadCatalog(catalogPath);
             _simulation = MachineSimulation.FromMachine(machine, catalog, Microsteps);
+            _servo = _simulation.ServosByInstance.Values.FirstOrDefault();
+            _fan = _simulation.FansByInstance.Values.FirstOrDefault();
+            _heater = _simulation.HeatersByInstance.Values.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(EndstopJoint))
+                _endstop = _simulation.Mcu.AddEndstop(EndstopJoint, EndstopTriggerM);
 
             _channels.Clear();
             foreach (var instanceId in machine.Wiring
@@ -463,10 +487,24 @@ public static unsafe class DirectFmu
                 _channels[index].SetVelocityRevPerSec(_velocity[index]);
             }
 
+            if (_servo is not null)
+            {
+                if (_servo.IsSlide)
+                    _servo.SetTargetPositionM(ServoTarget);
+                else
+                    _servo.SetTargetAngleDeg(ServoTarget);
+            }
+            _fan?.SetDuty(FanDuty);
+            _heater?.SetDuty(HeaterDuty);
+
             _simulation.RunFor(stepSize);
             for (var index = 0; index < _channels.Count; index++)
                 _angle[index] = _channels[index].RotorAngleRev;
             XCarriage = _angle[0] * CarriageMPerRev;
+            ServoPosition = _servo?.AngleDeg ?? 0;
+            FanRpm = (_fan?.RevPerSec ?? 0) * 60;
+            HeaterTemperatureC = _heater?.TemperatureC ?? 0;
+            EndstopTriggered = _endstop?.Pressed ?? false;
             return Ok;
         }
 
@@ -475,6 +513,10 @@ public static unsafe class DirectFmu
             _simulation?.Dispose();
             _simulation = null;
             _channels.Clear();
+            _servo = null;
+            _endstop = null;
+            _fan = null;
+            _heater = null;
         }
 
         public double GetReal(uint reference)
@@ -483,6 +525,20 @@ public static unsafe class DirectFmu
                 return CarriageMPerRev;
             if (reference == 17)
                 return XCarriage;
+            if (reference == 18)
+                return ServoTarget;
+            if (reference == 19)
+                return ServoPosition;
+            if (reference == 21)
+                return EndstopTriggerM;
+            if (reference == 23)
+                return FanDuty;
+            if (reference == 24)
+                return FanRpm;
+            if (reference == 25)
+                return HeaterDuty;
+            if (reference == 26)
+                return HeaterTemperatureC;
             if (reference >= 5 && reference <= 16)
             {
                 var offset = reference - 5;
@@ -502,6 +558,14 @@ public static unsafe class DirectFmu
         {
             if (reference == 4)
                 CarriageMPerRev = value;
+            else if (reference == 18)
+                ServoTarget = value;
+            else if (reference == 21)
+                EndstopTriggerM = value;
+            else if (reference == 23)
+                FanDuty = value;
+            else if (reference == 25)
+                HeaterDuty = value;
             else if (reference >= 5 && reference <= 16)
             {
                 var offset = reference - 5;
@@ -520,6 +584,8 @@ public static unsafe class DirectFmu
 
         public bool GetBoolean(uint reference)
         {
+            if (reference == 22)
+                return EndstopTriggered;
             if (reference >= 6 && reference <= 15)
             {
                 var offset = reference - 6;
@@ -543,6 +609,7 @@ public static unsafe class DirectFmu
             0 => StringPtr(ref _machinePathPtr, MachinePath),
             1 => StringPtr(ref _serverPathPtr, ServerPath),
             2 => StringPtr(ref _catalogPathPtr, CatalogPath),
+            20 => StringPtr(ref _endstopJointPtr, EndstopJoint),
             _ => StringPtr(ref _machinePathPtr, MachinePath)
         };
 
@@ -558,6 +625,9 @@ public static unsafe class DirectFmu
                     break;
                 case 2:
                     CatalogPath = value;
+                    break;
+                case 20:
+                    EndstopJoint = value;
                     break;
             }
         }
@@ -592,7 +662,10 @@ public static unsafe class DirectFmu
         public void Dispose()
         {
             Terminate();
-            foreach (var pointer in new[] { _machinePathPtr, _serverPathPtr, _catalogPathPtr })
+            foreach (var pointer in new[]
+                     {
+                         _machinePathPtr, _serverPathPtr, _catalogPathPtr, _endstopJointPtr
+                     })
             {
                 if (pointer != IntPtr.Zero)
                     Marshal.FreeCoTaskMem(pointer);

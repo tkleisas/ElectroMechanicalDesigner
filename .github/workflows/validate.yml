@@ -70,12 +70,47 @@ jobs:
       - name: Build direct NativeAOT FMU
         env:
           MECHMAKER_DIR: ${{ github.workspace }}/MechMaker
+          PYTHON: python
         run: tools/mechmaker_fmu/build_direct.sh
       - name: Run SSP integration test with direct FMU
         run: python tools/mechmaker_fmu/verify_ssp.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
       - name: Verify direct FMU in OMSimulator
         run: python tools/mechmaker_fmu/verify_omsim.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
       - name: Run machine fixture coverage
+        run: python tools/mechmaker_fmu/verify_machines.py --mechmaker-dir "${{ github.workspace }}/MechMaker"
+      - name: Build proxy FMU for parity
+        env:
+          MECHMAKER_DIR: ${{ github.workspace }}/MechMaker
+        run: tools/mechmaker_fmu/build.sh
+      - name: Compare direct and proxy FMUs
+        run: python tools/mechmaker_fmu/verify_parity.py --mechmaker-dir "${{ github.workspace }}/MechMaker"
+
+  fmu-direct-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tkleisas/MechMaker
+          ref: 54e76b55c82f6ab82e647447d56d874e81804172
+          path: MechMaker
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install co-simulation tools
+        run: python -m pip install pythonfmu==0.7.0 fmpy==0.3.32
+      - name: Build direct NativeAOT FMU (Windows)
+        shell: bash
+        env:
+          MECHMAKER_DIR: ${{ github.workspace }}/MechMaker
+        run: tools/mechmaker_fmu/build_direct.sh
+      - name: Run SSP integration test with Windows FMU
+        run: python tools/mechmaker_fmu/verify_ssp.py --mechmaker-fmu tools/mechmaker_fmu/MechMakerDirect.fmu
+      - name: Run machine fixture coverage on Windows
         run: python tools/mechmaker_fmu/verify_machines.py --mechmaker-dir "${{ github.workspace }}/MechMaker"
 
   schema:
@@ -109,4 +144,4 @@ jobs:
           cd adapters/python
           python -m unittest discover -s . -p 'test_*.py'
           python -m py_compile freecad_adapter.py emd_cad_manifest.py
-          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py
+          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py ../../tools/mechmaker_fmu/verify_parity.py

@@ -3,28 +3,56 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 MECHMAKER_DIR="${MECHMAKER_DIR:-$(cd ../../../MechMaker && pwd)}"
+if command -v cygpath >/dev/null 2>&1; then
+  MECHMAKER_DIR="$(cygpath -u "$MECHMAKER_DIR")"
+fi
+PYTHON="${PYTHON:-python3}"
 STAGE="direct-fmu"
 OUTPUT="MechMakerDirect.fmu"
 
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    RID="win-x64"
+    PLATFORM="win64"
+    LIBRARY="MechMakerDirect.dll"
+    SOURCE_LIBRARY="MechMaker.Fmu.Direct.dll"
+    ;;
+  Linux*)
+    RID="linux-x64"
+    PLATFORM="linux64"
+    LIBRARY="MechMakerDirect.so"
+    SOURCE_LIBRARY="MechMaker.Fmu.Direct.so"
+    ;;
+  *)
+    echo "Unsupported build host: $(uname -s)" >&2
+    exit 1
+    ;;
+esac
+
 rm -rf "$STAGE" "$OUTPUT"
-mkdir -p "$STAGE/binaries/linux64" "$STAGE/resources/payload/catalog"
+mkdir -p "$STAGE/binaries/$PLATFORM" "$STAGE/resources/payload/catalog"
 
-echo "Publishing NativeAOT MechMaker FMU..."
+echo "Publishing NativeAOT MechMaker FMU for $RID..."
 dotnet publish direct/MechMaker.Fmu.Direct.csproj \
-  -c Release -r linux-x64 --self-contained true \
+  -c Release -r "$RID" --self-contained true \
   -p:MechMakerDir="$MECHMAKER_DIR" \
-  -o "$STAGE/binaries/linux64" >/dev/null
+  -o "$STAGE/binaries/$PLATFORM" >/dev/null
 
-mv "$STAGE/binaries/linux64/MechMaker.Fmu.Direct.so" \
-   "$STAGE/binaries/linux64/MechMakerDirect.so"
-rm -f "$STAGE/binaries/linux64"/*.dbg "$STAGE/binaries/linux64"/*.pdb
+mv "$STAGE/binaries/$PLATFORM/$SOURCE_LIBRARY" \
+   "$STAGE/binaries/$PLATFORM/$LIBRARY"
+if [ ! -f "$STAGE/binaries/$PLATFORM/$LIBRARY" ]; then
+  echo "NativeAOT output not found: $LIBRARY" >&2
+  ls -l "$STAGE/binaries/$PLATFORM" >&2
+  exit 1
+fi
+rm -f "$STAGE/binaries/$PLATFORM"/*.dbg "$STAGE/binaries/$PLATFORM"/*.pdb \
+  "$STAGE/binaries/$PLATFORM"/*.lib "$STAGE/binaries/$PLATFORM"/*.exp
 
 cp direct/modelDescription.xml "$STAGE/"
 cp "$MECHMAKER_DIR/examples/linear_axis_v0.json" "$STAGE/resources/payload/machine.json"
 cp "$MECHMAKER_DIR"/catalog/*.json "$STAGE/resources/payload/catalog/"
 
-python3 - "$STAGE" "$OUTPUT" <<'PY'
-import os
+"$PYTHON" - "$STAGE" "$OUTPUT" <<'PY'
 import sys
 import zipfile
 from pathlib import Path

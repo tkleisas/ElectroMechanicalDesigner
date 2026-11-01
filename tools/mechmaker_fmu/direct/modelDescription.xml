@@ -57,6 +57,33 @@
     <ScalarVariable name="x_carriage_m" valueReference="17" causality="output">
       <Real/>
     </ScalarVariable>
+    <ScalarVariable name="servo_target" valueReference="18" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="servo_position" valueReference="19" causality="output">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="endstop_joint" valueReference="20" causality="parameter" variability="tunable">
+      <String start=""/>
+    </ScalarVariable>
+    <ScalarVariable name="endstop_trigger_m" valueReference="21" causality="parameter" variability="tunable">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="endstop_triggered" valueReference="22" causality="output" variability="discrete">
+      <Boolean/>
+    </ScalarVariable>
+    <ScalarVariable name="fan_duty" valueReference="23" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="fan_rpm" valueReference="24" causality="output">
+      <Real/>
+    </ScalarVariable>
+    <ScalarVariable name="heater_duty" valueReference="25" causality="input">
+      <Real start="0"/>
+    </ScalarVariable>
+    <ScalarVariable name="heater_temperature_c" valueReference="26" causality="output">
+      <Real/>
+    </ScalarVariable>
   </ModelVariables>
   <ModelStructure>
     <Outputs>
@@ -65,6 +92,10 @@
       <Unknown index="14"/>
       <Unknown index="17"/>
       <Unknown index="18"/>
+      <Unknown index="20"/>
+      <Unknown index="23"/>
+      <Unknown index="25"/>
+      <Unknown index="27"/>
     </Outputs>
   </ModelStructure>
 </fmiModelDescription>
