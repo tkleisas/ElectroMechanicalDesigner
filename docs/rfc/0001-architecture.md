@@ -346,6 +346,9 @@ Examples:
 | `EMD-KICAD-021` | Invalid KiCad PCB S-expression |
 | `EMD-KICAD-022` | KiCad PCB has no mounting holes |
 | `EMD-SPICE-001` | ngspice command failed |
+| `EMD-SPICE-003` | ngspice did not create the trace CSV |
+| `EMD-SPICE-004` | pythonfmu failed to build the SPICE FMU |
+| `EMD-SPICE-005` | Invalid or empty SPICE trace |
 | `EMD-KICAD-023` | Invalid STEP header/footer |
 | `EMD-KICAD-024` | STEP has no usable bounding-box points |
 | `EMD-SPICE-002` | Expected ngspice log is missing |
@@ -488,8 +491,9 @@ Implemented:
 
 Remaining:
 
-- SPICE models are included in SSP when backed by an FMU artifact; generating
-  that FMU from a raw ngspice netlist is the remaining step.
+- SPICE models are included in SSP when backed by an FMU artifact.
+  `emd spice fmu` generates a table-interpolating source FMU from an ngspice
+  transient run; closed-loop SPICE stepping remains future work.
 
 ### P3 — Digital twin co-simulation — groundwork
 

@@ -36,7 +36,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install co-simulation tools
-        run: python -m pip install pythonfmu==0.7.0 fmpy==0.3.32 omsimulator==3.0.0.post198
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ngspice
+          python -m pip install pythonfmu==0.7.0 fmpy==0.3.32 omsimulator==3.0.0.post198
       - name: Verify FreeCAD/KiCad imports and firmware bindings
         run: python tools/mechmaker_fmu/verify_imports.py
       - name: Verify OMSimulator parameter bindings
@@ -47,6 +50,8 @@ jobs:
         run: tools/mechmaker_fmu/build.sh
       - name: Run SSP integration test
         run: python tools/mechmaker_fmu/verify_ssp.py
+      - name: Run SPICE FMU integration test
+        run: python tools/spice_fmu/verify_spice_fmu.py
 
   fmu-direct:
     runs-on: ubuntu-latest

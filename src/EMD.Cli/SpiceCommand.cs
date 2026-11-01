@@ -10,6 +10,13 @@ public static class SpiceCommand
         TextWriter stderr,
         NgSpiceAdapter adapter)
     {
+        if (args.Length > 0 &&
+            string.Equals(args[0], "fmu", StringComparison.OrdinalIgnoreCase))
+        {
+            return SpiceFmuCommand.Run(
+                args.Skip(1).ToArray(), stdout, stderr, ProcessToolHost.Default);
+        }
+
         var netlist = GetOption(args, "--netlist");
         var output = GetOption(args, "--out");
 

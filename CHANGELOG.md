@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-01
+
+### Added
+
+- `emd spice fmu`: runs an ngspice transient analysis, captures selected
+  vectors, and generates a deterministic table-interpolating FMI 2.0 source FMU
+  that can be wired into SSP.
+
 ## [0.29.0] - 2026-11-01
 
 ### Added
@@ -316,7 +324,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.30.0
 [0.29.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.29.0
 [0.28.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.28.0
 [0.27.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.27.0
