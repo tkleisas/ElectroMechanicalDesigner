@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-11-01
+
+### Added
+
+- Renode headless firmware runner with UART log evidence and project artifact
+  resolution.
+- Firmware pin-map verification for empty maps, wrong boards, and ambiguous
+  MCU-board ports.
+- Renode 1.17 in the deterministic CI image plus local portable-install
+  documentation.
+
 ## [0.35.0] - 2026-11-01
 
 ### Added
@@ -373,7 +384,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.35.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.36.0...HEAD
+[0.36.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.0
 [0.35.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.35.0
 [0.34.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.34.0
 [0.33.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.33.0

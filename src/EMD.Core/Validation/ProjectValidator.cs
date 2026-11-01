@@ -35,6 +35,7 @@ public sealed class ProjectValidator
         ValidateElectricalVoltages(project, parts, nets, diagnostics);
         ValidateMotorTopology(project, diagnostics);
         ValidateFirmware(project, parts, nets, artifacts, diagnostics);
+        diagnostics.AddRange(FirmwarePinMapVerifier.Default.Validate(project));
         ValidateBehavior(project, parts, artifacts, diagnostics);
         ValidateSimulation(project, connections, artifacts, diagnostics);
         ValidateSimulationBindings(project, diagnostics);

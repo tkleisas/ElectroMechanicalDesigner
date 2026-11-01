@@ -15,23 +15,26 @@ Current capabilities:
 - **Imports/exports:** MechMaker machines, KiCad netlists/PCB outlines/STEP,
   FreeCAD manifests and artifacts, MJCF, BOM, harness, SSP, and assembly docs.
 - **Validation:** cross-domain electrical/mechanical/firmware checks, motor
-  phase count/mapping topology, artifact integrity, and simulation bindings.
+  phase count/mapping topology, firmware pin-map/board consistency, artifact
+  integrity, and simulation bindings.
 - **Digital twin:** direct in-process NativeAOT MechMaker FMU (~7 MB), legacy
   PythonFMU proxy, SSP 1.0/2.0, FMPy/OMSimulator execution, parameter bindings,
   trace assertions, and the runnable 40 mm axis MVP.
 - **Manufacturing/CAM:** G-code validation and postprocessing, KiCad fabrication
   packages, OrcaSlicer/PrusaSlicer adapters, CAMotics checks, 2.5D heightmap
   material-removal comparison, and assembly documentation.
+- **Firmware:** Renode headless execution with firmware/platform artifact
+  resolution, UART log evidence, and pin-map verification.
 - **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project
   graph, isometric scene, trace chart, package, validation, and G-code viewer.
 - **Desktop:** Avalonia system view with project loading, part list, validation,
   and a 2D system canvas.
 
-Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE; Renode
-firmware bridge; OpenModelica thermal/motor models; HIL; true multi-axis/3D CAM;
-Avalonia system view; groovebox real-project integration.
+Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE;
+OpenModelica thermal/motor models; firmware↔MechMaker co-simulation; HIL; true
+multi-axis/3D CAM; groovebox real-project integration.
 
-The suite has 273 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 278 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -61,6 +64,7 @@ cross-domain identity and bindings.
 - [Tool adapter protocol](docs/adapter-protocol.md)
 - [Starter FreeCAD adapter](adapters/python/README.md)
 - [MCP and HTTP server](docs/mcp-server.md)
+- [Renode setup](docs/renode.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
 Run the MCP server or desktop viewer:
@@ -106,6 +110,7 @@ emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cl
 emd package --project <project.json> --out-dir <dir> [--trace <csv>]...
 emd package verify --dir <dir>
 emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]
+emd renode run --project <project.json> [--firmware-project <key>] [--firmware <elf>] [--platform <repl>] [--out <log>] [--duration <s>]
 emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--save-trace] [--duration <s>] [--motor <id:rev/s>]
 emd diff --before <project.json> --after <project.json> [--json]
 emd kicad erc|drc|netlist|bom|gerbers|pos|step --schematic|--pcb <file> --out <path>
@@ -148,9 +153,9 @@ Planned additions:
 ```
 src/EMD.Mechanical      dedicated FreeCAD workbench, richer MCAD<->ECAD
 src/EMD.Electrical      closed-loop SPICE, netlist<->wiring
-src/EMD.Twin            Renode/OpenModelica bridges, HIL
+src/EMD.Twin            OpenModelica bridges, firmware co-simulation, HIL
 src/EMD.Cam             true multi-axis and full 3D CAM verification
-src/EMD.Hub             Avalonia system view and richer web UI
+src/EMD.Hub             richer 3D system view and web UI
 ```
 
 ## Development
@@ -164,7 +169,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.35.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.36.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

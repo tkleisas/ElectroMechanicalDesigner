@@ -2,6 +2,17 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+renode --version
+script=$(mktemp --suffix=.resc)
+cat > "$script" <<EOF
+mach create
+machine LoadPlatformDescription @/opt/renode/platforms/cpus/fomu.repl
+quit
+EOF
+renode --console --disable-gui "$script" >/tmp/renode-smoke.log
+grep -q "machine-0: Disposed" /tmp/renode-smoke.log
+rm -f "$script"
+
 dotnet test EMD.slnx --nologo
 
 (

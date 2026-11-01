@@ -11,6 +11,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       ca-certificates \
       clang \
+      curl \
       git \
       ngspice \
       python3 \
@@ -22,6 +23,15 @@ RUN python3 -m pip install --break-system-packages --no-cache-dir \
       pythonfmu==0.7.0 \
       fmpy==0.3.32 \
       omsimulator==3.0.0.post198
+
+# Renode portable release, pinned by digest. Runtime is self-contained.
+RUN curl -fsSL -o /tmp/renode.tar.gz \
+      https://github.com/renode/renode/releases/download/v1.17.0/renode-1.17.0.linux-portable.tar.gz \
+ && echo "4ba7c68b59e2447f188ef4b4b112fcccd2802582c460beedceb63b84e5605a5f  /tmp/renode.tar.gz" | sha256sum -c - \
+ && mkdir -p /opt/renode \
+ && tar -xzf /tmp/renode.tar.gz -C /opt/renode --strip-components=1 \
+ && ln -s /opt/renode/renode /usr/local/bin/renode \
+ && rm /tmp/renode.tar.gz
 
 WORKDIR /work
 CMD ["bash", "docker/ci-smoke.sh"]

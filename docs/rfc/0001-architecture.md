@@ -254,7 +254,8 @@ geometry sync in v1.
 
 - Source projects use PlatformIO, Zephyr, CMake, Arduino, or Make.
 - Renode 1.17 runs unmodified firmware against virtual MCUs and peripherals;
-  its external control API bridges simulated sensors/actuators to the twin.
+  `emd renode run` captures UART/log evidence. Firmware↔MechMaker co-simulation
+  and HIL remain future work.
 - MechMaker's virtual MCU remains the fast, deterministic path for stepper
   motion and Klipper protocol tests. Fidelity is selectable: MechMaker MCU for
   motion-heavy runs, Renode for firmware/peripheral fidelity.
@@ -340,6 +341,11 @@ Examples:
 | `EMD-FW-001` | Firmware pin map incomplete or conflicting |
 | `EMD-FW-002` | Duplicate MCU pin assignment |
 | `EMD-FW-003` | Firmware pin is not connected to its mapped net |
+| `EMD-FW-004` | Firmware pin has no MCU pin or targets another board |
+| `EMD-FW-005` | Firmware pin maps multiple MCU-board ports |
+| `EMD-FW-006` | Firmware pin map is empty |
+| `EMD-FW-007` | Firmware board is not a board part |
+| `EMD-RENODE-001` | Renode execution or input failed |
 | `EMD-KICAD-010` | `kicad-cli` command failed |
 | `EMD-KICAD-011` | Expected `kicad-cli` output is missing |
 | `EMD-KICAD-020` | KiCad PCB has no usable Edge.Cuts outline |
@@ -534,6 +540,7 @@ Remaining:
 - Groovebox real-project integration is deferred: import PCB outlines,
   enclosure dimensions, and firmware GPIO maps; electrical nets await a
   `netlist-spec.md` parser or `kicad-cli` netlist export.
+- Headless Renode firmware execution and firmware pin-map verification. **Done.**
 - Torque-level and HIL interfaces remain future work; both FMUs expose
   velocity/enable.
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)
@@ -542,7 +549,7 @@ Remaining:
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic). **Done** in both forms:
   PythonFMU + MCP proxy and direct .NET NativeAOT in-process FMU.
-- OpenModelica thermal/motor FMU; Renode firmware bridge.
+- OpenModelica thermal/motor FMU; firmware↔MechMaker co-simulation; HIL.
 - Record/replay and HIL mode through Klipper/adb.
 
 ### P4 — CAM and manufacturing
