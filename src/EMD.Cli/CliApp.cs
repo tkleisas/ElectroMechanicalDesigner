@@ -93,6 +93,7 @@ public static class CliApp
             "freecad" => ImportFreeCad(args, stdout, stderr),
             "freecad-manifest" => ImportFreeCadManifest(args, stdout, stderr),
             "kicad-pcb" => ImportKiCadPcb(args, stdout, stderr),
+            "kicad-step" => ImportKiCadStep(args, stdout, stderr),
             _ => UsageError(stderr, $"Unknown import source '{args[1]}'.")
         };
     }
@@ -239,6 +240,84 @@ public static class CliApp
         return result.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             ? 1
             : 0;
+    }
+
+    private static int ImportKiCadStep(string[] args, TextWriter stdout, TextWriter stderr)
+    {
+        var stepPath = GetOption(args, "--step");
+        if (string.IsNullOrWhiteSpace(stepPath))
+            return UsageError(stderr, "import kicad-step requires --step <file.step>.");
+
+        var projectPath = GetOption(args, "--project");
+        if (string.IsNullOrWhiteSpace(projectPath))
+            return UsageError(stderr, "import kicad-step requires --project <project.json>.");
+
+        var output = GetOption(args, "--out") ?? projectPath;
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        PrintDiagnostics(loaded.Diagnostics, stderr);
+        if (loaded.Project is null)
+            return 1;
+
+        var result = KiCadStepImporter.Default.ImportFile(stepPath);
+        PrintDiagnostics(result.Diagnostics, stderr);
+        if (result.Artifact is null || result.Info is null)
+            return 1;
+
+        var selector = GetOption(args, "--board");
+        var board = string.IsNullOrWhiteSpace(selector)
+            ? loaded.Project.Parts.FirstOrDefault(part => part.Kind == PartKind.Board)
+            : loaded.Project.Parts.FirstOrDefault(part =>
+                string.Equals(part.Key, selector, StringComparison.Ordinal) ||
+                string.Equals(part.Id.ToString(), selector, StringComparison.OrdinalIgnoreCase));
+        if (board is null)
+        {
+            stderr.WriteLine(
+                "emd: no board part found; import the PCB first or pass --board <key>.");
+            return 1;
+        }
+
+        var artifacts = loaded.Project.Artifacts
+            .Where(artifact => artifact.Id != result.Artifact.Id)
+            .Append(result.Artifact)
+            .ToList();
+        var metadata = board.Metadata?.DeepClone().AsObject() ?? new System.Text.Json.Nodes.JsonObject();
+        metadata["step_width_mm"] = result.Info.WidthMm;
+        metadata["step_height_mm"] = result.Info.HeightMm;
+        metadata["step_depth_mm"] = result.Info.DepthMm;
+        var parts = loaded.Project.Parts
+            .Select(part => part.Id == board.Id
+                ? part with
+                {
+                    DomainRefs = (part.DomainRefs ?? new PartDomainRefs()) with
+                    {
+                        Mechanical = new DomainRef
+                        {
+                            Tool = "kicad",
+                            Ref = Path.GetFileName(stepPath)
+                        }
+                    },
+                    Metadata = metadata
+                }
+                : part)
+            .ToList();
+        var mechanical = loaded.Project.Mechanical ?? new MechanicalSection();
+        var exports = new Dictionary<string, Guid>(mechanical.Exports ?? [])
+        {
+            ["step"] = result.Artifact.Id
+        };
+        mechanical = mechanical with { Exports = exports };
+
+        ProjectWriter.Save(loaded.Project with
+        {
+            Artifacts = artifacts,
+            Parts = parts,
+            Mechanical = mechanical
+        }, output);
+        stdout.WriteLine(
+            $"imported STEP: {board.Name} -> {output} " +
+            $"({result.Info.WidthMm:0.###} x {result.Info.HeightMm:0.###} x {result.Info.DepthMm:0.###} mm)");
+
+        return 0;
     }
 
     private static int ImportFreeCadManifest(string[] args, TextWriter stdout, TextWriter stderr)

@@ -343,6 +343,8 @@ Examples:
 | `EMD-KICAD-021` | Invalid KiCad PCB S-expression |
 | `EMD-KICAD-022` | KiCad PCB has no mounting holes |
 | `EMD-SPICE-001` | ngspice command failed |
+| `EMD-KICAD-023` | Invalid STEP header/footer |
+| `EMD-KICAD-024` | STEP has no usable bounding-box points |
 | `EMD-SPICE-002` | Expected ngspice log is missing |
 | `EMD-HARNESS-001` | Net is not point-to-point for harness export |
 | `EMD-HARNESS-002` | Harness net endpoint is unresolved |
@@ -378,6 +380,7 @@ Examples:
 | `EMD-SSP-002` | FMU artifact is missing or unreadable |
 | `EMD-SSP-003` | Simulation binding does not match FMU connectors |
 | `EMD-SSP-004` | Unsupported SSP version |
+| `EMD-SSP-005` | SPICE model needs an FMU artifact for SSP |
 | `EMD-MFG-001` | Manufacturing output missing or stale |
 | `EMD-BOM-001` | BOM/refdes mismatch |
 
@@ -452,13 +455,16 @@ Implemented:
   SAT, box/sphere and sphere/sphere penetration/separation, explicit-mate/joint
   exemptions, slide/hinge range sampling, and slide/hinge ranges.
 - CLI: `import freecad-manifest` and `export mjcf`.
+- KiCad STEP export artifacts can be attached to board parts with
+  `emd import kicad-step`, including header/bounding-box metadata.
 
 Remaining:
 
 - A richer FreeCAD property scheme or workbench export (real connector frames,
   materials, BOM, per-feature geometry).
 - CadQuery catalog part generation.
-- Full swept-volume checks and board outline/holes from KiCAD STEP.
+- Full swept-volume checks; exact STEP outline/hole reconstruction (PCB
+  Edge.Cuts remains canonical for now).
 
 ### P2 — Electrical vertical slice — in progress
 
@@ -479,7 +485,8 @@ Implemented:
 Remaining:
 
 - Deeper motor phase-count/mapping checks.
-- Co-simulation wiring for SPICE/FMU models.
+- SPICE models are included in SSP when backed by an FMU artifact; generating
+  that FMU from a raw ngspice netlist is the remaining step.
 
 ### P3 — Digital twin co-simulation — groundwork
 

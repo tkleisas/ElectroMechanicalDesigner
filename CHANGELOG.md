@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-01
+
+### Added
+
+- `emd import kicad-step`: validates a KiCad STEP export, records its header
+  and Cartesian-point bounding box, attaches it to the board part, and adds a
+  mechanical `step` export.
+- SPICE behavior models are accepted in SSP composition when backed by an FMU
+  artifact; raw SPICE netlists now report `EMD-SSP-005` with an actionable
+  message.
+
 ## [0.27.0] - 2026-11-01
 
 ### Added
@@ -297,7 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.28.0
 [0.27.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.27.0
 [0.26.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.26.0
 [0.25.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.25.0

@@ -53,9 +53,12 @@ public sealed class SspComposer
                 !string.Equals(artifact.Format, "fmu", StringComparison.OrdinalIgnoreCase))
             {
                 diagnostics.Add(new Diagnostic(
-                    "EMD-SSP-001",
+                    model.Kind == ModelKind.Spice ? "EMD-SSP-005" : "EMD-SSP-001",
                     DiagnosticSeverity.Warning,
-                    $"Behavior model '{model.Key}' has no FMU artifact; omitted.",
+                    model.Kind == ModelKind.Spice
+                        ? $"SPICE model '{model.Key}' has no FMU artifact; " +
+                          "export the netlist as an FMU before composing."
+                        : $"Behavior model '{model.Key}' has no FMU artifact; omitted.",
                     Entity: model.Key));
                 continue;
             }

@@ -163,6 +163,89 @@ public class SspComposerTests
     }
 
     [Fact]
+    public void Spice_model_without_an_fmu_is_reported_as_EMD_SSP_005()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+        var spicePath = Path.Combine(temp.Path, "axis.cir");
+        File.WriteAllText(spicePath, "* axis");
+        var spiceArtifactId = Guid.NewGuid();
+        project.Artifacts.Add(new Artifact
+        {
+            Id = spiceArtifactId,
+            Key = "axis_spice",
+            Path = spicePath,
+            Format = "spice",
+            Role = ArtifactRole.Simulation
+        });
+        project.Behavior!.Models.Add(new BehaviorModel
+        {
+            Id = Guid.NewGuid(),
+            Key = "spice_plant",
+            Name = "SPICE plant",
+            Kind = ModelKind.Spice,
+            ArtifactId = spiceArtifactId,
+            Outputs = [new ModelPort { Name = "out", Variable = "v(out)" }]
+        });
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "EMD-SSP-005");
+    }
+
+    [Fact]
+    public void Spice_model_with_an_fmu_artifact_is_composed()
+    {
+        using var temp = new TempDirectory();
+        var project = ProjectWithFmus(temp.Path);
+        var spiceFmuPath = Path.Combine(temp.Path, "spice.fmu");
+        File.WriteAllText(spiceFmuPath, "spice fmu");
+        var spiceArtifactId = Guid.NewGuid();
+        project.Artifacts.Add(new Artifact
+        {
+            Id = spiceArtifactId,
+            Key = "spice_fmu",
+            Path = spiceFmuPath,
+            Format = "fmu",
+            Role = ArtifactRole.Simulation
+        });
+        project.Behavior!.Models.Add(new BehaviorModel
+        {
+            Id = Guid.NewGuid(),
+            Key = "spice_plant",
+            Name = "SPICE plant",
+            Kind = ModelKind.Spice,
+            ArtifactId = spiceArtifactId,
+            Inputs = [new ModelPort { Name = "in", Variable = "in" }],
+            Outputs = [new ModelPort { Name = "out", Variable = "out" }]
+        });
+        var plantArtifactId = project.Artifacts[1].Id;
+        project.Connections.Clear();
+        project.Connections.Add(new Connection
+        {
+            Id = Guid.NewGuid(),
+            Key = "spice_to_plant",
+            Kind = ConnectionKind.SimulationBinding,
+            From = new Endpoint { ArtifactId = spiceArtifactId, Variable = "out" },
+            To = new Endpoint { ArtifactId = plantArtifactId, Variable = "cmd_in" }
+        });
+
+        var result = SspComposer.Default.Compose(project);
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        using var archive = new ZipArchive(new MemoryStream(result.Archive!), ZipArchiveMode.Read);
+        Assert.Contains(archive.Entries, entry => entry.FullName == "resources/spice_plant.fmu");
+        var document = XDocument.Parse(ReadEntry(archive, "SystemStructure.ssd"));
+        Assert.Contains(document.Root!.Descendants(Ssd + "Component"), component =>
+            (string?)component.Attribute("name") == "spice_plant");
+        var connection = Assert.Single(document.Root.Descendants(Ssd + "Connection"));
+        Assert.Equal("spice_plant", (string?)connection.Attribute("startElement"));
+        Assert.Equal("out", (string?)connection.Attribute("startConnector"));
+        Assert.Equal("plant", (string?)connection.Attribute("endElement"));
+    }
+
+    [Fact]
     public void Missing_fmu_file_reports_EMD_SSP_002()
     {
         using var temp = new TempDirectory();

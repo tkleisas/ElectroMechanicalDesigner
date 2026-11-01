@@ -146,6 +146,56 @@ public class CliAppTests
     }
 
     [Fact]
+    public void Import_kicad_step_attaches_to_the_board_part()
+    {
+        using var temp = new TempDirectory();
+        var projectPath = Path.Combine(temp.Path, "project.json");
+        var boardId = Guid.NewGuid();
+        var project = MinimalProject() with
+        {
+            Parts =
+            [
+                .. MinimalProject().Parts,
+                new Part
+                {
+                    Id = boardId,
+                    Key = "board",
+                    Name = "Board",
+                    Kind = PartKind.Board,
+                    Ports = []
+                }
+            ]
+        };
+        ProjectWriter.Save(project, projectPath);
+        var stepPath = Path.Combine(temp.Path, "board.step");
+        File.WriteAllText(stepPath, """
+            ISO-10303-21;
+            HEADER;
+            FILE_NAME('board.step','2026-11-01T00:00:00',(''),(''),'','','');
+            FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));
+            ENDSEC;
+            DATA;
+            #1=CARTESIAN_POINT('',(0.,0.,0.));
+            #2=CARTESIAN_POINT('',(100.,50.,1.6));
+            ENDSEC;
+            END-ISO-10303-21;
+            """);
+
+        var (exitCode, stdout, stderr) = Run(
+            "import", "kicad-step", "--step", stepPath, "--project", projectPath);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("imported STEP:", stdout);
+        var loaded = ProjectLoader.Default.LoadFile(projectPath);
+        Assert.True(loaded.IsValid, string.Join(Environment.NewLine, loaded.Diagnostics));
+        var board = loaded.Project!.Parts.Single(part => part.Id == boardId);
+        Assert.Equal("board.step", board.DomainRefs!.Mechanical!.Ref);
+        Assert.NotNull(loaded.Project.Mechanical!.Exports);
+        Assert.True(loaded.Project.Mechanical.Exports!.ContainsKey("step"));
+        Assert.Contains(loaded.Project.Artifacts, artifact => artifact.Format == "step");
+    }
+
+    [Fact]
     public void Export_mechmaker_writes_a_machine_json()
     {
         using var temp = new TempDirectory();
