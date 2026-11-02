@@ -539,9 +539,10 @@ Remaining:
 - Direct FMU coverage spans belt-driven, multi-axis gantry, gear-train,
   leadscrew, and fan/heater fixtures, with servo and endstop channels.
 - Direct/proxy parity and Windows NativeAOT builds are covered in CI.
-- Groovebox real-project integration is deferred: import PCB outlines,
-  enclosure dimensions, and firmware GPIO maps; electrical nets await a
-  `netlist-spec.md` parser or `kicad-cli` netlist export.
+- Groovebox real-project integration: NSR-1 control and keyboard netlists plus
+  routed PCBs import into one aligned 170-part / 522-connection project and
+  verify as a package; enclosure/faceplate models and firmware maps are kept
+  in the groovebox repository.
 - Headless Renode firmware execution, UART event extraction, and firmware
   pin-map verification. **Done.**
 - Renode UART command bridge to MechMaker motors, with a TCP/UART-file seam for

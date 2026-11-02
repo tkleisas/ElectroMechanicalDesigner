@@ -39,7 +39,7 @@ Current capabilities:
   and a 2D system canvas.
 
 Known gaps: validated real-firmware Klipper co-simulation and physical HIL;
-full 5-axis toolpath generation and 3D material removal; groovebox integration.
+full 5-axis toolpath generation and 3D material removal.
 
 The suite has 291 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
@@ -184,14 +184,14 @@ Pushing a `v*` tag builds and publishes the toolchain image to GHCR and creates
 the GitHub Release automatically. See [docs/releases.md](docs/releases.md).
 
 ```bash
-docker pull ghcr.io/tkleisas/emd:v0.39.0
+docker pull ghcr.io/tkleisas/emd:v0.39.1
 ```
 
 ## Versioning
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.39.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.39.1`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

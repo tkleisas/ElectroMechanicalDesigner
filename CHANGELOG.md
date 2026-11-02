@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-11-02
+
 ### Fixed
 
 - KiCad PCB import now treats only mounting-hole footprints as mechanical
   ports, ignoring connector and switch through-hole pads.
+
+### Added
+
+- NSR-1 groovebox integration baseline: control and keyboard netlists plus
+  routed PCBs import into one mechanically aligned 170-part / 522-connection
+  project and verify as a package.
 
 ## [0.39.0] - 2026-11-02
 
@@ -428,7 +436,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.39.1...HEAD
+[0.39.1]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.39.1
 [0.39.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.39.0
 [0.38.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.38.0
 [0.37.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.37.0
