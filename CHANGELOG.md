@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- KiCad PCB import now treats only mounting-hole footprints as mechanical
+  ports, ignoring connector and switch through-hole pads.
+
 ## [0.39.0] - 2026-11-02
 
 ### Added

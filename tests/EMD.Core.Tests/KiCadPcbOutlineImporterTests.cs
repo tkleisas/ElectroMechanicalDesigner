@@ -24,6 +24,7 @@ public class KiCadPcbOutlineImporterTests
         AssertClose([0.05, 0.03, 0], board.Pose!.Pos!);
 
         Assert.Equal(2, board.Ports.Count);
+        Assert.DoesNotContain(board.Ports, port => port.Key == "J1");
         var h1 = board.Ports.Single(port => port.Key == "H1");
         var h2 = board.Ports.Single(port => port.Key == "H2");
         Assert.Equal(PortDomain.Mechanical, h1.Domain);

@@ -204,6 +204,13 @@ public sealed class KiCadPcbOutlineImporter
             var footprintX = Number(at, 1) ?? 0;
             var footprintY = Number(at, 2) ?? 0;
             var reference = ReferenceOf(footprint);
+            var footprintName = Value(footprint, 1);
+            var isMountingHole =
+                (footprintName?.Contains("MountingHole", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (reference?.StartsWith('H') == true && reference.Length > 1 &&
+                 char.IsDigit(reference[1]));
+            if (!isMountingHole)
+                continue;
 
             foreach (var pad in Children(footprint, "pad"))
             {
