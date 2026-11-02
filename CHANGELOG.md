@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-11-02
+
 ### Added
 
 - Automatic tag-triggered GitHub Release and GHCR toolchain-image publishing.
+- Renode UART command bridge: firmware sends `MOTOR`, `ENABLE`, `RUN`, and
+  `STOP` lines; the bridge drives MechMaker over MCP and records axis traces.
+- Renode bridge script generator with a TCP socket terminal, plus a real
+  bridge integration test.
 
 ## [0.37.0] - 2026-11-01
 
@@ -402,7 +408,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.37.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.38.0...HEAD
+[0.38.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.38.0
 [0.37.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.37.0
 [0.36.1]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.1
 [0.36.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.0

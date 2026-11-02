@@ -12,9 +12,14 @@ public static class RenodeCommand
         TextWriter stderr,
         RenodeAdapter adapter)
     {
-        if (args.Length == 0 ||
-            !string.Equals(args[0], "run", StringComparison.OrdinalIgnoreCase))
-            return Usage(stderr, "renode expects the 'run' subcommand.");
+        if (args.Length == 0)
+            return Usage(stderr, "renode expects 'run', 'bridge', or 'bridge-script'.");
+        if (args[0].Equals("bridge", StringComparison.OrdinalIgnoreCase) ||
+            args[0].Equals("bridge-script", StringComparison.OrdinalIgnoreCase) ||
+            args[0].Equals("script", StringComparison.OrdinalIgnoreCase))
+            return RenodeBridgeCommand.Run(args, stdout, stderr);
+        if (!string.Equals(args[0], "run", StringComparison.OrdinalIgnoreCase))
+            return Usage(stderr, "renode expects 'run', 'bridge', or 'bridge-script'.");
 
         var projectPath = GetOption(args, "--project");
         if (string.IsNullOrWhiteSpace(projectPath))

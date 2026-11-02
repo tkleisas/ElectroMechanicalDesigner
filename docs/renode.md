@@ -21,3 +21,22 @@ JSON.
 
 Docker CI also downloads a pinned Zephyr ELF and asserts the Renode UART shell
 prompt, so the adapter is covered against a real emulator, not only fakes.
+
+## UART ↔ MechMaker bridge
+
+Generate a Renode socket script:
+
+```bash
+emd renode bridge-script --firmware axis.elf --platform board.repl \
+  --out bridge.resc --uart uart0 --port 3456
+```
+
+Run Renode with that script, then connect the bridge:
+
+```bash
+emd renode bridge --machine machine.json --mechmaker MechMaker.Server \
+  --endpoint 127.0.0.1:3456 --out bridge-trace.csv
+```
+
+Firmware commands are newline-delimited: `MOTOR <id> <rev/s>`, `ENABLE <id>
+<0|1>`, `RUN <seconds>`, `STOP <id>`. The same endpoint seam is the HIL path.

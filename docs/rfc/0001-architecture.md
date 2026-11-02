@@ -542,6 +542,8 @@ Remaining:
   `netlist-spec.md` parser or `kicad-cli` netlist export.
 - Headless Renode firmware execution, UART event extraction, and firmware
   pin-map verification. **Done.**
+- Renode UART command bridge to MechMaker motors, with a TCP/UART-file seam for
+  HIL. **Prototype done.**
 - Torque-level and HIL interfaces remain future work; both FMUs expose
   velocity/enable.
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)

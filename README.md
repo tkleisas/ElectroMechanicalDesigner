@@ -23,18 +23,18 @@ Current capabilities:
 - **Manufacturing/CAM:** G-code validation and postprocessing, KiCad fabrication
   packages, OrcaSlicer/PrusaSlicer adapters, CAMotics checks, 2.5D heightmap
   material-removal comparison, and assembly documentation.
-- **Firmware:** Renode headless execution with firmware/platform artifact
-  resolution, UART log evidence, and pin-map verification.
+- **Firmware:** Renode headless execution, UART log/event evidence, pin-map
+  verification, and a UART command bridge that drives MechMaker motors.
 - **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project
   graph, isometric scene, trace chart, package, validation, and G-code viewer.
 - **Desktop:** Avalonia system view with project loading, part list, validation,
   and a 2D system canvas.
 
 Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE;
-OpenModelica thermal/motor models; firmware↔MechMaker co-simulation; HIL; true
-multi-axis/3D CAM; groovebox real-project integration.
+OpenModelica thermal/motor models; full Klipper firmware co-simulation and
+physical HIL; true multi-axis/3D CAM; groovebox real-project integration.
 
-The suite has 279 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 284 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -179,7 +179,7 @@ docker pull ghcr.io/tkleisas/emd:v0.37.0
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.37.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.38.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
