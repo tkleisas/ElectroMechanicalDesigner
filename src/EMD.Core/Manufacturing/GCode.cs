@@ -8,7 +8,11 @@ public sealed record GCodeMove(
     double[] Start,
     double[] End,
     double FeedMmMin,
-    bool Rapid);
+    bool Rapid)
+{
+    public double[] RotaryStart { get; init; } = [0, 0, 0];
+    public double[] RotaryEnd { get; init; } = [0, 0, 0];
+}
 
 public sealed record GCodeProgram(
     IReadOnlyList<GCodeMove> Moves,
@@ -16,7 +20,11 @@ public sealed record GCodeProgram(
     double[] Max,
     double CutLengthMm,
     double RapidLengthMm,
-    int LineCount);
+    int LineCount)
+{
+    public double[] RotaryMin { get; init; } = [0, 0, 0];
+    public double[] RotaryMax { get; init; } = [0, 0, 0];
+}
 
 public sealed record GCodeLoadResult(
     GCodeProgram? Program,
@@ -35,12 +43,15 @@ public sealed class GCodeParser
         var diagnostics = new List<Diagnostic>();
         var moves = new List<GCodeMove>();
         var position = new[] { 0d, 0d, 0d };
+        var rotary = new[] { 0d, 0d, 0d };
         var absolute = true;
         var scale = 1.0;
         var feed = 0.0;
         var lineNumber = 0;
         var min = new[] { double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity };
         var max = new[] { double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity };
+        var rotaryMin = new[] { double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity };
+        var rotaryMax = new[] { double.NegativeInfinity, double.NegativeInfinity, double.NegativeInfinity };
         var cutLength = 0.0;
         var rapidLength = 0.0;
 
@@ -103,6 +114,11 @@ public sealed class GCodeParser
                         if (values.TryGetValue(axis, out var set))
                             position[AxisIndex(axis)] = set * scale;
                     }
+                    foreach (var axis in new[] { 'A', 'B', 'C' })
+                    {
+                        if (values.TryGetValue(axis, out var set))
+                            rotary[axis - 'A'] = set;
+                    }
                     continue;
                 case 28:
                 case 30:
@@ -124,12 +140,20 @@ public sealed class GCodeParser
                 feed = feedValue * scale;
 
             var next = (double[])position.Clone();
+            var nextRotary = (double[])rotary.Clone();
             foreach (var axis in new[] { 'X', 'Y', 'Z' })
             {
                 if (!values.TryGetValue(axis, out var value))
                     continue;
                 var index = AxisIndex(axis);
                 next[index] = absolute ? value * scale : next[index] + value * scale;
+            }
+            foreach (var axis in new[] { 'A', 'B', 'C' })
+            {
+                if (!values.TryGetValue(axis, out var value))
+                    continue;
+                var index = axis - 'A';
+                nextRotary[index] = absolute ? value : nextRotary[index] + value;
             }
 
             var rapid = code == 0;
@@ -140,12 +164,22 @@ public sealed class GCodeParser
                 cutLength += delta;
 
             var start = (double[])position.Clone();
-            moves.Add(new GCodeMove(lineNumber, start, next, feed, rapid));
+            var startRotary = (double[])rotary.Clone();
+            moves.Add(new GCodeMove(lineNumber, start, next, feed, rapid)
+            {
+                RotaryStart = startRotary,
+                RotaryEnd = nextRotary
+            });
             position = next;
+            rotary = nextRotary;
             for (var axis = 0; axis < 3; axis++)
             {
                 min[axis] = Math.Min(min[axis], Math.Min(start[axis], next[axis]));
                 max[axis] = Math.Max(max[axis], Math.Max(start[axis], next[axis]));
+                rotaryMin[axis] = Math.Min(rotaryMin[axis],
+                    Math.Min(startRotary[axis], nextRotary[axis]));
+                rotaryMax[axis] = Math.Max(rotaryMax[axis],
+                    Math.Max(startRotary[axis], nextRotary[axis]));
             }
         }
 
@@ -165,7 +199,11 @@ public sealed class GCodeParser
             max = [0, 0, 0];
 
         return new GCodeLoadResult(
-            new GCodeProgram(moves, min, max, cutLength, rapidLength, lineNumber),
+            new GCodeProgram(moves, min, max, cutLength, rapidLength, lineNumber)
+            {
+                RotaryMin = rotaryMin[0] == double.PositiveInfinity ? [0, 0, 0] : rotaryMin,
+                RotaryMax = rotaryMax[0] == double.NegativeInfinity ? [0, 0, 0] : rotaryMax
+            },
             diagnostics);
     }
 
@@ -225,7 +263,9 @@ public sealed class GCodeValidator
         GCodeProgram program,
         double[]? envelopeMin = null,
         double[]? envelopeMax = null,
-        double? maxFeedMmMin = null)
+        double? maxFeedMmMin = null,
+        double[]? rotaryMin = null,
+        double[]? rotaryMax = null)
     {
         var diagnostics = new List<Diagnostic>();
         foreach (var move in program.Moves)
@@ -245,6 +285,17 @@ public sealed class GCodeValidator
                     "EMD-CAM-002",
                     DiagnosticSeverity.Error,
                     $"G-code line {move.Line} is a cutting move without a positive feed."));
+            }
+
+            if (rotaryMin is { Length: >= 3 } && rotaryMax is { Length: >= 3 } &&
+                (move.RotaryEnd[0] < rotaryMin[0] || move.RotaryEnd[0] > rotaryMax[0] ||
+                 move.RotaryEnd[1] < rotaryMin[1] || move.RotaryEnd[1] > rotaryMax[1] ||
+                 move.RotaryEnd[2] < rotaryMin[2] || move.RotaryEnd[2] > rotaryMax[2]))
+            {
+                diagnostics.Add(new Diagnostic(
+                    "EMD-CAM-011",
+                    DiagnosticSeverity.Error,
+                    $"G-code line {move.Line} leaves the rotary envelope."));
             }
 
             if (maxFeedMmMin is { } limit && move.FeedMmMin > limit)
@@ -267,9 +318,16 @@ public sealed class GCodeValidator
 
 public sealed class GCodePostProcessor
 {
+    private static readonly System.Text.RegularExpressions.Regex AxisToken = new(
+        @"([XYZABC])([-+]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][-+]?[0-9]+)?)",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+
     public static GCodePostProcessor Default { get; } = new();
 
-    public string Process(string text, string flavor)
+    public string Process(
+        string text,
+        string flavor,
+        IReadOnlyDictionary<char, char>? axisMap = null)
     {
         var normalized = text.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd();
         var (header, footer) = flavor.ToLowerInvariant() switch
@@ -281,6 +339,29 @@ public sealed class GCodePostProcessor
             "reprap" => ("; EMD postprocessor: RepRap", "M2"),
             _ => ($"; EMD postprocessor: {flavor}", "")
         };
+        if (axisMap is { Count: > 0 })
+            normalized = MapAxes(normalized, axisMap);
         return header + "\n" + normalized + (footer.Length == 0 ? "\n" : $"\n{footer}\n");
+    }
+
+    private static string MapAxes(string text, IReadOnlyDictionary<char, char> axisMap)
+    {
+        var lines = text.Split('\n');
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var semicolon = lines[index].IndexOf(';');
+            var code = semicolon < 0 ? lines[index] : lines[index][..semicolon];
+            var comment = semicolon < 0 ? "" : lines[index][semicolon..];
+            code = AxisToken.Replace(code, match =>
+            {
+                var axis = char.ToUpperInvariant(match.Groups[1].Value[0]);
+                var mapped = axisMap.TryGetValue(axis, out var target)
+                    ? char.ToUpperInvariant(target)
+                    : axis;
+                return mapped + match.Groups[2].Value;
+            });
+            lines[index] = code + comment;
+        }
+        return string.Join('\n', lines);
     }
 }

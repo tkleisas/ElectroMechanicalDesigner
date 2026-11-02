@@ -13,13 +13,15 @@ public static class RenodeCommand
         RenodeAdapter adapter)
     {
         if (args.Length == 0)
-            return Usage(stderr, "renode expects 'run', 'bridge', or 'bridge-script'.");
+            return Usage(stderr, "renode expects 'run', 'bridge', 'bridge-script', or 'klipper'.");
+        if (args[0].Equals("klipper", StringComparison.OrdinalIgnoreCase))
+            return RenodeKlipperCommand.Run(args.Skip(1).ToArray(), stdout, stderr);
         if (args[0].Equals("bridge", StringComparison.OrdinalIgnoreCase) ||
             args[0].Equals("bridge-script", StringComparison.OrdinalIgnoreCase) ||
             args[0].Equals("script", StringComparison.OrdinalIgnoreCase))
             return RenodeBridgeCommand.Run(args, stdout, stderr);
         if (!string.Equals(args[0], "run", StringComparison.OrdinalIgnoreCase))
-            return Usage(stderr, "renode expects 'run', 'bridge', or 'bridge-script'.");
+            return Usage(stderr, "renode expects 'run', 'bridge', 'bridge-script', or 'klipper'.");
 
         var projectPath = GetOption(args, "--project");
         if (string.IsNullOrWhiteSpace(projectPath))

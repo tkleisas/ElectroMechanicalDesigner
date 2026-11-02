@@ -33,3 +33,6 @@ tools/mechmaker_fmu/payload/
 
 # Downloaded integration-test FMUs
 tools/mechmaker_fmu/.cache/
+
+# Generated OpenModelica FMUs
+tools/modelica/out/

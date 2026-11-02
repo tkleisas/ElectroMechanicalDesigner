@@ -482,10 +482,12 @@ Implemented:
   `emd import kicad-step`, including header/bounding-box metadata.
 - FreeCAD manifest properties cover description, tags, per-feature geometry, and
   per-part BOM data; CadQuery can generate a small parametric part catalog.
+- FreeCAD EMD workbench exports manifests and STEP/STL directly from the GUI.
+  **Done.**
 
 Remaining:
 
-- A dedicated FreeCAD workbench export; the current manifest property contract
+- Richer FreeCAD workbench automation beyond manifest export; the current manifest property contract
   covers connector frames, materials, BOM, and per-feature geometry metadata.
 - CadQuery-generated STEP/STL geometry is available when CadQuery is installed;
   CI covers the dependency-free catalog plan.
@@ -544,6 +546,8 @@ Remaining:
   pin-map verification. **Done.**
 - Renode UART command bridge to MechMaker motors, with a TCP/UART-file seam for
   HIL. **Prototype done.**
+- Klipper wire-protocol parser and MCP command forwarder. **Prototype done;
+  real-firmware validation remains.**
 - Torque-level and HIL interfaces remain future work; both FMUs expose
   velocity/enable.
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)
@@ -552,15 +556,16 @@ Remaining:
 - Trace assertion evaluator and `emd trace check`. **Done.**
 - MechMaker FMU wrapper (fixed step, deterministic). **Done** in both forms:
   PythonFMU + MCP proxy and direct .NET NativeAOT in-process FMU.
-- OpenModelica thermal/motor FMU; firmware↔MechMaker co-simulation; HIL.
+- OpenModelica thermal/motor FMUs. **Done.**
+- Firmware↔MechMaker co-simulation and HIL remain open.
 - Record/replay and HIL mode through Klipper/adb.
 
 ### P4 — CAM and manufacturing
 
 Implemented:
 
-- G-code ingestion, work-envelope/feed validation, and Klipper/LinuxCNC
-  postprocessing (`emd gcode check|post`).
+- G-code ingestion, X/Y/Z and A/B/C rotary validation, axis remapping, and
+  Klipper/LinuxCNC/GRBL/Marlin/RepRap postprocessing (`emd gcode check|post`).
 - Deterministic KiCad fabrication package with Gerbers, drill, BOM,
   pick-and-place, STEP, hashes, and a manifest (`emd kicad fabrication`).
 - OrcaSlicer/PrusaSlicer CLI slicing and G-code validation (`emd slice`).

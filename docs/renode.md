@@ -40,3 +40,14 @@ emd renode bridge --machine machine.json --mechmaker MechMaker.Server \
 
 Firmware commands are newline-delimited: `MOTOR <id> <rev/s>`, `ENABLE <id>
 <0|1>`, `RUN <seconds>`, `STOP <id>`. The same endpoint seam is the HIL path.
+
+For Klipper wire frames, use:
+
+```bash
+emd renode klipper --machine machine.json --mechmaker MechMaker.Server \
+  --endpoint 127.0.0.1:3456 --out klipper-trace.csv
+```
+
+The Klipper bridge decodes framed commands, calls MechMaker's `klipper_send`,
+and writes MCU acknowledgements/responses back to the transport. It is a
+prototype; validation against unmodified real firmware remains future work.

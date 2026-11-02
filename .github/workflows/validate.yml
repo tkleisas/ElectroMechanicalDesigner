@@ -52,6 +52,8 @@ jobs:
         run: python tools/mechmaker_fmu/verify_ssp.py
       - name: Run SPICE FMU integration test
         run: python tools/spice_fmu/verify_spice_fmu.py
+      - name: Run closed-loop SPICE integration test
+        run: python tools/spice_fmu/verify_closed_loop.py
       - name: Run Renode bridge integration test
         run: python tools/renode/verify_bridge.py --mechmaker tools/mechmaker_fmu/payload/server/MechMaker.Server --machine "${{ github.workspace }}/MechMaker/examples/linear_axis_v0.json"
 
@@ -168,4 +170,4 @@ jobs:
           cd ../../tools/cadquery
           python -m unittest discover -s . -p 'test_*.py'
           python -m py_compile generate_parts.py
-          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py ../../tools/mechmaker_fmu/verify_parity.py ../../tools/spice_fmu/verify_spice_fmu.py ../../tools/renode/verify_renode.py ../../tools/renode/verify_bridge.py
+          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py ../../tools/mechmaker_fmu/verify_parity.py ../../tools/spice_fmu/verify_spice_fmu.py ../../tools/spice_fmu/verify_closed_loop.py ../../tools/renode/verify_renode.py ../../tools/renode/verify_bridge.py ../../tools/modelica/build_fmus.py ../../tools/modelica/verify_modelica.py ../../tools/freecad/verify_workbench.py

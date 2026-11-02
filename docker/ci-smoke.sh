@@ -24,6 +24,7 @@ dotnet test EMD.slnx --nologo
   python3 -m unittest discover -s . -p 'test_*.py'
 )
 python3 tools/spice_fmu/verify_spice_fmu.py
+python3 tools/spice_fmu/verify_closed_loop.py
 python3 tools/renode/verify_renode.py \
   --renode /usr/local/bin/renode \
   --platform /opt/renode/platforms/cpus/nrf52840.repl

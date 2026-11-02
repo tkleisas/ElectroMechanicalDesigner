@@ -53,6 +53,41 @@ public class GCodeTests
     }
 
     [Fact]
+    public void Parser_tracks_rotary_axes()
+    {
+        var result = GCodeParser.Default.Parse("G21\nG90\nG1 X10 A90 B-45 F500\n");
+
+        Assert.True(result.IsValid, string.Join(Environment.NewLine, result.Diagnostics));
+        var move = Assert.Single(result.Program!.Moves);
+        Assert.Equal(90, move.RotaryEnd[0]);
+        Assert.Equal(-45, move.RotaryEnd[1]);
+        Assert.Equal(90, result.Program.RotaryMax[0]);
+        Assert.Equal(-45, result.Program.RotaryMin[1]);
+    }
+
+    [Fact]
+    public void Validator_checks_the_rotary_envelope()
+    {
+        var parsed = GCodeParser.Default.Parse("G21\nG90\nG1 X1 A90 F500\n");
+        var diagnostics = GCodeValidator.Default.Validate(
+            parsed.Program!, [0, 0, 0], [10, 10, 10], null, [-45, -45, -45], [45, 45, 45]);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "EMD-CAM-011");
+    }
+
+    [Fact]
+    public void Postprocessor_can_remap_axes()
+    {
+        var output = GCodePostProcessor.Default.Process(
+            "G1 X1 Y2 A90 ; keep X9\n",
+            "klipper",
+            new Dictionary<char, char> { ['X'] = 'Y', ['Y'] = 'X' });
+
+        Assert.Contains("G1 Y1 X2 A90", output);
+        Assert.Contains("; keep X9", output);
+    }
+
+    [Fact]
     public void Postprocessor_normalises_line_endings_and_adds_header()
     {
         var output = GCodePostProcessor.Default.Process("G1 X1\r\nG1 X2\r\n", "klipper");

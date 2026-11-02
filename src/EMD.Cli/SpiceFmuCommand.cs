@@ -23,6 +23,7 @@ public static class SpiceFmuCommand
         var step = GetOption(args, "--step-size") ?? "0.001";
         var ngspice = GetOption(args, "--ngspice") ?? "ngspice";
         var python = GetOption(args, "--python") ?? "python3";
+        var closedLoop = args.Contains("--closed-loop");
 
         if (string.IsNullOrWhiteSpace(netlist))
             return Usage(stderr, "spice fmu requires --netlist <file.cir>.");
@@ -57,42 +58,74 @@ public static class SpiceFmuCommand
         var work = Directory.CreateTempSubdirectory("emd-spice-fmu-");
         try
         {
-            var wrapperPath = Path.Combine(work.FullName, "analysis.cir");
-            var csvPath = Path.Combine(work.FullName, "trace.csv");
-            var logPath = Path.Combine(work.FullName, "ngspice.log");
             var slavePath = Path.Combine(work.FullName, "spice_trace_slave.py");
             var buildDirectory = Path.Combine(work.FullName, "build");
             Directory.CreateDirectory(buildDirectory);
 
-            File.WriteAllText(wrapperPath, Wrap(
-                netlistText, signalList, stopTime, stepSize, csvPath));
-            var run = runner.RunAsync(
-                ngspice,
-                ["-b", "-o", logPath, wrapperPath],
-                timeout: TimeSpan.FromMinutes(2)).GetAwaiter().GetResult();
-            PrintDiagnostics(run.Diagnostics, stderr);
-            if (!run.Succeeded)
+            string className;
+            string sourceText;
+            IReadOnlyList<string> variables;
+            if (closedLoop)
             {
-                if (run.Diagnostics.Count == 0)
-                    stderr.WriteLine(
-                        $"emd: ngspice failed with exit code {run.ExitCode}: {run.Stderr.Trim()}");
-                return 1;
+                var inputs = (GetOption(args, "--inputs") ?? "")
+                    .Split([',', ' ', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList();
+                if (inputs.Count == 0)
+                    return Usage(stderr, "spice fmu --closed-loop requires --inputs <name,...>.");
+                SpiceClosedLoopSource source;
+                try
+                {
+                    source = SpiceClosedLoopSourceBuilder.Default.Build(
+                        netlistText, inputs, signalList);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    stderr.WriteLine($"emd: {exception.Message}");
+                    return 1;
+                }
+                className = source.ClassName;
+                sourceText = source.Source;
+                variables = source.Variables;
+            }
+            else
+            {
+                var wrapperPath = Path.Combine(work.FullName, "analysis.cir");
+                var csvPath = Path.Combine(work.FullName, "trace.csv");
+                var logPath = Path.Combine(work.FullName, "ngspice.log");
+                File.WriteAllText(wrapperPath, Wrap(
+                    netlistText, signalList, stopTime, stepSize, csvPath));
+                var run = runner.RunAsync(
+                    ngspice,
+                    ["-b", "-o", logPath, wrapperPath],
+                    timeout: TimeSpan.FromMinutes(2)).GetAwaiter().GetResult();
+                PrintDiagnostics(run.Diagnostics, stderr);
+                if (!run.Succeeded)
+                {
+                    if (run.Diagnostics.Count == 0)
+                        stderr.WriteLine(
+                            $"emd: ngspice failed with exit code {run.ExitCode}: {run.Stderr.Trim()}");
+                    return 1;
+                }
+
+                if (!File.Exists(csvPath))
+                {
+                    stderr.WriteLine("EMD-SPICE-003 [Error] ngspice did not create the trace CSV.");
+                    return 1;
+                }
+
+                var loaded = SpiceTraceLoader.Default.Load(
+                    File.ReadAllText(csvPath), signalList, csvPath);
+                PrintDiagnostics(loaded.Diagnostics, stderr);
+                if (loaded.Trace is null)
+                    return 1;
+
+                var source = SpiceFmuSourceBuilder.Default.Build(loaded.Trace);
+                className = source.ClassName;
+                sourceText = source.Source;
+                variables = source.Variables;
             }
 
-            if (!File.Exists(csvPath))
-            {
-                stderr.WriteLine("EMD-SPICE-003 [Error] ngspice did not create the trace CSV.");
-                return 1;
-            }
-
-            var loaded = SpiceTraceLoader.Default.Load(
-                File.ReadAllText(csvPath), signalList, csvPath);
-            PrintDiagnostics(loaded.Diagnostics, stderr);
-            if (loaded.Trace is null)
-                return 1;
-
-            var source = SpiceFmuSourceBuilder.Default.Build(loaded.Trace);
-            File.WriteAllText(slavePath, source.Source);
+            File.WriteAllText(slavePath, sourceText);
             var build = runner.RunAsync(
                 python,
                 ["-m", "pythonfmu", "build", "-f", slavePath, "--dest", buildDirectory],
@@ -106,7 +139,7 @@ public static class SpiceFmuCommand
                 return 1;
             }
 
-            var builtFmu = Path.Combine(buildDirectory, $"{source.ClassName}.fmu");
+            var builtFmu = Path.Combine(buildDirectory, $"{className}.fmu");
             if (!File.Exists(builtFmu))
             {
                 stderr.WriteLine($"EMD-SPICE-004 [Error] pythonfmu did not create '{builtFmu}'.");
@@ -120,7 +153,7 @@ public static class SpiceFmuCommand
             File.Copy(builtFmu, outputPath, overwrite: true);
 
             stdout.WriteLine(
-                $"exported SPICE FMU: {string.Join(", ", source.Variables)} -> {outputPath}");
+                $"exported SPICE FMU: {string.Join(", ", variables)} -> {outputPath}");
             return 0;
         }
         finally

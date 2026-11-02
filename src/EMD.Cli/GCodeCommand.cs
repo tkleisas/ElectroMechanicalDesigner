@@ -41,12 +41,15 @@ public static class GCodeCommand
             return 1;
 
         var envelope = ParseVec(GetOption(args, "--envelope"));
+        var rotary = ParseVec(GetOption(args, "--rotary-envelope"));
         var maxFeed = ParseDouble(GetOption(args, "--max-feed"));
         var diagnostics = GCodeValidator.Default.Validate(
             parsed.Program,
             envelope?[..3],
             envelope?[3..],
-            maxFeed);
+            maxFeed,
+            rotary?[..3],
+            rotary?[3..]);
         foreach (var diagnostic in diagnostics)
             stderr.WriteLine(diagnostic);
 
@@ -56,7 +59,8 @@ public static class GCodeCommand
             $"gcode: {parsed.Program.Moves.Count} move(s), " +
             $"{parsed.Program.CutLengthMm:0.###} mm cutting, " +
             $"{parsed.Program.RapidLengthMm:0.###} mm rapid, " +
-            $"bounds {Format(parsed.Program.Min)} .. {Format(parsed.Program.Max)}");
+            $"bounds {Format(parsed.Program.Min)} .. {Format(parsed.Program.Max)}, " +
+            $"rotary {Format(parsed.Program.RotaryMin)} .. {Format(parsed.Program.RotaryMax)}");
         stdout.WriteLine(valid ? "gcode: valid" : "gcode: invalid");
         return valid ? 0 : 1;
     }
@@ -71,7 +75,8 @@ public static class GCodeCommand
         if (string.IsNullOrWhiteSpace(output))
             return Usage(stderr, "gcode post requires --out <file>.");
         var flavor = GetOption(args, "--flavor") ?? "klipper";
-        var text = GCodePostProcessor.Default.Process(File.ReadAllText(path), flavor);
+        var axisMap = ParseAxisMap(GetOption(args, "--axis-map"));
+        var text = GCodePostProcessor.Default.Process(File.ReadAllText(path), flavor, axisMap);
         var directory = Path.GetDirectoryName(Path.GetFullPath(output));
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
@@ -100,6 +105,20 @@ public static class GCodeCommand
         double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var result)
             ? result
             : null;
+
+    private static IReadOnlyDictionary<char, char>? ParseAxisMap(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        var map = new Dictionary<char, char>();
+        foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var sides = part.Split('=', 2);
+            if (sides.Length == 2 && sides[0].Length == 1 && sides[1].Length == 1)
+                map[char.ToUpperInvariant(sides[0][0])] = char.ToUpperInvariant(sides[1][0]);
+        }
+        return map.Count == 0 ? null : map;
+    }
 
     private static string Format(double[] values) =>
         string.Join(",", values.Select(value => value.ToString("0.###", CultureInfo.InvariantCulture)));

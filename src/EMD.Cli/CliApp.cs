@@ -969,8 +969,8 @@ public static class CliApp
         writer.WriteLine("  emd cam verify --gcode <file.gcode> [--project <project.json>] [--envelope ...] [--max-feed <mm/min>] [--camotics <exe> --out <surface.stl>]");
         writer.WriteLine("  emd cam simulate --gcode <file.gcode> --target <design.stl> --stock <min,max> --out <report.json> [--tool-diameter <mm>] [--cell <mm>]");
         writer.WriteLine("  emd slice --model <file.stl> --out <file.gcode> --slicer orca|prusa [--profile <ini>]... [--envelope ...]");
-        writer.WriteLine("  emd gcode check --gcode <file.gcode> [--envelope xmin,ymin,zmin,xmax,ymax,zmax] [--max-feed <mm/min>]");
-        writer.WriteLine("  emd gcode post --gcode <file.gcode> --out <file.gcode> [--flavor klipper|linuxcnc]");
+        writer.WriteLine("  emd gcode check --gcode <file.gcode> [--envelope xmin,ymin,zmin,xmax,ymax,zmax] [--rotary-envelope amin,bmin,cmin,amax,bmax,cmax] [--max-feed <mm/min>]");
+        writer.WriteLine("  emd gcode post --gcode <file.gcode> --out <file.gcode> [--flavor klipper|linuxcnc|grbl|marlin|reprap] [--axis-map X=Y,Y=X]");
         writer.WriteLine("  emd spice --netlist <file.cir> --out <log>");
         writer.WriteLine("  emd spice fmu --netlist <file.cir> --out <file.fmu> --signals <v(out),...> [--stop-time <s>] [--step-size <s>]");
         writer.WriteLine("  emd compile mechmaker --project <project.json> --out <scene.xml> --mechmaker <cli.dll|exe> [--work-dir <dir>]");
@@ -978,6 +978,7 @@ public static class CliApp
         writer.WriteLine("  emd package verify --dir <dir>");
         writer.WriteLine("  emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]");
         writer.WriteLine("  emd renode bridge-script --firmware <elf> --platform <repl> --out <script.resc> [--uart uart0] [--port <tcp-port>]");
+        writer.WriteLine("  emd renode klipper --machine <machine.json> --mechmaker <server.dll|exe> --out <trace.csv> --endpoint <host:port>|--uart-file <frames.bin> [--run-step <s>]");
         writer.WriteLine("  emd renode bridge --machine <machine.json> --mechmaker <server.dll|exe> --out <trace.csv> --endpoint <host:port>|--uart-file <log>");
         writer.WriteLine("  emd renode run --project <project.json> [--firmware-project <key>] [--firmware <elf>] [--platform <repl>] [--uart <peripheral>] [--out <log>] [--duration <s>]");
         writer.WriteLine("  emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--duration <s>] [--motor <id:rev/s>]");

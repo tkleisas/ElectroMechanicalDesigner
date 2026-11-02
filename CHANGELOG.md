@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-11-02
+
+### Added
+
+- Klipper wire-protocol parser/encoder and UART bridge that forwards framed
+  commands into MechMaker's MCP Klipper session. Supports TCP and captured-UART
+  transport for HIL prototyping.
+- OpenModelica `MotorThermal` and `MotorDrive` FMUs with build and FMPy
+  verification tooling.
+- FreeCAD EMD workbench addon for exporting manifests and STEP/STL.
+- Closed-loop SPICE FMU generation: template netlists accept FMI inputs and
+  re-run ngspice per step.
+- Multi-axis G-code parsing/validation for X/Y/Z plus A/B/C, rotary envelopes,
+  and postprocessor axis remapping.
+
 ## [0.38.0] - 2026-11-02
 
 ### Added
@@ -408,7 +423,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.38.0...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.39.0...HEAD
+[0.39.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.39.0
 [0.38.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.38.0
 [0.37.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.37.0
 [0.36.1]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.1

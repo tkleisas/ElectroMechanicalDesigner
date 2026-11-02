@@ -20,21 +20,28 @@ Current capabilities:
 - **Digital twin:** direct in-process NativeAOT MechMaker FMU (~7 MB), legacy
   PythonFMU proxy, SSP 1.0/2.0, FMPy/OMSimulator execution, parameter bindings,
   trace assertions, and the runnable 40 mm axis MVP.
-- **Manufacturing/CAM:** G-code validation and postprocessing, KiCad fabrication
-  packages, OrcaSlicer/PrusaSlicer adapters, CAMotics checks, 2.5D heightmap
+- **Manufacturing/CAM:** G-code validation and postprocessing with X/Y/Z and
+  A/B/C rotary axes, axis remapping, KiCad fabrication packages,
+  OrcaSlicer/PrusaSlicer adapters, CAMotics checks, 2.5D heightmap
   material-removal comparison, and assembly documentation.
+- **Closed-loop SPICE:** generated FMUs accept input values and re-run ngspice
+  per step for algebraic circuit feedback.
 - **Firmware:** Renode headless execution, UART log/event evidence, pin-map
-  verification, and a UART command bridge that drives MechMaker motors.
+  verification, a custom UART command bridge, and a Klipper wire-protocol
+  bridge prototype that drives MechMaker over MCP.
+- **Behavior models:** OpenModelica thermal and motor FMUs built and verified
+  with FMPy.
+- **Mechanical authoring:** FreeCAD EMD workbench exporting manifests with
+  connectors, materials, BOM metadata, features, STEP, and STL.
 - **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project
   graph, isometric scene, trace chart, package, validation, and G-code viewer.
 - **Desktop:** Avalonia system view with project loading, part list, validation,
   and a 2D system canvas.
 
-Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE;
-OpenModelica thermal/motor models; full Klipper firmware co-simulation and
-physical HIL; true multi-axis/3D CAM; groovebox real-project integration.
+Known gaps: validated real-firmware Klipper co-simulation and physical HIL;
+full 5-axis toolpath generation and 3D material removal; groovebox integration.
 
-The suite has 284 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 291 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -65,6 +72,7 @@ cross-domain identity and bindings.
 - [Starter FreeCAD adapter](adapters/python/README.md)
 - [MCP and HTTP server](docs/mcp-server.md)
 - [Renode setup](docs/renode.md)
+- [FreeCAD EMD workbench](adapters/freecad/README.md)
 - [Release process](docs/releases.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
@@ -122,11 +130,13 @@ emd cam verify --gcode <file.gcode> --project out/axis.json
 emd cam simulate --gcode <file.gcode> --target design.stl --stock 0,0,0,400,400,100 --out cam-report.json
 emd import freecad-path --job <path-job.json> --project out/axis.json
 emd export assembly-doc --project out/axis.json --out out/assembly.md
-emd gcode check --gcode <file.gcode> --envelope 0,0,0,400,400,100
-emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper|linuxcnc|grbl|marlin|reprap
+emd gcode check --gcode <file.gcode> --envelope 0,0,0,400,400,100 --rotary-envelope -180,-180,-180,180,180,180
+emd gcode post --gcode <file.gcode> --out <file.klipper.gcode> --flavor klipper|linuxcnc|grbl|marlin|reprap [--axis-map X=Y,Y=X]
 emd spice --netlist <file.cir> --out <log>
 emd spice fmu --netlist <file.cir> --out <file.fmu> \
   --signals v(out),i(v1) --stop-time 0.01 --step-size 0.0001
+emd spice fmu --netlist <template.cir> --out <file.fmu> \
+  --signals v(out) --inputs vin --closed-loop
 emd artifacts verify <project.json> [--store <dir>]
 emd build plan --project <project.json>
 ```
@@ -144,6 +154,8 @@ docker                  deterministic CI image and smoke script
 tools/mechmaker_fmu     MechMaker proxy and direct NativeAOT FMU
 tools/spice_fmu         ngspice trace source-FMU generator
 tools/cadquery          parametric catalog generator
+tools/modelica          OpenModelica thermal/motor FMU build + verification
+tools/freecad           workbench integration test
 tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI, CAM tests
 tests/EMD.Adapters.Tests process host + tool adapter tests
 tests/EMD.Server.Tests  MCP tool, graph, and viewer contract tests
@@ -152,7 +164,7 @@ tests/EMD.Server.Tests  MCP tool, graph, and viewer contract tests
 Planned additions:
 
 ```
-src/EMD.Mechanical      dedicated FreeCAD workbench, richer MCAD<->ECAD
+src/EMD.Mechanical      richer MCAD<->ECAD integration
 src/EMD.Electrical      closed-loop SPICE, netlist<->wiring
 src/EMD.Twin            OpenModelica bridges, firmware co-simulation, HIL
 src/EMD.Cam             true multi-axis and full 3D CAM verification
@@ -172,14 +184,14 @@ Pushing a `v*` tag builds and publishes the toolchain image to GHCR and creates
 the GitHub Release automatically. See [docs/releases.md](docs/releases.md).
 
 ```bash
-docker pull ghcr.io/tkleisas/emd:v0.37.0
+docker pull ghcr.io/tkleisas/emd:v0.39.0
 ```
 
 ## Versioning
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.38.0`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.39.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
