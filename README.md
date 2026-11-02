@@ -65,6 +65,7 @@ cross-domain identity and bindings.
 - [Starter FreeCAD adapter](adapters/python/README.md)
 - [MCP and HTTP server](docs/mcp-server.md)
 - [Renode setup](docs/renode.md)
+- [Release process](docs/releases.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
 Run the MCP server or desktop viewer:
@@ -164,6 +165,15 @@ This project is developed **test-first (TDD)**. Every behavior change starts
 with a failing test, then the minimum implementation, then a refactor. Bug
 fixes start with a regression test. See [CONTRIBUTING.md](CONTRIBUTING.md) for
 the required workflow, test layers, and pull-request checklist.
+
+## Releases and container image
+
+Pushing a `v*` tag builds and publishes the toolchain image to GHCR and creates
+the GitHub Release automatically. See [docs/releases.md](docs/releases.md).
+
+```bash
+docker pull ghcr.io/tkleisas/emd:v0.37.0
+```
 
 ## Versioning
 
