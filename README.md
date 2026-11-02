@@ -34,7 +34,7 @@ Known gaps: dedicated FreeCAD workbench export; closed-loop SPICE;
 OpenModelica thermal/motor models; firmware↔MechMaker co-simulation; HIL; true
 multi-axis/3D CAM; groovebox real-project integration.
 
-The suite has 278 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 279 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -169,7 +169,7 @@ the required workflow, test layers, and pull-request checklist.
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.36.1`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.37.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

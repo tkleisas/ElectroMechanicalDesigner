@@ -14,6 +14,7 @@ public class RenodeCommandTests
         var firmware = Path.Combine(temp.Path, "axis.elf");
         var platform = Path.Combine(temp.Path, "axis.repl");
         var log = Path.Combine(temp.Path, "renode.log");
+        var events = Path.Combine(temp.Path, "uart.json");
         var projectPath = Path.Combine(temp.Path, "project.json");
         File.WriteAllText(firmware, "elf");
         File.WriteAllText(platform, "platform");
@@ -55,12 +56,13 @@ public class RenodeCommandTests
         using var stderr = new StringWriter();
 
         var exitCode = RenodeCommand.Run(
-            ["run", "--project", projectPath, "--out", log],
+            ["run", "--project", projectPath, "--out", log, "--events", events],
             stdout, stderr, new RenodeAdapter(new Runner()));
 
         Assert.True(exitCode == 0, stderr.ToString());
         Assert.True(File.Exists(log));
         Assert.Contains("renode:", stdout.ToString());
+        Assert.True(File.Exists(events));
     }
 
     private sealed class Runner : IToolProcessRunner

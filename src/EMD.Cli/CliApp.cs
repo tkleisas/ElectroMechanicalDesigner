@@ -977,7 +977,7 @@ public static class CliApp
         writer.WriteLine("  emd package --project <project.json> --out-dir <dir> [--trace <csv>]...");
         writer.WriteLine("  emd package verify --dir <dir>");
         writer.WriteLine("  emd trace check --project <project.json> --trace <trace.csv> [--scenario <key>]");
-        writer.WriteLine("  emd renode run --project <project.json> [--firmware-project <key>] [--firmware <elf>] [--platform <repl>] [--out <log>] [--duration <s>]");
+        writer.WriteLine("  emd renode run --project <project.json> [--firmware-project <key>] [--firmware <elf>] [--platform <repl>] [--uart <peripheral>] [--out <log>] [--duration <s>]");
         writer.WriteLine("  emd simulate mechmaker --machine <machine.json>|--project <project.json> --out <trace.csv> --mechmaker <server.dll|exe> [--scenario <key>] [--duration <s>] [--motor <id:rev/s>]");
         writer.WriteLine("  emd diff --before <project.json> --after <project.json> [--json]");
         writer.WriteLine("  emd artifacts verify <project.json> [--store <dir>]");

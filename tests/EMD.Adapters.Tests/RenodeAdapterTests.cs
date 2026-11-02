@@ -14,13 +14,14 @@ public class RenodeAdapterTests
         var runner = new Runner();
         var adapter = new RenodeAdapter(runner);
 
-        var result = await adapter.RunAsync(firmware, platform, log, 1.5);
+        var result = await adapter.RunAsync(firmware, platform, log, 1.5, "uart0");
 
         Assert.True(result.Success);
         Assert.Equal("renode", runner.Executable);
         Assert.Contains("--console", runner.Arguments);
         Assert.Contains("--disable-gui", runner.Arguments);
         Assert.Contains("sysbus LoadELF", runner.Script);
+        Assert.Contains("showAnalyzer uart0", runner.Script);
         Assert.Contains("emulation RunFor", runner.Script);
         Assert.Contains("uart: boot", File.ReadAllText(log));
         Assert.Equal("renode-log", Assert.Single(result.Artifacts).Format);

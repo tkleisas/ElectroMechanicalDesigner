@@ -540,7 +540,8 @@ Remaining:
 - Groovebox real-project integration is deferred: import PCB outlines,
   enclosure dimensions, and firmware GPIO maps; electrical nets await a
   `netlist-spec.md` parser or `kicad-cli` netlist export.
-- Headless Renode firmware execution and firmware pin-map verification. **Done.**
+- Headless Renode firmware execution, UART event extraction, and firmware
+  pin-map verification. **Done.**
 - Torque-level and HIL interfaces remain future work; both FMUs expose
   velocity/enable.
 - Self-contained MechMaker FMI 2.0 proxy FMU (embedded server/catalog/machine)

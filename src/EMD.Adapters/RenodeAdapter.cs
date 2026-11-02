@@ -25,6 +25,7 @@ public sealed class RenodeAdapter
         string platformPath,
         string outputLogPath,
         double durationSeconds = 2,
+        string? uart = null,
         CancellationToken cancellationToken = default)
     {
         if (!File.Exists(firmwarePath))
@@ -36,12 +37,15 @@ public sealed class RenodeAdapter
 
         var fullFirmware = Path.GetFullPath(firmwarePath);
         var fullPlatform = Path.GetFullPath(platformPath);
+        var analyzer = string.IsNullOrWhiteSpace(uart)
+            ? ""
+            : $"showAnalyzer {uart.Trim()}\n";
         var script = $"""
             :name: emd-firmware
             mach create
             machine LoadPlatformDescription @{fullPlatform}
             sysbus LoadELF @{fullFirmware}
-            emulation RunFor "00:00:{durationSeconds:0.###}"
+            {analyzer}emulation RunFor "00:00:{durationSeconds:0.###}"
             quit
             """;
         var scriptPath = Path.Combine(

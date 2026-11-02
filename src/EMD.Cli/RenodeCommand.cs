@@ -55,12 +55,27 @@ public static class RenodeCommand
             return 1;
         }
 
-        var result = adapter.RunAsync(firmwarePath, platform, output, duration)
+        var result = adapter.RunAsync(
+                firmwarePath, platform, output, duration, GetOption(args, "--uart"))
             .GetAwaiter().GetResult();
         foreach (var diagnostic in result.Diagnostics)
             stderr.WriteLine(diagnostic);
         if (!result.Success)
             return 1;
+
+        var eventsPath = GetOption(args, "--events");
+        if (!string.IsNullOrWhiteSpace(eventsPath))
+        {
+            var events = Emd.Core.Manufacturing.RenodeLogParser.ExtractUart(
+                File.ReadAllText(output));
+            var directory = Path.GetDirectoryName(Path.GetFullPath(eventsPath));
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+            File.WriteAllText(
+                eventsPath,
+                Emd.Core.Manufacturing.RenodeLogParser.ToJson(events).ToJsonString());
+            stdout.WriteLine($"renode UART events: {events.Count} -> {eventsPath}");
+        }
 
         stdout.WriteLine($"renode: {firmware.Key} -> {output}");
         return 0;

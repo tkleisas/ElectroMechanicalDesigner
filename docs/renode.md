@@ -16,4 +16,8 @@ If `~/.local/bin` is not on `PATH`, either add it or invoke
 `~/.local/bin/renode` directly.
 
 `emd renode run` executes project firmware headlessly and writes the UART/log
-stream to the requested output file.
+stream to the requested output file. `--events` writes parsed UART messages as
+JSON.
+
+Docker CI also downloads a pinned Zephyr ELF and asserts the Renode UART shell
+prompt, so the adapter is covered against a real emulator, not only fakes.

@@ -166,4 +166,4 @@ jobs:
           cd ../../tools/cadquery
           python -m unittest discover -s . -p 'test_*.py'
           python -m py_compile generate_parts.py
-          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py ../../tools/mechmaker_fmu/verify_parity.py ../../tools/spice_fmu/verify_spice_fmu.py
+          python -m py_compile ../../tools/mechmaker_fmu/mechmaker_slave.py ../../tools/mechmaker_fmu/verify_fmpy.py ../../tools/mechmaker_fmu/command_slave.py ../../tools/mechmaker_fmu/verify_ssp.py ../../tools/mechmaker_fmu/verify_imports.py ../../tools/mechmaker_fmu/verify_omsim.py ../../tools/mechmaker_fmu/verify_machines.py ../../tools/mechmaker_fmu/verify_parity.py ../../tools/spice_fmu/verify_spice_fmu.py ../../tools/renode/verify_renode.py

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-11-01
+
+### Added
+
+- Real Renode CI integration using a pinned Zephyr ELF, UART shell assertion,
+  and exported UART event JSON.
+
 ## [0.36.1] - 2026-11-01
 
 ### Fixed
@@ -391,7 +398,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributor guide with a mandatory test-driven development (TDD) workflow.
 - GPL-3.0-only license.
 
-[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.36.1...HEAD
+[Unreleased]: https://github.com/tkleisas/ElectroMechanicalDesigner/compare/v0.37.0...HEAD
+[0.37.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.37.0
 [0.36.1]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.1
 [0.36.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.36.0
 [0.35.0]: https://github.com/tkleisas/ElectroMechanicalDesigner/releases/tag/v0.35.0
