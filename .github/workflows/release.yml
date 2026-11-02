@@ -41,6 +41,7 @@ jobs:
     needs: image
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: softprops/action-gh-release@v2
         with:
           name: EMD ${{ github.ref_name }}
