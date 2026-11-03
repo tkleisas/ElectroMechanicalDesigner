@@ -1,0 +1,269 @@
+@page "/"
+@using Emd.Contracts
+@using Emd.Web.Services
+@inject WorkspaceClient Client
+
+<PageTitle>EMD workspaces</PageTitle>
+
+<h1>EMD workspaces</h1>
+
+@if (error is not null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Workspaces</div>
+            <div class="card-body">
+                <button class="btn btn-sm btn-outline-secondary mb-3" @onclick="LoadAsync" disabled="@busy">Refresh</button>
+                @if (workspaces.Count == 0)
+                {
+                    <p class="text-muted">No workspaces yet.</p>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var workspace in workspaces)
+                        {
+                            <button class="list-group-item list-group-item-action @(selected?.Id == workspace.Id ? "active" : "")"
+                                    @onclick="() => SelectAsync(workspace.Id)">
+                                <strong>@workspace.Name</strong>
+                                <span class="d-block small">@workspace.Key · @workspace.Revision</span>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">New workspace</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label class="form-label">Key</label>
+                    <input class="form-control" @bind="newKey" placeholder="nsr1" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" @bind="newName" placeholder="NSR-1" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Git repository</label>
+                    <input class="form-control" @bind="newRepository" placeholder="https://…/groovebox.git" />
+                </div>
+                <button class="btn btn-primary" @onclick="CreateAsync" disabled="@busy">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        @if (detail is null)
+        {
+            <div class="alert alert-secondary">Select a workspace to inspect its lease and revisions.</div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>@detail.Workspace.Name</span>
+                    <code>@detail.Workspace.Id</code>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Repository:</strong> @detail.Workspace.Repository</p>
+                    <p class="mb-3"><strong>Revision:</strong> <code>@detail.Workspace.Revision</code></p>
+
+                    <h5>Lease</h5>
+                    @if (detail.Lease is null)
+                    {
+                        <p class="text-muted">No active lease.</p>
+                        <div class="row g-2">
+                            <div class="col-md-4"><input class="form-control" @bind="leaseOwner" placeholder="owner" /></div>
+                            <div class="col-md-4"><input class="form-control" @bind="leaseBranch" placeholder="job/branch" /></div>
+                            <div class="col-md-2"><input class="form-control" type="number" @bind="leaseTtl" /></div>
+                            <div class="col-md-2"><button class="btn btn-primary w-100" @onclick="AcquireLeaseAsync" disabled="@busy">Acquire</button></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong>@detail.Lease.Owner</strong> on <code>@detail.Lease.Branch</code>
+                            until @detail.Lease.ExpiresAt.ToLocalTime().ToString("g")
+                        </p>
+                        <button class="btn btn-outline-danger" @onclick="ReleaseLeaseAsync" disabled="@busy">Release lease</button>
+                    }
+
+                    <hr />
+                    <h5>Commit revision</h5>
+                    <div class="row g-2">
+                        <div class="col-md-4"><input class="form-control" @bind="commitOwner" placeholder="owner" /></div>
+                        <div class="col-md-4"><input class="form-control" @bind="commitBranch" placeholder="job/branch" /></div>
+                        <div class="col-md-4"><input class="form-control" @bind="commitHash" placeholder="commit SHA" /></div>
+                        <div class="col-12"><input class="form-control" @bind="commitMessage" placeholder="message" /></div>
+                        <div class="col-12"><input class="form-control" @bind="commitArtifacts" placeholder="artifact refs, comma-separated" /></div>
+                        <div class="col-12"><button class="btn btn-primary" @onclick="CommitAsync" disabled="@busy">Commit</button></div>
+                    </div>
+
+                    <hr />
+                    <h5>Revisions</h5>
+                    @if (detail.Revisions.Count == 0)
+                    {
+                        <p class="text-muted">No revisions.</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm">
+                            <thead><tr><th>Commit</th><th>Branch</th><th>Message</th><th>When</th></tr></thead>
+                            <tbody>
+                                @foreach (var revision in detail.Revisions)
+                                {
+                                    <tr>
+                                        <td><code>@revision.Commit</code></td>
+                                        <td>@revision.Branch</td>
+                                        <td>@revision.Message</td>
+                                        <td>@revision.CreatedAt.ToLocalTime().ToString("g")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<WorkspaceSummary> workspaces = [];
+    private WorkspaceDetail? detail;
+    private WorkspaceSummary? selected;
+    private string? error;
+    private bool busy;
+    private string newKey = "";
+    private string newName = "";
+    private string newRepository = "";
+    private string leaseOwner = "";
+    private string leaseBranch = "job/";
+    private int leaseTtl = 900;
+    private string commitOwner = "";
+    private string commitBranch = "job/";
+    private string commitHash = "";
+    private string commitMessage = "";
+    private string commitArtifacts = "";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await Run(async () =>
+        {
+            workspaces = (await Client.ListAsync()).ToList();
+            if (selected is not null)
+                await RefreshSelectedAsync();
+        });
+    }
+
+    private async Task SelectAsync(Guid id)
+    {
+        await Run(async () =>
+        {
+            detail = await Client.GetAsync(id);
+            selected = detail?.Workspace;
+            SyncLeaseFields();
+        });
+    }
+
+    private async Task CreateAsync()
+    {
+        await Run(async () =>
+        {
+            var created = await Client.CreateAsync(new CreateWorkspaceRequest(
+                newKey.Trim(), newName.Trim(), newRepository.Trim()));
+            workspaces = (await Client.ListAsync()).ToList();
+            detail = await Client.GetAsync(created.Id);
+            selected = detail?.Workspace;
+            SyncLeaseFields();
+            newKey = newName = newRepository = "";
+        });
+    }
+
+    private async Task AcquireLeaseAsync()
+    {
+        if (detail is null)
+            return;
+        await Run(async () =>
+        {
+            await Client.AcquireLeaseAsync(detail.Workspace.Id, new AcquireLeaseRequest(
+                leaseOwner.Trim(), leaseBranch.Trim(), leaseTtl));
+            await RefreshSelectedAsync();
+        });
+    }
+
+    private async Task ReleaseLeaseAsync()
+    {
+        if (detail?.Lease is null)
+            return;
+        await Run(async () =>
+        {
+            await Client.ReleaseLeaseAsync(detail.Workspace.Id, detail.Lease.Id, leaseOwner.Trim());
+            await RefreshSelectedAsync();
+        });
+    }
+
+    private async Task CommitAsync()
+    {
+        if (detail is null)
+            return;
+        await Run(async () =>
+        {
+            await Client.CommitAsync(detail.Workspace.Id, new CommitRevisionRequest(
+                commitOwner.Trim(),
+                commitBranch.Trim(),
+                commitHash.Trim(),
+                string.IsNullOrWhiteSpace(commitMessage) ? null : commitMessage.Trim(),
+                string.IsNullOrWhiteSpace(commitArtifacts)
+                    ? []
+                    : commitArtifacts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
+            await RefreshSelectedAsync();
+        });
+    }
+
+    private async Task RefreshSelectedAsync()
+    {
+        if (detail is not null)
+        {
+            detail = await Client.GetAsync(detail.Workspace.Id);
+            selected = detail?.Workspace;
+            SyncLeaseFields();
+        }
+    }
+
+    private void SyncLeaseFields()
+    {
+        if (detail?.Lease is null)
+            return;
+        leaseOwner = detail.Lease.Owner;
+        leaseBranch = detail.Lease.Branch;
+        commitOwner = detail.Lease.Owner;
+        commitBranch = detail.Lease.Branch;
+    }
+
+    private async Task Run(Func<Task> action)
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            await action();
+        }
+        catch (Exception exception)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

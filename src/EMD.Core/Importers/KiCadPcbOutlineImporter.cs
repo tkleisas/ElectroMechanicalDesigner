@@ -206,7 +206,7 @@ public sealed class KiCadPcbOutlineImporter
             var reference = ReferenceOf(footprint);
             var footprintName = Value(footprint, 1);
             var isMountingHole =
-                (footprintName?.Contains("MountingHole", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (footprintName?.StartsWith("MountingHole", StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (reference?.StartsWith('H') == true && reference.Length > 1 &&
                  char.IsDigit(reference[1]));
             if (!isMountingHole)

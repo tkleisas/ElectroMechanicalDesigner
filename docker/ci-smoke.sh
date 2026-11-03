@@ -13,6 +13,7 @@ renode --console --disable-gui "$script" >/tmp/renode-smoke.log
 grep -q "machine-0: Disposed" /tmp/renode-smoke.log
 rm -f "$script"
 
+dotnet build EMD.slnx --nologo
 dotnet test EMD.slnx --nologo
 
 (

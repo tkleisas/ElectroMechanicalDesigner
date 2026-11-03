@@ -539,10 +539,10 @@ Remaining:
 - Direct FMU coverage spans belt-driven, multi-axis gantry, gear-train,
   leadscrew, and fan/heater fixtures, with servo and endstop channels.
 - Direct/proxy parity and Windows NativeAOT builds are covered in CI.
-- Groovebox real-project integration: NSR-1 control and keyboard netlists plus
-  routed PCBs import into one aligned 170-part / 522-connection project and
-  verify as a package; enclosure/faceplate models and firmware maps are kept
-  in the groovebox repository.
+- Groovebox real-project integration: NSR-1 control, keyboard, Pi carrier, and
+  power netlists plus routed PCBs import into one aligned 237-part /
+  735-connection project and verify as a package; enclosure/faceplate models,
+  headers, and firmware maps stay in the groovebox repository.
 - Headless Renode firmware execution, UART event extraction, and firmware
   pin-map verification. **Done.**
 - Renode UART command bridge to MechMaker motors, with a TCP/UART-file seam for
@@ -660,5 +660,8 @@ A motorized axis that:
 5. Which HIL transports are first-class: Klipper, MQTT, OPC UA, DCP, ROS 2?
 6. Do we adopt Asset Administration Shell / DTDL metadata for twins?
 7. Distribution: separate installers per tool vs one container/appliance?
+   **Addressed by [RFC 0002](0002-deployment.md).**
 8. How should the GPL-3.0 hub be packaged with GPL/LGPL tools in installers
    and containers while keeping source and notice obligations clear?
+   **Partially addressed by [RFC 0002](0002-deployment.md); licensing review
+   remains open.**

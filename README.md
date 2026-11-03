@@ -35,13 +35,21 @@ Current capabilities:
   connectors, materials, BOM metadata, features, STEP, and STL.
 - **Agent/server:** MCP stdio and streamable HTTP tools plus a read-only project
   graph, isometric scene, trace chart, package, validation, and G-code viewer.
+- **Coordinator:** SQLite workspace registry, revisions, exclusive workspace
+  leases, bearer-token auth, artifact upload/download, and HTTP/MCP endpoints
+  for the browser/desktop/MCP clients.
+- **Browser UI:** Blazor WebAssembly workspace/revision/lease client.
+- **Artifacts:** content-addressed upload/download API; local store today,
+  S3-compatible adapter next.
 - **Desktop:** Avalonia system view with project loading, part list, validation,
   and a 2D system canvas.
 
-Known gaps: validated real-firmware Klipper co-simulation and physical HIL;
-full 5-axis toolpath generation and 3D material removal.
+Known gaps: automatic Git checkout/commit/push, an S3 object-store adapter,
+the local GUI host agent, OIDC/multi-user authorization, validated real-firmware
+Klipper co-simulation, and physical HIL; full 5-axis toolpath generation and 3D
+material removal.
 
-The suite has 291 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 298 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -73,13 +81,15 @@ cross-domain identity and bindings.
 - [MCP and HTTP server](docs/mcp-server.md)
 - [Renode setup](docs/renode.md)
 - [FreeCAD EMD workbench](adapters/freecad/README.md)
+- [Deployment architecture RFC](docs/rfc/0002-deployment.md)
 - [Release process](docs/releases.md)
 - [Contributing guide (TDD is mandatory)](CONTRIBUTING.md)
 
-Run the MCP server or desktop viewer:
+Run the MCP server, coordinator, browser UI, or desktop viewer:
 
 ```bash
 dotnet run --project src/EMD.Server -- --http 8080
+dotnet run --project src/EMD.Web
 dotnet run --project src/EMD.Desktop
 ```
 
@@ -145,9 +155,12 @@ emd build plan --project <project.json>
 
 ```
 src/EMD.Core            project graph, schema, validation, importers, MJCF exporter
+src/EMD.Contracts       HTTP coordinator DTOs shared by server and clients
+src/EMD.Coordinator     workspace registry, revisions, leases, file-backed store
 src/EMD.Adapters        process host, JSON-RPC contract, tool adapters
 src/EMD.Cli             validate/import/export/kicad/build/CAM commands
-src/EMD.Server          MCP tools and read-only HTTP project viewer
+src/EMD.Server          coordinator API, MCP tools, and HTTP project viewer
+src/EMD.Web             Blazor WebAssembly workspace/revision/lease client
 src/EMD.Desktop         Avalonia system view
 adapters/python         FreeCAD adapter + manifest helpers
 docker                  deterministic CI image and smoke script
@@ -158,6 +171,7 @@ tools/modelica          OpenModelica thermal/motor FMU build + verification
 tools/freecad           workbench integration test
 tests/EMD.Core.Tests    unit, schema, importer, exporter, CLI, CAM tests
 tests/EMD.Adapters.Tests process host + tool adapter tests
+tests/EMD.Coordinator.Tests workspace, revision, and lease tests
 tests/EMD.Server.Tests  MCP tool, graph, and viewer contract tests
 ```
 
@@ -184,14 +198,14 @@ Pushing a `v*` tag builds and publishes the toolchain image to GHCR and creates
 the GitHub Release automatically. See [docs/releases.md](docs/releases.md).
 
 ```bash
-docker pull ghcr.io/tkleisas/emd:v0.39.1
+docker pull ghcr.io/tkleisas/emd:v0.39.2
 ```
 
 ## Versioning
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.39.1`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.39.2`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

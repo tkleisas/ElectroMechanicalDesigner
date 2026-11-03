@@ -9,8 +9,8 @@ Pushing an annotated `v*` tag triggers `.github/workflows/release.yml`:
 Image:
 
 ```bash
-docker pull ghcr.io/tkleisas/emd:v0.37.0
-docker run --rm -v "$PWD:/work" -w /work ghcr.io/tkleisas/emd:v0.37.0 bash docker/ci-smoke.sh
+docker pull ghcr.io/tkleisas/emd:v0.39.2
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/tkleisas/emd:v0.39.2 bash docker/ci-smoke.sh
 ```
 
 The image contains the .NET SDK, Python co-simulation tools, ngspice, and

@@ -10,6 +10,9 @@ dotnet run --project src/EMD.Server
 
 Tools:
 
+- `list_workspaces`, `create_workspace`, `get_workspace`
+- `acquire_workspace_lease`, `release_workspace_lease`
+- `commit_workspace_revision`
 - `validate_project`
 - `project_summary`
 - `list_scenarios`
@@ -38,6 +41,36 @@ dotnet run --project src/EMD.Server -- --http 8080
 - `GET /api/gcode?path=...&envelope=...`
 
 The viewer is read-only and binds to localhost by default.
+
+## Coordinator API
+
+`EMD.Server --http` also exposes the workspace/revision/lease API used by the
+Blazor WebAssembly client:
+
+- `GET /api/workspaces`
+- `POST /api/workspaces`
+- `GET /api/workspaces/{id}`
+- `POST /api/workspaces/{id}/leases`
+- `POST /api/workspaces/{id}/leases/{leaseId}/release`
+- `GET /api/workspaces/{id}/revisions`
+- `POST /api/workspaces/{id}/revisions`
+- `POST /api/artifacts`
+- `GET /api/artifacts/{sha256}`
+
+Set `EMD_COORDINATOR_ROOT` (or pass `--coordinator-root`) to choose the
+coordinator state directory and `EMD_ARTIFACT_ROOT` for the content-addressed
+artifact store (defaults to `<coordinator-root>/artifacts`). Set
+`EMD_COORDINATOR_URL` on additional MCP
+servers to make them peers of an existing coordinator instead of opening the
+local state file. Set `EMD_API_TOKEN` to require a bearer token on all `/api`
+routes other than `/api/health`, and to add it to remote MCP/Web client calls. `EMD_WEB_ORIGINS` controls the browser CORS allowlist; it
+defaults to `http://localhost:5005,http://127.0.0.1:5005`.
+
+The browser client is in `src/EMD.Web` and reads its server URL and optional
+bearer token from `wwwroot/appsettings.json` (`EmdServer`, `ApiToken`). It is a
+Blazor WebAssembly app, not a server-rendered page. The static `ApiToken` is
+only suitable for local/trusted deployments; public deployments should use
+OIDC and short-lived tokens.
 
 ## Desktop
 

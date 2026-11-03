@@ -17,6 +17,8 @@ jobs:
         run: dotnet restore EMD.slnx
       - name: Format check
         run: dotnet format EMD.slnx --verify-no-changes --no-restore
+      - name: Build
+        run: dotnet build EMD.slnx --nologo --no-restore
       - name: Test
         run: dotnet test EMD.slnx --nologo --no-restore
 

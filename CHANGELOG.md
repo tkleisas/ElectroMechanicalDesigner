@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-11-03
+
+### Added
+
+- Coordinator: SQLite workspace registry, revision history, exclusive
+  workspace leases, bearer-token auth, and HTTP/MCP endpoints for
+  browser/desktop/MCP clients.
+- Blazor WebAssembly client for creating workspaces, acquiring/releasing
+  leases, and committing revisions.
+- Content-addressed artifact upload/download endpoints backed by the existing
+  EMD artifact store (`EMD_ARTIFACT_ROOT`).
+- RFC 0002 deployment architecture: browser-first UI, central Git/object
+  store, local GUI host agent, and peer MCP servers with coordinator leases.
+
+### Fixed
+
+- KiCad PCB import no longer mistakes a module footprint whose name contains
+  `MountingHoles` (for example a Raspberry Pi Zero carrier footprint) for a
+  mounting-hole footprint. Only `MountingHole*` footprints and `H*` references
+  contribute mechanical mount ports.
+- Four-board NSR-1 integration imports and verifies as a 237-part /
+  735-connection package.
+
 ## [0.39.1] - 2026-11-02
 
 ### Fixed

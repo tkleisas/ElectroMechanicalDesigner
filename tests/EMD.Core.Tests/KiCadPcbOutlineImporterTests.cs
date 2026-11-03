@@ -36,6 +36,22 @@ public class KiCadPcbOutlineImporterTests
     }
 
     [Fact]
+    public void Module_footprint_with_MountingHoles_in_its_name_is_not_a_mounting_hole()
+    {
+        var text = Fixture.Replace(
+            "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical",
+            "Module:Raspberry_Pi_Zero_Socketed_THT_FaceDown_MountingHoles",
+            StringComparison.Ordinal);
+
+        var result = KiCadPcbOutlineImporter.Default.Import(text, "brain.kicad_pcb");
+
+        Assert.Empty(result.Diagnostics);
+        var board = Assert.IsType<Part>(result.Board);
+        Assert.DoesNotContain(board.Ports, port => port.Key == "J1");
+        Assert.Equal(2, board.Ports.Count);
+    }
+
+    [Fact]
     public void Missing_edge_cuts_reports_EMD_KICAD_020()
     {
         var text = Fixture.Replace("(layer \"Edge.Cuts\")", "(layer \"F.Cu\")", StringComparison.Ordinal);

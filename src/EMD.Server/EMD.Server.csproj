@@ -2,6 +2,8 @@
   <ItemGroup>
     <ProjectReference Include="..\EMD.Core\EMD.Core.csproj" />
     <ProjectReference Include="..\EMD.Adapters\EMD.Adapters.csproj" />
+    <ProjectReference Include="..\EMD.Contracts\EMD.Contracts.csproj" />
+    <ProjectReference Include="..\EMD.Coordinator\EMD.Coordinator.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
