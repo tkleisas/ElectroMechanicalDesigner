@@ -8,9 +8,13 @@ public static class HostApi
 {
     public static void MapHostApi(this WebApplication app)
     {
-        app.MapGet("/api/host", async (HostClient client, CancellationToken cancellationToken) =>
+        app.MapGet("/api/hosts", (HostHub hub) => Results.Ok(hub.List()));
+
+        app.MapGet("/api/host", async (HostHub hub, HostClient client, CancellationToken cancellationToken) =>
         {
-            var capabilities = await client.ProbeAsync(cancellationToken);
+            var capabilities = hub.List().FirstOrDefault();
+            if (capabilities is null)
+                capabilities = await client.ProbeAsync(cancellationToken);
             return capabilities is null
                 ? Results.Json(new { error = "host agent is not configured" }, statusCode: 503)
                 : Results.Ok(capabilities);
@@ -18,9 +22,12 @@ public static class HostApi
 
         app.MapPost("/api/host/execute", async (
             HostCommandRequest request,
+            HostHub hub,
             HostClient client,
             CancellationToken cancellationToken) =>
         {
+            if (hub.List().Count > 0)
+                return Results.Ok(await hub.ExecuteAsync(null, request, TimeSpan.FromSeconds(60), cancellationToken));
             var result = await client.ExecuteAsync(request, cancellationToken);
             return result is null
                 ? Results.Json(new { error = "host agent is not configured" }, statusCode: 503)

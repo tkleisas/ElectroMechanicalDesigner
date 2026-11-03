@@ -47,12 +47,14 @@ if (args.Contains("--http"))
     web.Services.AddSingleton(coordinator);
     web.Services.AddSingleton(artifacts);
     web.Services.AddSingleton(host);
+    web.Services.AddSingleton<HostHub>();
     web.Services.AddMcpServer()
         .WithHttpTransport()
         .WithToolsFromAssembly();
 
     var app = web.Build();
     app.UseCors("emd-web");
+    app.UseWebSockets();
     var apiToken = Environment.GetEnvironmentVariable("EMD_API_TOKEN");
     if (!string.IsNullOrWhiteSpace(apiToken))
     {
@@ -60,6 +62,7 @@ if (args.Contains("--http"))
         {
             if (!context.Request.Path.StartsWithSegments("/api") ||
                 context.Request.Path.Equals("/api/health") ||
+                context.Request.Path.Equals("/api/hosts/ws") ||
                 HttpMethods.IsOptions(context.Request.Method))
             {
                 await next();
@@ -88,6 +91,7 @@ if (args.Contains("--http"))
     app.MapCoordinatorApi();
     app.MapArtifactApi();
     app.MapHostApi();
+    app.MapHostWebSocket();
     app.MapGet("/", () => Results.Content(WebUi.Html, "text/html"));
     app.MapGet("/api/health", () => Results.Json(new { status = "ok", server = ServerInfo.Name }));
     app.MapGet("/api/project", (string path) =>

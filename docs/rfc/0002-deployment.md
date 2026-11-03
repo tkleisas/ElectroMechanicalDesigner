@@ -164,9 +164,9 @@ The supported defaults are 2 and 3. Profile 4 is required for CI.
 4. Git CLI + object-store adapters and job branches. **Partial:** the host
    agent performs local checkout/commit/push; coordinator-managed job branches
    and the S3 adapter remain.
-5. Local host agent with FreeCAD/KiCad command adapters. **Partial:**
-   authenticated probe, Git checkout/commit/push, and GUI open are implemented;
-   export/script automation and outbound WebSocket transport remain.
+5. Local host agent with FreeCAD/KiCad command adapters. **Done:** authenticated
+   probe, Git checkout/commit/push, GUI open, FreeCAD/KiCad exports,
+   allowlisted scripts, and outbound WebSocket transport are implemented.
 6. Remote job queue, audit, and multi-user authorization.
 7. Richer 3D/diff/PR workflows.
 

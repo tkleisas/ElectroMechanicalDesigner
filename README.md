@@ -41,17 +41,18 @@ Current capabilities:
 - **Browser UI:** Blazor WebAssembly workspace/revision/lease client.
 - **Artifacts:** content-addressed upload/download API; local store today,
   S3-compatible adapter next.
-- **Host agent:** authenticated local bridge for Git checkout/commit/push and
-  opening FreeCAD/KiCad documents; server-side proxy included.
+- **Host agent:** authenticated local bridge for Git checkout/commit/push,
+  FreeCAD/KiCad exports, allowlisted scripts, and GUI document opening; local
+  HTTP and outbound WebSocket transport plus server-side proxy.
 - **Desktop:** Avalonia system view with project loading, part list, validation,
   and a 2D system canvas.
 
-Known gaps: outbound WebSocket transport for the host agent, GUI export/script
-automation, an S3 object-store adapter, OIDC/multi-user authorization,
-validated real-firmware Klipper co-simulation, and physical HIL; full 5-axis
-toolpath generation and 3D material removal.
+Known gaps: an S3 object-store adapter, OIDC/multi-user authorization,
+coordinator-managed job branches, validated real-firmware Klipper
+co-simulation, and physical HIL; full 5-axis toolpath generation and 3D
+material removal.
 
-The suite has 302 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
+The suite has 304 xUnit tests, 12 Python adapter tests, and 2 CadQuery tests.
 
 ## Principle
 
@@ -204,14 +205,14 @@ Pushing a `v*` tag builds and publishes the toolchain image to GHCR and creates
 the GitHub Release automatically. See [docs/releases.md](docs/releases.md).
 
 ```bash
-docker pull ghcr.io/tkleisas/emd:v0.39.3
+docker pull ghcr.io/tkleisas/emd:v0.39.4
 ```
 
 ## Versioning
 
 This project follows [Semantic Versioning 2.0](https://semver.org/). Releases
 are annotated git tags named `vMAJOR.MINOR.PATCH`; the current release is
-`v0.39.3`. See [CHANGELOG.md](CHANGELOG.md).
+`v0.39.4`. See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

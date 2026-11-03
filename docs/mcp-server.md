@@ -58,6 +58,8 @@ Blazor WebAssembly client:
 - `GET /api/artifacts/{sha256}`
 - `GET /api/host`
 - `POST /api/host/execute`
+- `GET /api/hosts`
+- `WS /api/hosts/ws`
 
 Set `EMD_COORDINATOR_ROOT` (or pass `--coordinator-root`) to choose the
 coordinator state directory and `EMD_ARTIFACT_ROOT` for the content-addressed

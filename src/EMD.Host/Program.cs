@@ -62,4 +62,11 @@ app.MapPost("/api/host/execute", async (
         CancellationToken cancellationToken) =>
     Results.Ok(await host.ExecuteAsync(request, cancellationToken)));
 
+var coordinatorWs = Environment.GetEnvironmentVariable("EMD_COORDINATOR_WS_URL");
+if (!string.IsNullOrWhiteSpace(coordinatorWs))
+{
+    var client = new HostWebSocketClient(executor, new Uri(coordinatorWs), token);
+    _ = Task.Run(() => client.RunAsync(app.Lifetime.ApplicationStopping));
+}
+
 app.Run();

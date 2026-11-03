@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.4] - 2026-11-03
+
+### Added
+
+- Outbound WebSocket transport for host agents, with server-side host registry
+  and command dispatch.
+- Host `gui.export` for FreeCAD STEP/STL and KiCad step/gerber/DRC/ERC/BOM/
+  netlist output, plus allowlisted `script.run` under `.emd/scripts`.
+
 ## [0.39.3] - 2026-11-03
 
 ### Added

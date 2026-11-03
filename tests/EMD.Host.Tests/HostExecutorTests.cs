@@ -104,3 +104,67 @@ public sealed class HostExecutorTests : IDisposable
     }
 
 }
+
+public sealed class HostExportTests : IDisposable
+{
+    private readonly string _root = Path.Combine(
+        Path.GetTempPath(), "emd-host-export-tests", Guid.NewGuid().ToString("N"));
+
+    public HostExportTests() => Directory.CreateDirectory(_root);
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_root, recursive: true); } catch (IOException) { }
+    }
+
+    [Fact]
+    public async Task Kicad_export_returns_an_artifact()
+    {
+        var input = Path.Combine(_root, "board.kicad_pcb");
+        var output = Path.Combine(_root, "board.step");
+        await File.WriteAllTextAsync(input, "board");
+        var runner = new FakeRunner();
+        var executor = new HostExecutor(_root, "test-agent", runner);
+
+        var result = await executor.ExecuteAsync(new HostCommandRequest(
+            "gui.export", Path: input, OutputPath: output, Tool: "kicad-cli", Format: "step"));
+
+        Assert.True(result.Success, result.Message);
+        Assert.NotNull(result.Artifacts);
+        Assert.Single(result.Artifacts!);
+        Assert.Equal(output, result.Artifacts![0].Path);
+        Assert.Contains(runner.Calls, call => call.File == "kicad-cli" &&
+            call.Arguments.Contains("step") && call.Arguments.Contains(output));
+    }
+
+    [Fact]
+    public async Task Script_run_rejects_scripts_outside_the_allowlist()
+    {
+        var script = Path.Combine(_root, "outside.py");
+        await File.WriteAllTextAsync(script, "print('no')");
+        var executor = new HostExecutor(_root, "test-agent", new FakeRunner());
+
+        var result = await executor.ExecuteAsync(new HostCommandRequest(
+            "script.run", Path: script, Tool: "python3"));
+
+        Assert.False(result.Success);
+        Assert.Contains("scripts", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed class FakeRunner : IHostProcessRunner
+    {
+        public List<(string File, List<string> Arguments)> Calls { get; } = [];
+
+        public async Task<HostProcessResult> RunAsync(
+            string file,
+            IReadOnlyList<string> arguments,
+            string? workingDirectory,
+            CancellationToken cancellationToken = default)
+        {
+            Calls.Add((file, arguments.ToList()));
+            if (file == "kicad-cli" && arguments.Count > 4 && arguments[3] == "-o")
+                await File.WriteAllTextAsync(arguments[4], "generated", cancellationToken);
+            return new HostProcessResult(0, "ok", "");
+        }
+    }
+}

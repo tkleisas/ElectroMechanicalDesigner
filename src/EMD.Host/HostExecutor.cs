@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Emd.Contracts;
 
@@ -51,6 +53,8 @@ public sealed class HostExecutor
                 "git.checkout" => await CheckoutAsync(request, cancellationToken),
                 "git.commit" => await CommitAsync(request, cancellationToken),
                 "gui.open" => OpenGui(request),
+                "gui.export" => await ExportAsync(request, cancellationToken),
+                "script.run" => await RunScriptAsync(request, cancellationToken),
                 _ => new HostCommandResult(false, $"unsupported host command '{request.Command}'"),
             };
         }
@@ -133,6 +137,119 @@ public sealed class HostExecutor
         if (!push.Success)
             return Failure("git push failed", push);
         return new HostCommandResult(true, "committed", Commit: rev.StdOut.Trim(), Path: path);
+    }
+
+    private async Task<HostCommandResult> ExportAsync(
+        HostCommandRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Path) || string.IsNullOrWhiteSpace(request.OutputPath))
+            return new HostCommandResult(false, "path and outputPath are required");
+        var input = ResolveWorkspacePath(request.Path);
+        var output = ResolveWorkspacePath(request.OutputPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(output) ?? WorkspaceRoot);
+        var format = (request.Format ?? Path.GetExtension(output).TrimStart('.')).ToLowerInvariant();
+        var tool = request.Tool?.ToLowerInvariant();
+
+        HostProcessResult result;
+        if (tool == "freecad")
+            result = await ExportFreeCadAsync(input, output, format, cancellationToken);
+        else if (tool == "kicad-cli" || tool == "kicad")
+            result = await ExportKiCadAsync(input, output, format, cancellationToken);
+        else
+            return new HostCommandResult(false, "tool must be 'freecad' or 'kicad-cli'");
+
+        if (!result.Success)
+            return Failure($"{tool} export failed", result);
+        if (!File.Exists(output))
+            return new HostCommandResult(false, $"{tool} did not produce {output}");
+        var bytes = await File.ReadAllBytesAsync(output, cancellationToken);
+        var sha = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        return new HostCommandResult(
+            true,
+            "exported",
+            Path: output,
+            Artifacts: [new HostArtifact(output, sha, bytes.LongLength)],
+            Logs: [result.StdOut.Trim()]);
+    }
+
+    private async Task<HostProcessResult> ExportFreeCadAsync(
+        string input,
+        string output,
+        string format,
+        CancellationToken cancellationToken)
+    {
+        var script = Path.Combine(Path.GetTempPath(), $"emd-export-{Guid.NewGuid():N}.py");
+        var exporter = format is "stl" or "mesh" ? "Mesh.export" : "Import.export";
+        var scriptText = $"""
+            import FreeCAD
+            {exporter.Split('.')[0]}
+            doc = FreeCAD.openDocument({JsonSerializer.Serialize(input)})
+            {exporter}(doc.Objects, {JsonSerializer.Serialize(output)})
+            """;
+        await File.WriteAllTextAsync(script, scriptText, cancellationToken);
+        try
+        {
+            return await _runner.RunAsync("freecadcmd", [script], null, cancellationToken);
+        }
+        finally
+        {
+            try { File.Delete(script); } catch (IOException) { }
+        }
+    }
+
+    private Task<HostProcessResult> ExportKiCadAsync(
+        string input,
+        string output,
+        string format,
+        CancellationToken cancellationToken)
+    {
+        var args = format switch
+        {
+            "step" => new List<string> { "pcb", "export", "step", "-o", output, input },
+            "gerbers" => new List<string> { "pcb", "export", "gerbers", "-o", output, input },
+            "drc" => new List<string> { "pcb", "drc", "-o", output, input },
+            "erc" => new List<string> { "sch", "erc", "-o", output, input },
+            "bom" => new List<string> { "sch", "export", "bom", "-o", output, input },
+            "netlist" => new List<string> { "sch", "export", "netlist", "-o", output, input },
+            _ => [],
+        };
+        return args.Count == 0
+            ? Task.FromResult(new HostProcessResult(-1, "", $"unsupported KiCad format '{format}'"))
+            : _runner.RunAsync("kicad-cli", args, null, cancellationToken);
+    }
+
+    private async Task<HostCommandResult> RunScriptAsync(
+        HostCommandRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Path))
+            return new HostCommandResult(false, "path is required");
+        var script = ResolveWorkspacePath(request.Path);
+        var scriptsRoot = Path.Combine(WorkspaceRoot, ".emd", "scripts");
+        if (!script.StartsWith(Path.GetFullPath(scriptsRoot) + Path.DirectorySeparatorChar,
+                StringComparison.Ordinal))
+            return new HostCommandResult(false, "scripts must live under .emd/scripts");
+        var tool = request.Tool?.ToLowerInvariant() switch
+        {
+            "freecadcmd" => "freecadcmd",
+            "python3" => "python3",
+            _ => null,
+        };
+        if (tool is null)
+            return new HostCommandResult(false, "tool must be 'freecadcmd' or 'python3'");
+        var result = await _runner.RunAsync(tool, [script], WorkspaceRoot, cancellationToken);
+        return result.Success
+            ? new HostCommandResult(true, "script completed", Logs: [result.StdOut.Trim()])
+            : Failure($"{tool} script failed", result);
+    }
+
+    private string ResolveWorkspacePath(string path)
+    {
+        var full = Path.GetFullPath(Path.IsPathRooted(path) ? path : Path.Combine(WorkspaceRoot, path));
+        if (!WithinWorkspace(full))
+            throw new ArgumentException("path is outside the workspace root");
+        return full;
     }
 
     private HostCommandResult OpenGui(HostCommandRequest request)

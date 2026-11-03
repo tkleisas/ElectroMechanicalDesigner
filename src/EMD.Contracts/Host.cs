@@ -26,7 +26,9 @@ public sealed record HostCommandRequest(
     string? Message = null,
     string? AuthorName = null,
     string? AuthorEmail = null,
-    string? Tool = null);
+    string? Tool = null,
+    string? OutputPath = null,
+    string? Format = null);
 
 public sealed record HostCommandResult(
     bool Success,
@@ -35,3 +37,19 @@ public sealed record HostCommandResult(
     string? Path = null,
     IReadOnlyList<HostArtifact>? Artifacts = null,
     IReadOnlyList<string>? Logs = null);
+
+
+public sealed record HostHello(
+    string Type,
+    string AgentId,
+    HostCapabilities Capabilities);
+
+public sealed record HostCommandEnvelope(
+    string Type,
+    string Id,
+    HostCommandRequest Request);
+
+public sealed record HostResultEnvelope(
+    string Type,
+    string Id,
+    HostCommandResult Result);
