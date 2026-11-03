@@ -6,6 +6,7 @@
     <Project Path="src/EMD.Contracts/EMD.Contracts.csproj" />
     <Project Path="src/EMD.Coordinator/EMD.Coordinator.csproj" />
     <Project Path="src/EMD.Core/EMD.Core.csproj" />
+    <Project Path="src/EMD.Host/EMD.Host.csproj" />
     <Project Path="src/EMD.Server/EMD.Server.csproj" />
     <Project Path="src/EMD.Web/EMD.Web.csproj" />
   </Folder>
@@ -13,6 +14,7 @@
     <Project Path="tests/EMD.Adapters.Tests/EMD.Adapters.Tests.csproj" />
     <Project Path="tests/EMD.Coordinator.Tests/EMD.Coordinator.Tests.csproj" />
     <Project Path="tests/EMD.Core.Tests/EMD.Core.Tests.csproj" />
+    <Project Path="tests/EMD.Host.Tests/EMD.Host.Tests.csproj" />
     <Project Path="tests/EMD.Server.Tests/EMD.Server.Tests.csproj" />
   </Folder>
 </Solution>

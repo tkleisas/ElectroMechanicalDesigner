@@ -161,8 +161,12 @@ The supported defaults are 2 and 3. Profile 4 is required for CI.
    metadata, SQLite store and tests. **Done.**
 2. Server endpoints and MCP peer operations for the coordinator. **Done.**
 3. Blazor WASM workspace/revision/lease UI. **Done.**
-4. Git CLI + object-store adapters and job branches. **Next.**
-5. Local host agent with FreeCAD/KiCad command adapters. **Next.**
+4. Git CLI + object-store adapters and job branches. **Partial:** the host
+   agent performs local checkout/commit/push; coordinator-managed job branches
+   and the S3 adapter remain.
+5. Local host agent with FreeCAD/KiCad command adapters. **Partial:**
+   authenticated probe, Git checkout/commit/push, and GUI open are implemented;
+   export/script automation and outbound WebSocket transport remain.
 6. Remote job queue, audit, and multi-user authorization.
 7. Richer 3D/diff/PR workflows.
 

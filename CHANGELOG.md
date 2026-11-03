@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.3] - 2026-11-03
+
+### Added
+
+- Local host agent (`EMD.Host`) with authenticated probe, Git
+  checkout/commit/push, and FreeCAD/KiCad open commands.
+- Server host-agent proxy endpoints (`/api/host`, `/api/host/execute`).
+- Host-agent protocol documentation.
+
 ## [0.39.2] - 2026-11-03
 
 ### Added

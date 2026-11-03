@@ -21,6 +21,9 @@ var coordinator = new CoordinatorService(coordinatorRoot);
 var artifactRoot = Environment.GetEnvironmentVariable("EMD_ARTIFACT_ROOT")
     ?? Path.Combine(coordinatorRoot, "artifacts");
 var artifacts = new ArtifactStore(artifactRoot);
+var host = new HostClient(
+    Environment.GetEnvironmentVariable("EMD_HOST_URL"),
+    Environment.GetEnvironmentVariable("EMD_HOST_TOKEN"));
 CoordinatorTools.Configure(coordinator, Environment.GetEnvironmentVariable("EMD_COORDINATOR_URL"));
 
 if (args.Contains("--http"))
@@ -43,6 +46,7 @@ if (args.Contains("--http"))
         policy => policy.WithOrigins(webOrigins).AllowAnyHeader().AllowAnyMethod()));
     web.Services.AddSingleton(coordinator);
     web.Services.AddSingleton(artifacts);
+    web.Services.AddSingleton(host);
     web.Services.AddMcpServer()
         .WithHttpTransport()
         .WithToolsFromAssembly();
@@ -83,6 +87,7 @@ if (args.Contains("--http"))
     app.MapMcp("/mcp");
     app.MapCoordinatorApi();
     app.MapArtifactApi();
+    app.MapHostApi();
     app.MapGet("/", () => Results.Content(WebUi.Html, "text/html"));
     app.MapGet("/api/health", () => Results.Json(new { status = "ok", server = ServerInfo.Name }));
     app.MapGet("/api/project", (string path) =>
